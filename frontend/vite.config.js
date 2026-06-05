@@ -1,0 +1,28 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { fileURLToPath } from 'url'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+
+  build: {
+    rollupOptions: {
+      output: {
+        // Function form — required for Rolldown (Vite 8)
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor-react';
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
+})
