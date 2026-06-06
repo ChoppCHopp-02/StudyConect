@@ -11,6 +11,8 @@ export default function Pomodoro() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
   const [newRoomTime, setNewRoomTime] = useState(25);
   const [timerMode, setTimerMode] = useState('pomodoro');
   const [customHours, setCustomHours] = useState(3);
