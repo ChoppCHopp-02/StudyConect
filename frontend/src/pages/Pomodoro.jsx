@@ -14,6 +14,9 @@ export default function Pomodoro() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomTime, setNewRoomTime] = useState(25);
+  const [timerMode, setTimerMode] = useState('pomodoro');
+  const [customHours, setCustomHours] = useState(3);
+  const [customMinutes, setCustomMinutes] = useState(0);
 
   // Timer states (moved inside here for when in a room)
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
@@ -46,7 +49,7 @@ export default function Pomodoro() {
       const { data, error } = await supabase
         .from('pomodoro_rooms')
         .select(`
-          id, name, focus_time, status, created_at,
+          id, name, focus_time, status, created_at, creator_id,
           users ( full_name )
         `)
         .eq('status', 'active')
@@ -66,11 +69,24 @@ export default function Pomodoro() {
       addToast('Vui lòng nhập tên phòng', 'error');
       return;
     }
+    let finalTime = 25;
+    if (timerMode === 'pomodoro') {
+      finalTime = newRoomTime;
+    } else if (timerMode === 'custom') {
+      finalTime = (customHours * 60) + customMinutes;
+      if (finalTime <= 0) {
+        addToast('Vui lòng chọn thời gian hợp lệ', 'error');
+        return;
+      }
+    } else if (timerMode === 'stopwatch') {
+      finalTime = 0; // 0 means count up
+    }
+
     try {
       const { data, error } = await supabase.from('pomodoro_rooms').insert([{
         name: newRoomName.trim(),
         creator_id: user.id,
-        focus_time: newRoomTime,
+        focus_time: finalTime,
         status: 'active'
       }]).select().single();
 
@@ -96,10 +112,11 @@ export default function Pomodoro() {
       });
       
       setActiveRoom(room);
-      const secs = room.focus_time * 60;
+      const isStopwatch = room.focus_time === 0;
+      const secs = isStopwatch ? 0 : room.focus_time * 60;
       setSecondsLeft(secs);
       setInitialSeconds(secs);
-      setIsRunning(false); // require manual start for now, or sync with server later
+      setIsRunning(false);
     } catch (err) {
       console.error(err);
       addToast('Không thể tham gia phòng lúc này', 'error');
@@ -118,6 +135,21 @@ export default function Pomodoro() {
     setIsRunning(false);
     if (timerInterval.current) clearInterval(timerInterval.current);
     setActiveRoom(null);
+  };
+
+  const handleDeleteRoom = async (roomId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa phòng này?')) return;
+    try {
+      await supabase.from('pomodoro_rooms').delete().eq('id', roomId);
+      addToast('Đã xóa phòng', 'success');
+      if (activeRoom?.id === roomId) {
+        leaveRoom();
+      } else {
+        fetchRooms();
+      }
+    } catch (err) {
+      addToast('Lỗi khi xóa phòng', 'error');
+    }
   };
 
   // --- Timer Logic ---
@@ -160,23 +192,25 @@ export default function Pomodoro() {
 
   useEffect(() => {
     if (isRunning) {
+      const isStopwatch = activeRoom?.focus_time === 0;
       timerInterval.current = setInterval(() => {
-        setSecondsLeft((prev) => prev - 1);
+        setSecondsLeft((prev) => isStopwatch ? prev + 1 : prev - 1);
       }, 1000);
     }
     return () => {
       if (timerInterval.current) clearInterval(timerInterval.current);
     };
-  }, [isRunning]);
+  }, [isRunning, activeRoom]);
 
   useEffect(() => {
-    if (secondsLeft <= 0 && isRunning) {
+    const isStopwatch = activeRoom?.focus_time === 0;
+    if (!isStopwatch && secondsLeft <= 0 && isRunning) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsRunning(false);
       playBeep('alarm');
       addToast('⏰ Đã hết thời gian! Hãy nghỉ ngơi chút nhé.', 'success');
     }
-  }, [secondsLeft, isRunning, addToast]);
+  }, [secondsLeft, isRunning, addToast, activeRoom]);
 
   const fmtTime = (secs) => {
     const h = Math.floor(secs / 3600).toString().padStart(2, '0');
@@ -186,7 +220,7 @@ export default function Pomodoro() {
     return `${m}:${s}`;
   };
 
-  const progressPercent = initialSeconds > 0 ? ((initialSeconds - secondsLeft) / initialSeconds) * 100 : 0;
+  const progressPercent = initialSeconds > 0 ? ((initialSeconds - secondsLeft) / initialSeconds) * 100 : (activeRoom?.focus_time === 0 ? 0 : 0);
 
   // Render Timer View
   if (activeRoom) {
@@ -210,6 +244,17 @@ export default function Pomodoro() {
           <button className="leave-btn" onClick={leaveRoom}>
             <span>←</span> Rời phòng
           </button>
+          
+          <div style={{ position: 'absolute', top: 16, right: 16 }}>
+            {activeRoom.creator_id === user?.id && (
+              <button 
+                onClick={() => handleDeleteRoom(activeRoom.id)}
+                style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                🗑 Xóa phòng
+              </button>
+            )}
+          </div>
 
           <div style={{ textAlign: 'center', marginBottom: '24px', marginTop: '20px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 107, 107, 0.1)', border: '1px solid rgba(255, 107, 107, 0.2)', padding: '6px 14px', borderRadius: '30px', fontSize: '13px', fontWeight: 700, color: '#FF6B6B', marginBottom: '12px' }}>
@@ -237,7 +282,7 @@ export default function Pomodoro() {
                 />
               </svg>
               <span style={{ fontSize: '12px', fontWeight: 800, color: isRunning ? '#FF8E53' : '#FF6B6B', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px', zIndex: 1 }}>
-                ⏳ {activeRoom.focus_time} Phút
+                ⏳ {activeRoom.focus_time === 0 ? 'TÍNH GIỜ' : `${activeRoom.focus_time} Phút`}
               </span>
               <span style={{ fontSize: '48px', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'monospace', zIndex: 1, letterSpacing: '-1px' }}>
                 {fmtTime(secondsLeft)}
@@ -314,11 +359,18 @@ export default function Pomodoro() {
                 <div className="room-info">
                   <h3>{room.name}</h3>
                   <p>
-                    <span>⏱ {room.focus_time} Phút</span>
+                    <span>{room.focus_time === 0 ? '⏱ Tính giờ học' : `⏱ ${room.focus_time} Phút`}</span>
                     <span>👑 {room.users?.full_name || 'Người dùng'}</span>
                   </p>
                 </div>
-                <div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {room.creator_id === user?.id && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteRoom(room.id); }}
+                      style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                      Xóa
+                    </button>
+                  )}
                   <button style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                     Tham gia
                   </button>
@@ -357,18 +409,52 @@ export default function Pomodoro() {
                 />
               </div>
               <div className="form-group">
-                <label>Thời gian tập trung (Phút)</label>
-                <select 
-                  className="form-input"
-                  value={newRoomTime}
-                  onChange={e => setNewRoomTime(parseInt(e.target.value))}
-                >
-                  <option value={15}>15 Phút</option>
-                  <option value={25}>25 Phút (Khuyên dùng)</option>
-                  <option value={45}>45 Phút</option>
-                  <option value={60}>60 Phút</option>
-                  <option value={90}>90 Phút</option>
-                </select>
+                <label>Chế độ đếm giờ</label>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  <button className={`btn-action ${timerMode === 'pomodoro' ? 'btn-primary-play' : 'btn-secondary-action'}`} style={{ flex: 1, padding: '8px', fontSize: '12px' }} onClick={() => setTimerMode('pomodoro')}>Pomodoro</button>
+                  <button className={`btn-action ${timerMode === 'custom' ? 'btn-primary-play' : 'btn-secondary-action'}`} style={{ flex: 1, padding: '8px', fontSize: '12px' }} onClick={() => setTimerMode('custom')}>Tự chọn giờ</button>
+                  <button className={`btn-action ${timerMode === 'stopwatch' ? 'btn-primary-play' : 'btn-secondary-action'}`} style={{ flex: 1, padding: '8px', fontSize: '12px' }} onClick={() => setTimerMode('stopwatch')}>Đếm thời gian</button>
+                </div>
+                
+                {timerMode === 'pomodoro' && (
+                  <>
+                    <label>Thời gian tập trung (Phút)</label>
+                    <select 
+                      className="form-input"
+                      value={newRoomTime}
+                      onChange={e => setNewRoomTime(parseInt(e.target.value))}
+                    >
+                      <option value={10}>10 Phút</option>
+                      <option value={15}>15 Phút</option>
+                      <option value={20}>20 Phút</option>
+                      <option value={25}>25 Phút (Khuyên dùng)</option>
+                    </select>
+                  </>
+                )}
+                {timerMode === 'custom' && (
+                  <>
+                    <label>Thời gian mong muốn</label>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{ flex: 1 }}>
+                        <select className="form-input" value={customHours} onChange={e => setCustomHours(parseInt(e.target.value))}>
+                          {[0, 1, 2, 3, 4, 5, 6].map(h => <option key={h} value={h}>{h} Giờ</option>)}
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <select className="form-input" value={customMinutes} onChange={e => setCustomMinutes(parseInt(e.target.value))}>
+                          {[0, 10, 15, 20, 30, 40, 45, 50].map(m => <option key={m} value={m}>{m} Phút</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {timerMode === 'stopwatch' && (
+                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
+                    <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+                      ⏱ Chế độ bấm giờ: Đồng hồ sẽ chạy tiến để theo dõi xem bạn đã học được bao lâu.
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="modal-actions">
                 <button 

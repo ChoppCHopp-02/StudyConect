@@ -176,7 +176,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               </span>
             </div>
 
-            <div style={{ padding: '10px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="no-scrollbar" style={{ padding: '10px 18px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: 1 }}>
               {/* Tên nhóm */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tên nhóm *</label>
