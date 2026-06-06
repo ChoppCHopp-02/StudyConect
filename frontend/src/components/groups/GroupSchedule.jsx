@@ -29,6 +29,8 @@ export default function GroupSchedule({
   handleUpdateSchedule,
   handleScheduleSubmit,
   handleScheduleDelete,
+  overrideLocation,
+  setOverrideLocation,
   addToast,
 }) {
   const generateRoomLink = () => {
