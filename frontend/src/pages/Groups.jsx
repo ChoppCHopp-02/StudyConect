@@ -942,7 +942,11 @@ export default function Groups() {
               🔍
             </button>
           ) : (
-            <div className="premium-panel search-panel" style={{ flex: 1, margin: 0, animation: 'slideIn 0.3s ease', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div 
+              className="premium-panel search-panel" 
+              style={{ flex: 1, margin: 0, animation: 'slideIn 0.3s ease', display: 'flex', alignItems: 'center', gap: '10px' }}
+              onMouseLeave={() => { if (!searchQuery.trim()) setIsSearchExpanded(false); }}
+            >
               <span style={{ fontSize: '18px' }}>🔍</span>
               <input 
                 type="text" 
