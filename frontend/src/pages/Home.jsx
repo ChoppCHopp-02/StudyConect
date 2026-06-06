@@ -85,7 +85,6 @@ const NAV_ITEMS = [
 export default function Home() {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
-  const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [chatUnread, setChatUnread] = useState(() => {
     return parseInt(localStorage.getItem('studyconect_chat_unread') || '0', 10);
@@ -358,16 +357,7 @@ export default function Home() {
     }
   };
 
-  const filteredPosts = posts.filter((p) => {
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    const content = p.content ? String(p.content).toLowerCase() : '';
-    const tag = p.tag ? String(p.tag).toLowerCase() : '';
-    const userFullName = p.userFullName ? String(p.userFullName).toLowerCase() : '';
-    return content.includes(q) || tag.includes(q) || userFullName.includes(q);
-  });
-
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
+  const sortedPosts = [...posts].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
     return new Date(b.createdAt) - new Date(a.createdAt);
@@ -438,27 +428,7 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Post Search Filter */}
-            <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '8px 14px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.3-4.3"/>
-              </svg>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm kiếm bài viết, hashtag, người đăng..."
-                style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'inherit' }}
-              />
-              {search && (
-                <button
-                  onClick={() => setSearch('')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px', padding: 0 }}
-                >
-                  ✕
-                </button>
-              )}
-            </div> 
+
             <PostList
               posts={sortedPosts}
               currentUser={user}
