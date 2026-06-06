@@ -11,12 +11,11 @@ export default function Pomodoro() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newRoomName, setNewRoomName] = useState('');
   const [newRoomTime, setNewRoomTime] = useState(25);
   const [timerMode, setTimerMode] = useState('pomodoro');
   const [customHours, setCustomHours] = useState(3);
   const [customMinutes, setCustomMinutes] = useState(0);
+  const [roomToDelete, setRoomToDelete] = useState(null);
 
   // Timer states (moved inside here for when in a room)
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
@@ -137,18 +136,24 @@ export default function Pomodoro() {
     setActiveRoom(null);
   };
 
-  const handleDeleteRoom = async (roomId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa phòng này?')) return;
+  const handleDeleteRoom = (roomId) => {
+    setRoomToDelete(roomId);
+  };
+
+  const confirmDeleteRoom = async () => {
+    if (!roomToDelete) return;
     try {
-      await supabase.from('pomodoro_rooms').delete().eq('id', roomId);
+      await supabase.from('pomodoro_rooms').delete().eq('id', roomToDelete);
       addToast('Đã xóa phòng', 'success');
-      if (activeRoom?.id === roomId) {
+      if (activeRoom?.id === roomToDelete) {
         leaveRoom();
       } else {
         fetchRooms();
       }
     } catch (err) {
       addToast('Lỗi khi xóa phòng', 'error');
+    } finally {
+      setRoomToDelete(null);
     }
   };
 
@@ -298,6 +303,27 @@ export default function Pomodoro() {
               </button>
             </div>
           </div>
+          
+          {/* Delete Confirmation Modal for Active Room */}
+          {roomToDelete && (
+            <div className="modal-overlay" style={{ zIndex: 10000 }}>
+              <div className="modal-content" style={{ maxWidth: '360px', textAlign: 'center', padding: '24px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗑️</div>
+                <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0' }}>Xóa phòng học?</h3>
+                <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.5, margin: '0 0 24px 0' }}>
+                  Phòng học này sẽ bị xóa vĩnh viễn và không thể khôi phục. Mọi người trong phòng sẽ bị đẩy ra ngoài.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button onClick={() => setRoomToDelete(null)} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#e2e8f0', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}>
+                    Hủy
+                  </button>
+                  <button onClick={confirmDeleteRoom} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.3)', transition: 'background 0.2s' }}>
+                    Xóa ngay
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </AppLayout>
     );
@@ -410,10 +436,10 @@ export default function Pomodoro() {
               </div>
               <div className="form-group">
                 <label>Chế độ đếm giờ</label>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                  <button className={`btn-action ${timerMode === 'pomodoro' ? 'btn-primary-play' : 'btn-secondary-action'}`} style={{ flex: 1, padding: '8px', fontSize: '12px' }} onClick={() => setTimerMode('pomodoro')}>Pomodoro</button>
-                  <button className={`btn-action ${timerMode === 'custom' ? 'btn-primary-play' : 'btn-secondary-action'}`} style={{ flex: 1, padding: '8px', fontSize: '12px' }} onClick={() => setTimerMode('custom')}>Tự chọn giờ</button>
-                  <button className={`btn-action ${timerMode === 'stopwatch' ? 'btn-primary-play' : 'btn-secondary-action'}`} style={{ flex: 1, padding: '8px', fontSize: '12px' }} onClick={() => setTimerMode('stopwatch')}>Đếm thời gian</button>
+                <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '4px', marginBottom: '16px' }}>
+                  <button style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: timerMode === 'pomodoro' ? '#6366f1' : 'transparent', color: timerMode === 'pomodoro' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => setTimerMode('pomodoro')}>Pomodoro</button>
+                  <button style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: timerMode === 'custom' ? '#6366f1' : 'transparent', color: timerMode === 'custom' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => setTimerMode('custom')}>Tự chọn</button>
+                  <button style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: timerMode === 'stopwatch' ? '#6366f1' : 'transparent', color: timerMode === 'stopwatch' ? '#fff' : '#94a3b8', fontWeight: 600, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => setTimerMode('stopwatch')}>Bấm giờ</button>
                 </div>
                 
                 {timerMode === 'pomodoro' && (
@@ -465,6 +491,27 @@ export default function Pomodoro() {
                 </button>
                 <button className="btn-create" onClick={handleCreateRoom}>
                   Tạo phòng ngay
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal for Rooms List */}
+        {roomToDelete && !activeRoom && (
+          <div className="modal-overlay" style={{ zIndex: 10000 }}>
+            <div className="modal-content" style={{ maxWidth: '360px', textAlign: 'center', padding: '24px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗑️</div>
+              <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0' }}>Xóa phòng học?</h3>
+              <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.5, margin: '0 0 24px 0' }}>
+                Phòng học này sẽ bị xóa vĩnh viễn và không thể khôi phục. Mọi người trong phòng sẽ bị đẩy ra ngoài.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button onClick={() => setRoomToDelete(null)} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#e2e8f0', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}>
+                  Hủy
+                </button>
+                <button onClick={confirmDeleteRoom} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.3)', transition: 'background 0.2s' }}>
+                  Xóa ngay
                 </button>
               </div>
             </div>
