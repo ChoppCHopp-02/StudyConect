@@ -4,7 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { getTotalUnread, refreshCache } from '@/services/chatServiceTEMP';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { supabase } from '@/config/supabaseClient';
-
+import { getSearchSuggestions } from '@/services/interactionService';
+import Avatar from '@/components/common/Avatar';
 const NAV_ICONS = {
   home: (isActive) => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.3s', color: isActive ? 'var(--secondary)' : 'var(--text-secondary)' }}>
@@ -85,6 +86,30 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingFriendsCount, setPendingFriendsCount] = useState(0);
+  
+  const [search, setSearch] = useState('');
+  const [searchData, setSearchData] = useState({ users: [], groups: [] });
+
+  // Fetch all search suggestions on mount
+  useEffect(() => {
+    const fetchSearchSuggestions = async () => {
+      try {
+        const data = await getSearchSuggestions();
+        setSearchData(data);
+      } catch (err) {
+        console.error('Error loading search suggestions:', err);
+      }
+    };
+    fetchSearchSuggestions();
+  }, []);
+
+  const filteredUsers = search.trim()
+    ? searchData.users.filter(u => u.fullName.toLowerCase().includes(search.trim().toLowerCase()) && String(u.id) !== String(user?.id))
+    : [];
+
+  const filteredGroups = search.trim()
+    ? searchData.groups.filter(g => g.name.toLowerCase().includes(search.trim().toLowerCase()))
+    : [];
 
   useEffect(() => {
     if (!user?.id) return;
@@ -412,23 +437,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                         onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99, 102, 241, 0.08)')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                       >
-                        {user.avatar ? (
-                          <img src={user.avatar} alt="avatar" style={{ border: '2px solid var(--primary)', width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} />
-                        ) : (
-                          <div style={{
-                            width: '34px',
-                            height: '34px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            color: 'white',
-                            border: '2px solid var(--primary)'
-                          }}>{initials}</div>
-                        )}
+                        <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={34} />
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {user.fullName || 'Người dùng'}
@@ -437,9 +446,127 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                         </div>
                       </div>
                     </Link>
+                    <div style={{ flexShrink: 0, paddingRight: '4px' }}>
+                      <NotificationBell 
+                        userId={user.id} 
+                        style={{ 
+                          height: '38px', 
+                          width: '38px', 
+                          padding: 0, 
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }} 
+                      />
+                    </div>
                   </div>
                 )}
 
+                {/* Search */}
+                <div
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '10px', 
+                    background: 'var(--bg-input)', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '12px', 
+                    padding: '9px 14px', 
+                    marginBottom: '8px', 
+                    cursor: 'text', 
+                    transition: 'all 0.2s ease' 
+                  }}
+                  onClick={() => document.getElementById('sidebar-search')?.focus()}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(99, 102, 241, 0.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  <span style={{ fontSize: '13px', color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/>
+                      <path d="m21 21-4.3-4.3"/>
+                    </svg>
+                  </span>
+                  <input
+                    id="sidebar-search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Tìm kiếm..."
+                    style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'inherit' }}
+                  />
+                  {search && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSearch(''); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Smart Global Search Dropdown */}
+                {search.trim() && (filteredUsers.length > 0 || filteredGroups.length > 0) && (
+                  <div style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '14px',
+                    padding: '12px',
+                    marginBottom: '10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
+                  }}>
+                    {/* Matching Groups */}
+                    {filteredGroups.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary-light)', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                          👥 Nhóm học tập ({filteredGroups.length})
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {filteredGroups.slice(0, 3).map(g => (
+                            <Link key={g.id} to={`/groups/${g.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                              <div
+                                style={{ padding: '6px 8px', borderRadius: '8px', background: 'var(--bg-input)', fontSize: '12px', fontWeight: 600, transition: 'var(--transition)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--border)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
+                              >
+                                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500, marginTop: '2px' }}>{g.category}</div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Matching Users */}
+                    {filteredUsers.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--secondary)', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                          🎓 Thành viên ({filteredUsers.length})
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {filteredUsers.slice(0, 3).map(u => (
+                            <Link key={u.id} to="/friends" style={{ textDecoration: 'none', color: 'inherit' }}>
+                              <div
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '8px', background: 'var(--bg-input)', fontSize: '12px', fontWeight: 600, transition: 'var(--transition)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--border)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
+                              >
+                                <Avatar src={u.avatar} initial={u.fullName} size={24} />
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{u.fullName}</div>
+                                  <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 500 }}>{u.university}</div>
+                                </div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {/* Sidebar items */}
                 {NAV_ITEMS.map((item) => {
                   const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { getUserSchedulesAndDeadlines, getPosts, deletePost, createComment, toggleLikePost, getSearchSuggestions, togglePinPost } from '@/services/interactionService';
+import { getUserSchedulesAndDeadlines, getPosts, deletePost, createComment, toggleLikePost, togglePinPost } from '@/services/interactionService';
 import { getFriends } from '@/services/friendService';
 import { supabase } from '@/config/supabaseClient';
 import { getTotalUnread } from '@/services/chatServiceTEMP';
@@ -10,7 +10,6 @@ import AppLayout from '@/layouts/AppLayout';
 import Avatar from '@/components/common/Avatar';
 import PostList from '@/components/posts/PostList';
 import CreatePostModal from '@/components/posts/CreatePostModal';
-import NotificationBell from '@/components/notifications/NotificationBell';
 import ConfirmModal from '@/components/ConfirmModal';
 
 const NAV_ICONS = {
@@ -110,7 +109,6 @@ export default function Home() {
       return [];
     }
   });
-  const [searchData, setSearchData] = useState({ users: [], groups: [] });
   const [confirmConfig, setConfirmConfig] = useState(null);
   const [friends, setFriends] = useState([]);
   const [onlineUserIds, setOnlineUserIds] = useState([]);
@@ -375,16 +373,10 @@ export default function Home() {
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
-  const filteredUsers = search.trim()
-    ? searchData.users.filter(u => u.fullName.toLowerCase().includes(search.trim().toLowerCase()) && String(u.id) !== String(user?.id))
-    : [];
 
-  const filteredGroups = search.trim()
-    ? searchData.groups.filter(g => g.name.toLowerCase().includes(search.trim().toLowerCase()))
-    : [];
 
   return (
-    <AppLayout hideSidebar={true}>
+    <AppLayout>
       <style>{`
         @keyframes floatEmojiUpFixed {
           0% {
@@ -428,240 +420,8 @@ export default function Home() {
           {p.char}
         </span>
       ))}
-      <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 16px' }}>
-        <div className="layout-3col">
-          
-          <aside style={{ position: 'sticky', top: '80px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px', marginBottom: '8px', overflow: 'visible', paddingRight: '8px' }}>
-              <Link to="/profile" style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 10px 10px 12px', transition: 'var(--transition)' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99, 102, 241, 0.08)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={34} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {user?.fullName || 'Người dùng'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--primary-light)', fontWeight: 600 }}>Xem hồ sơ</div>
-                  </div>
-                </div>
-              </Link>
-              {user?.id && (
-                <div style={{ flexShrink: 0, paddingRight: '4px' }}>
-                  <NotificationBell 
-                    userId={user.id} 
-                    style={{ 
-                      height: '38px', 
-                      width: '38px', 
-                      padding: 0, 
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }} 
-                  />
-                </div>
-              )}
-            </div>
- 
-            {/* Search */}
-            <div
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '10px', 
-                background: 'var(--bg-input)', 
-                border: '1px solid var(--border)', 
-                borderRadius: '12px', 
-                padding: '9px 14px', 
-                marginBottom: '8px', 
-                cursor: 'text', 
-                transition: 'all 0.2s ease' 
-              }}
-              onClick={() => document.getElementById('sidebar-search')?.focus()}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(99, 102, 241, 0.1)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
-            >
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.3-4.3"/>
-                </svg>
-              </span>
-              <input
-                id="sidebar-search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm kiếm..."
-                style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'inherit' }}
-              />
-              {search && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setSearch(''); }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Smart Global Search Dropdown */}
-            {search.trim() && (filteredUsers.length > 0 || filteredGroups.length > 0) && (
-              <div style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: '14px',
-                padding: '12px',
-                marginBottom: '10px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
-              }}>
-                {/* Matching Groups */}
-                {filteredGroups.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary-light)', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
-                      👥 Nhóm học tập ({filteredGroups.length})
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {filteredGroups.slice(0, 3).map(g => (
-                        <Link key={g.id} to={`/groups/${g.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <div
-                            style={{ padding: '6px 8px', borderRadius: '8px', background: 'var(--bg-input)', fontSize: '12px', fontWeight: 600, transition: 'var(--transition)' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--border)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
-                          >
-                            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</div>
-                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500, marginTop: '2px' }}>{g.category}</div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Matching Users */}
-                {filteredUsers.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--secondary)', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
-                      🎓 Thành viên ({filteredUsers.length})
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {filteredUsers.slice(0, 3).map(u => (
-                        <Link key={u.id} to="/friends" style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '8px', background: 'var(--bg-input)', fontSize: '12px', fontWeight: 600, transition: 'var(--transition)' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--border)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
-                          >
-                            <Avatar src={u.avatar} initial={u.fullName} size={24} />
-                            <div style={{ minWidth: 0, flex: 1 }}>
-                              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{u.fullName}</div>
-                              <div style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 500 }}>{u.university}</div>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Navigation links */}
-            {NAV_ITEMS.map((item) => {
-              const loc = window.location.pathname;
-              const isActive = item.to === '/' ? loc === '/' : loc.startsWith(item.to);
-              const hasUnread = item.key === 'chat' && chatUnread > 0;
-              const hasPending = item.key === 'friends' && pendingFriendsCount > 0;
-              return (
-                <Link key={item.key} to={item.to} style={{ textDecoration: 'none' }}>
-                  <div
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '12px', 
-                      padding: '11px 14px', 
-                      borderRadius: '12px', 
-                      background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(255, 122, 0, 0.08))' : 'none', 
-                      border: isActive ? '1px solid rgba(255, 122, 0, 0.25)' : '1px solid transparent',
-                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
-                      transform: 'translateY(0)',
-                      position: 'relative' 
-                    }}
-                    onMouseEnter={(e) => { 
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'var(--bg-input)';
-                        e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.1)';
-                      }
-                    }}
-                    onMouseLeave={(e) => { 
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'none';
-                        e.currentTarget.style.borderColor = 'transparent';
-                      }
-                    }}
-                  >
-                    <span style={{ 
-                      width: '28px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      flexShrink: 0, 
-                      filter: isActive ? 'drop-shadow(0 0 8px rgba(255, 122, 0, 0.55))' : 'none' 
-                    }}>
-                      {NAV_ICONS[item.icon] ? NAV_ICONS[item.icon](isActive) : item.icon}
-                    </span>
-                    <span style={{ 
-                      fontSize: '14px', 
-                      fontWeight: isActive ? 700 : 500, 
-                      color: isActive ? 'var(--secondary)' : 'var(--text-secondary)', 
-                      flex: 1 
-                    }}>
-                      {item.label}
-                    </span>
-                    {hasUnread && (
-                      <span style={{ 
-                        background: '#ef4444', 
-                        color: 'white', 
-                        fontSize: '10px', 
-                        fontWeight: 800, 
-                        padding: '2px 6px', 
-                        borderRadius: '10px', 
-                        minWidth: '18px', 
-                        textAlign: 'center',
-                        boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
-                        lineHeight: 1
-                      }}>
-                        {chatUnread > 99 ? '99+' : chatUnread}
-                      </span>
-                    )}
-                    {hasPending && (
-                      <span style={{ 
-                        background: '#ef4444', 
-                        color: 'white', 
-                        fontSize: '10px', 
-                        fontWeight: 800, 
-                        padding: '2px 6px', 
-                        borderRadius: '10px', 
-                        minWidth: '18px', 
-                        textAlign: 'center',
-                        boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
-                        lineHeight: 1
-                      }}>
-                        {pendingFriendsCount > 99 ? '99+' : pendingFriendsCount}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </aside>
+      <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
 
           {/* MIDDLE COLUMN: Feed */}
           <main style={{ minWidth: 0 }}>
@@ -677,7 +437,28 @@ export default function Home() {
                 Bạn có câu hỏi học tập nào không? Đăng ngay...
               </button>
             </div>
- 
+
+            {/* Post Search Filter */}
+            <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '8px 14px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Tìm kiếm bài viết, hashtag, người đăng..."
+                style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'inherit' }}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px', padding: 0 }}
+                >
+                  ✕
+                </button>
+              )}
+            </div> 
             <PostList
               posts={sortedPosts}
               currentUser={user}
