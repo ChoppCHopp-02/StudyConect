@@ -263,7 +263,7 @@ export default function Pomodoro() {
     <AppLayout>
       <div className="pomodoro-list-container">
         <style>{`
-          .pomodoro-list-container { display: flex; flex-direction: column; align-items: center; padding: 20px 12px; width: 100%; min-height: calc(100vh - 80px); font-family: 'Inter', sans-serif; position: relative; }
+          .pomodoro-list-container { display: flex; flex-direction: column; align-items: center; padding: 60px 12px 20px 12px; width: 100%; min-height: calc(100vh - 80px); font-family: 'Inter', sans-serif; position: relative; }
           .header-section { text-align: center; margin-bottom: 32px; width: 100%; max-width: 600px; }
           .header-badge { display: inline-flex; alignItems: center; gap: 6px; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.2); padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 700; color: #FF6B6B; margin-bottom: 12px; }
           .header-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 8px; }
@@ -295,12 +295,6 @@ export default function Pomodoro() {
           .form-input:focus { border-color: #6366f1; }
           .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 32px; }
         `}</style>
-
-        <div className="header-section">
-          <div className="header-badge">🍅 Phòng Tự Học Pomodoro Đồng Bộ</div>
-          <h1 className="header-title">Không Gian Tập Trung</h1>
-          <p className="header-subtitle">Tham gia hoặc tạo phòng học tập trung để cùng nâng cao năng suất cùng các sinh viên khác!</p>
-        </div>
 
         <div className="rooms-section">
           <div className="section-header">
