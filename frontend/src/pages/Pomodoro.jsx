@@ -58,6 +58,7 @@ export default function Pomodoro() {
       setRooms(data || []);
     } catch (err) {
       console.error(err);
+      addToast('Không thể tải danh sách phòng', 'error');
     } finally {
       setLoading(false);
     }
@@ -68,11 +69,12 @@ export default function Pomodoro() {
       addToast('Vui lòng nhập tên phòng', 'error');
       return;
     }
+    
     let finalTime = 25;
     if (timerMode === 'pomodoro') {
-      finalTime = newRoomTime;
+      finalTime = Number(newRoomTime);
     } else if (timerMode === 'custom') {
-      finalTime = (customHours * 60) + customMinutes;
+      finalTime = (Number(customHours) * 60) + Number(customMinutes);
       if (finalTime <= 0) {
         addToast('Vui lòng chọn thời gian hợp lệ', 'error');
         return;
