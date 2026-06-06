@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { supabase } from '../config/supabaseClient';
@@ -19,7 +18,6 @@ export default function Pomodoro() {
   const [customHours, setCustomHours] = useState(3);
   const [customMinutes, setCustomMinutes] = useState(0);
   const [roomToDelete, setRoomToDelete] = useState(null);
-  const navigate = useNavigate();
 
   // Timer states (moved inside here for when in a room)
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
