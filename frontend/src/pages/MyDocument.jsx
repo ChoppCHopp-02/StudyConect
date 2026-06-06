@@ -241,20 +241,20 @@ export default function MyDocuments() {
       <main className="document-page-container">
           {/* Header + Stats */}
           <div className="premium-panel">
-            <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '8px', color: '#fff' }}>Tài liệu của tôi</h1>
-            <p style={{ fontSize: '15px', color: '#94a3b8', marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px', color: '#fff' }}>Tài liệu của tôi</h1>
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
               Tất cả tài liệu bạn đã tải lên trong các nhóm học.
             </p>
 
             {/* Stats row */}
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
               {[
                 { label: 'Tổng tài liệu', value: files.length },
                 { label: 'Nhóm đã chia sẻ', value: new Set(files.map(f => f.groupId)).size },
               ].map(s => (
                 <div key={s.label} className="stat-box">
-                  <div style={{ fontSize: '32px', fontWeight: 800, color: '#818cf8' }}>{s.value}</div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px' }}>{s.label}</div>
+                  <div style={{ fontSize: '24px', fontWeight: 800, color: '#818cf8' }}>{s.value}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -322,7 +322,7 @@ export default function MyDocuments() {
 
       <style>{`
         .document-page-container {
-          padding: 40px 16px;
+          padding: 24px 16px;
           max-width: 1000px;
           margin: 0 auto;
           font-family: 'Inter', sans-serif;
@@ -332,16 +332,16 @@ export default function MyDocuments() {
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
-          padding: 32px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
-          margin-bottom: 24px;
+          border-radius: 20px;
+          padding: 20px 24px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+          margin-bottom: 20px;
         }
         .stat-box {
           background: rgba(0, 0, 0, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 16px;
-          padding: 20px;
+          border-radius: 12px;
+          padding: 12px;
           flex: 1;
           display: flex;
           flex-direction: column;
@@ -399,13 +399,13 @@ export default function MyDocuments() {
         .file-card-item {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 16px;
-          padding: 16px 20px;
+          border-radius: 14px;
+          padding: 12px 16px;
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 12px;
           transition: all 0.3s;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
         .file-card-item:hover {
           background: rgba(255,255,255,0.06);

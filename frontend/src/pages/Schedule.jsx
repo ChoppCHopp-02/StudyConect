@@ -328,39 +328,39 @@ export default function Schedule() {
         .schedule-container {
           max-width: 1100px;
           margin: 0 auto;
-          padding: 40px 24px;
+          padding: 24px 16px;
           font-family: 'Inter', sans-serif;
           position: relative;
           z-index: 1;
         }
         .page-title {
-          font-size: 32px;
+          font-size: 24px;
           font-weight: 800;
           color: #fff;
-          margin: 0 0 8px 0;
+          margin: 0 0 6px 0;
           line-height: 1.2;
         }
         .page-subtitle {
           color: #94a3b8;
-          font-size: 15px;
+          font-size: 14px;
           margin: 0;
         }
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 16px;
-          margin-top: 24px;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 12px;
+          margin-top: 16px;
         }
         .stat-card {
           background: rgba(255, 255, 255, 0.03);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          padding: 24px;
+          border-radius: 16px;
+          padding: 16px;
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 12px;
           transition: all 0.3s;
         }
         .stat-card:hover {
@@ -369,34 +369,34 @@ export default function Schedule() {
           box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         .stat-value {
-          font-size: 36px;
+          font-size: 28px;
           font-weight: 800;
           line-height: 1;
         }
         .stat-label {
-          font-size: 13px;
+          font-size: 12px;
           color: #94a3b8;
-          margin-top: 6px;
+          margin-top: 4px;
           font-weight: 500;
         }
         
         .urgent-banner {
           background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(245,158,11,0.05));
           border: 1px solid rgba(239,68,68,0.3);
-          border-radius: 20px;
-          padding: 20px 24px;
+          border-radius: 16px;
+          padding: 16px 20px;
           display: flex;
           align-items: center;
-          gap: 16px;
-          margin-top: 24px;
+          gap: 12px;
+          margin-top: 16px;
           box-shadow: 0 8px 24px rgba(239,68,68,0.1);
         }
         
         .grid-responsive {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 32px;
-          margin-top: 40px;
+          gap: 24px;
+          margin-top: 24px;
         }
         @media (max-width: 768px) {
           .grid-responsive { grid-template-columns: 1fr; }
@@ -429,11 +429,11 @@ export default function Schedule() {
         .item-card {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 16px;
-          padding: 20px;
+          border-radius: 14px;
+          padding: 16px;
           transition: all 0.3s;
           cursor: pointer;
-          margin-bottom: 16px;
+          margin-bottom: 12px;
         }
         .item-card:hover {
           background: rgba(255,255,255,0.05);
