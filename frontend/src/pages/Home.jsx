@@ -470,7 +470,7 @@ export default function Home() {
           </main>
  
           {/* RIGHT COLUMN: Lịch & Deadline gộp 1 card */}
-          <aside style={{ position: 'sticky', top: '80px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <aside className="no-scrollbar" style={{ position: 'sticky', top: '80px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
 
               {/* ─ Header chung ─ */}
