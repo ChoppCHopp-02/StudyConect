@@ -205,55 +205,32 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               {meetingMode === 'offline' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Chọn địa điểm học tập *</label>
+                    <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tên địa điểm học tập *</label>
                     <div className="form-input-wrap">
-                      <select
+                      <input
                         className="form-input"
-                        style={{ padding: '8px 12px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '8px', width: '100%', cursor: 'pointer' }}
-                        value={selectedSpaceId}
-                        onChange={e => handleSpaceChange(e.target.value)}
+                        style={{ padding: '8px 12px', fontSize: 13 }}
+                        placeholder="Nhập tên quán cà phê, thư viện..."
+                        value={customName}
+                        onChange={e => handleCustomLocationChange(e.target.value, customAddress)}
                         required
-                      >
-                        <option value="">-- Chọn địa điểm từ danh sách --</option>
-                        {spaces.map(s => (
-                          <option key={s.id} value={s.id}>{s.name} ({s.district}, {s.province})</option>
-                        ))}
-                        <option value="custom">✍️ Nhập địa chỉ tự do...</option>
-                      </select>
+                      />
                     </div>
                   </div>
 
-                  {selectedSpaceId === 'custom' && (
-                    <>
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tên địa điểm tự nhập *</label>
-                        <div className="form-input-wrap">
-                          <input
-                            className="form-input"
-                            style={{ padding: '8px 12px', fontSize: 13 }}
-                            placeholder="Nhập tên quán cà phê, thư viện..."
-                            value={customName}
-                            onChange={e => handleCustomLocationChange(e.target.value, customAddress)}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Địa chỉ chi tiết *</label>
-                        <div className="form-input-wrap">
-                          <input
-                            className="form-input"
-                            style={{ padding: '8px 12px', fontSize: 13 }}
-                            placeholder="Số nhà, tên đường, quận/huyện, tỉnh/TP"
-                            value={customAddress}
-                            onChange={e => handleCustomLocationChange(customName, e.target.value)}
-                            required
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Địa chỉ chi tiết *</label>
+                    <div className="form-input-wrap">
+                      <input
+                        className="form-input"
+                        style={{ padding: '8px 12px', fontSize: 13 }}
+                        placeholder="Số nhà, tên đường, quận/huyện, tỉnh/TP"
+                        value={customAddress}
+                        onChange={e => handleCustomLocationChange(customName, e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
 
                   {selectedLocation && (
                     <div style={{ fontSize: 11, color: '#10b981', display: 'flex', alignItems: 'center', gap: 5, padding: '4px 6px', background: 'rgba(16,185,129,0.08)', borderRadius: 6, border: '1px solid rgba(16,185,129,0.2)' }}>
