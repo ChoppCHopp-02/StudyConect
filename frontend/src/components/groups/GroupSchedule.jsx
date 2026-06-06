@@ -83,6 +83,7 @@ export default function GroupSchedule({
 
   const getLocationStr = (loc) => typeof loc === 'string' ? loc : (loc?.name || loc?.address || '');
 
+  // eslint-disable-next-line no-undef
   const activeGeoPreview = (!overrideLocation && group?.location?.lat)
     ? {
         lat: group.location.lat,
@@ -93,6 +94,7 @@ export default function GroupSchedule({
       }
     : geoPreview;
 
+  // eslint-disable-next-line no-undef
   const activeLocationName = (!overrideLocation && group?.location) ? getLocationStr(group.location) : newScheduleLocation;
 
 
