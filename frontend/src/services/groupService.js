@@ -31,34 +31,14 @@ export const getAllGroups = async () => {
         user_id,
         role
       )
-    `);
+    `)
+    .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(`Lỗi tải danh sách nhóm: ${error.message}`);
   }
 
-  const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-  const now = Date.now();
-  const activeGroups = [];
-  const expiredIds = [];
-
-  (data || []).forEach(g => {
-    const ageInMs = now - new Date(g.created_at).getTime();
-    if (ageInMs < oneWeekMs) {
-      activeGroups.push(g);
-    } else {
-      expiredIds.push(g.id);
-    }
-  });
-
-  // Background cleanup for expired groups
-  if (expiredIds.length > 0) {
-    Promise.all(expiredIds.map(id =>
-      supabase.from('study_groups').delete().eq('id', id)
-    )).catch(err => console.warn('Background cleanup error:', err));
-  }
-
-  return activeGroups.map(mapGroup);
+  return (data || []).map(mapGroup);
 };
 
 export const createGroup = async (userId, { name, subject, description, meetingMode, isPrivate, maxMembers, location }) => {
@@ -80,12 +60,31 @@ export const createGroup = async (userId, { name, subject, description, meetingM
       throw new Error('Bạn đã đạt giới hạn làm trưởng nhóm tối đa 3 nhóm học hoạt động.');
     }
   }
+  // Generate a unique 6-digit ID
+  let uniqueId = null;
+  let isUnique = false;
+  let attempts = 0;
+  
+  while (!isUnique && attempts < 10) {
+    const randomId = Math.floor(100000 + Math.random() * 900000); // 100000 to 999999
+    const { data } = await supabase.from('study_groups').select('id').eq('id', randomId).maybeSingle();
+    if (!data) {
+      uniqueId = randomId;
+      isUnique = true;
+    }
+    attempts++;
+  }
+
+  if (!uniqueId) {
+    throw new Error('Không thể tạo ID nhóm. Vui lòng thử lại.');
+  }
 
   // 1. Insert into study_groups
   const { data: group, error: groupError } = await supabase
     .from('study_groups')
     .insert([
       {
+        id: uniqueId,
         name,
         subject,
         description: description || '',

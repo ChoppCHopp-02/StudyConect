@@ -458,7 +458,13 @@ export default function useGroupDetail(groupId, user, addToast) {
     // Validate: schedule must be within 7 days from now
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 7);
-    if (new Date(editScheduleDateTime) > maxDate) {
+
+    const [dateP, timeP] = editScheduleDateTime.split('T');
+    const [y, m, d] = dateP.split('-');
+    const [h, min] = timeP.split(':');
+    const scheduleDateObj = new Date(y, m - 1, d, h, min);
+
+    if (scheduleDateObj > maxDate) {
       addToast('Thời gian học không được vượt quá 7 ngày kể từ hôm nay!', 'error');
       return;
     }
@@ -466,7 +472,7 @@ export default function useGroupDetail(groupId, user, addToast) {
       setIsSubmittingSchedule(true);
       await updateSchedule(editingSchedule.id, {
         topic: editScheduleTopic.trim(),
-        dateTime: new Date(editScheduleDateTime).toISOString(),
+        dateTime: scheduleDateObj.toISOString(),
         location: editScheduleLocation.trim(),
         description: editScheduleDesc.trim(),
       });
@@ -498,7 +504,13 @@ export default function useGroupDetail(groupId, user, addToast) {
     // Validate: deadline must be within 7 days from now
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 7);
-    if (new Date(editDeadlineDueDate) > maxDate) {
+
+    const [dateP, timeP] = editDeadlineDueDate.split('T');
+    const [y, m, d] = dateP.split('-');
+    const [h, min] = timeP.split(':');
+    const deadlineDateObj = new Date(y, m - 1, d, h, min);
+
+    if (deadlineDateObj > maxDate) {
       addToast('Hạn chót không được vượt quá 7 ngày kể từ hôm nay!', 'error');
       return;
     }
@@ -510,7 +522,7 @@ export default function useGroupDetail(groupId, user, addToast) {
       })() : null;
       await updateDeadline(editingDeadline.id, {
         title: editDeadlineTitle.trim(),
-        dueDate: new Date(editDeadlineDueDate).toISOString(),
+        dueDate: deadlineDateObj.toISOString(),
         description: editDeadlineDesc.trim(),
         assigneeId: editDeadlineAssignee !== 'all' ? editDeadlineAssignee : null,
         assigneeName: assigneeMember,
@@ -583,7 +595,13 @@ export default function useGroupDetail(groupId, user, addToast) {
     // Validate: schedule must be within 7 days from now
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 7);
-    if (new Date(newScheduleDateTime) > maxDate) {
+    // Robust parsing for datetime-local string (YYYY-MM-DDTHH:mm) to local Date
+    const [dateP, timeP] = newScheduleDateTime.split('T');
+    const [y, m, d] = dateP.split('-');
+    const [h, min] = timeP.split(':');
+    const scheduleDateObj = new Date(y, m - 1, d, h, min);
+
+    if (scheduleDateObj > maxDate) {
       return addToast('Thời gian học không được vượt quá 7 ngày kể từ hôm nay!', 'error');
     }
     const isOfflineWithLocation = group?.meetingMode === 'offline' && group?.location && !overrideLocation;
@@ -595,7 +613,7 @@ export default function useGroupDetail(groupId, user, addToast) {
       setIsSubmittingSchedule(true);
       await createSchedule(groupId, {
         topic: newScheduleTopic.trim(),
-        dateTime: new Date(newScheduleDateTime).toISOString(),
+        dateTime: scheduleDateObj.toISOString(),
         location: locationValue,
         locationLat: null,
         locationLng: null,
@@ -640,7 +658,13 @@ export default function useGroupDetail(groupId, user, addToast) {
     // Validate: deadline must be within 7 days from now
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 7);
-    if (new Date(newDeadlineDueDate) > maxDate) {
+
+    const [dateP, timeP] = newDeadlineDueDate.split('T');
+    const [y, m, d] = dateP.split('-');
+    const [h, min] = timeP.split(':');
+    const deadlineDateObj = new Date(y, m - 1, d, h, min);
+
+    if (deadlineDateObj > maxDate) {
       return addToast('Hạn chót không được vượt quá 7 ngày kể từ hôm nay!', 'error');
     }
     try {
@@ -651,7 +675,7 @@ export default function useGroupDetail(groupId, user, addToast) {
       })() : null;
       await createDeadline(groupId, {
         title: newDeadlineTitle.trim(),
-        dueDate: new Date(newDeadlineDueDate).toISOString(),
+        dueDate: deadlineDateObj.toISOString(),
         description: newDeadlineDesc.trim(),
         creatorId: user.id,
         assigneeId: newDeadlineAssignee !== 'all' ? newDeadlineAssignee : null,

@@ -175,9 +175,6 @@ export default function Schedule() {
             <div id="schedules-section" style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="section-header" style={{ borderBottomColor: 'rgba(108,99,255,0.3)' }}>
                 <h2 className="section-title">Buổi học sắp diễn ra</h2>
-                <span className="badge-count" style={{ background: 'rgba(108,99,255,0.2)', color: '#a5b4fc' }}>
-                  {schedules.length}
-                </span>
               </div>
 
               {schedules.length === 0 ? (
@@ -236,9 +233,6 @@ export default function Schedule() {
             <div id="deadlines-section" style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="section-header" style={{ borderBottomColor: 'rgba(239,68,68,0.3)' }}>
                 <h2 className="section-title">Deadline chưa hoàn thành</h2>
-                <span className="badge-count" style={{ background: incompleteDeadlines.length > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)', color: incompleteDeadlines.length > 0 ? '#fca5a5' : '#86efac' }}>
-                  {incompleteDeadlines.length}
-                </span>
               </div>
 
               {incompleteDeadlines.length === 0 ? (

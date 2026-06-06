@@ -240,7 +240,7 @@ function StudyTimer() {
 
 
 // ── WEBRTC HOOK ──────────────────────────────────────────────
-function useWebRTC({ roomId, user, micOn, camOn }) {
+function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
   const [localStream,  setLocalStream]  = useState(null);
   const [remoteFeeds,  setRemoteFeeds]  = useState({}); // { peerId: { stream, name, avatar, camOff, micMuted, screenSharing } }
   const [error,        setError]        = useState(null);
@@ -476,6 +476,13 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
         if (pc) pc.addIceCandidate(msg.candidate).catch(() => {});
       }
 
+      if (msg.type === 'force-mute') {
+        if (msg.to === myId.current) {
+          if (msg.muteCam && onForceMute) onForceMute('cam');
+          if (msg.muteMic && onForceMute) onForceMute('mic');
+        }
+      }
+
       if (msg.type === 'state-change') {
         setRemoteFeeds(prev => {
           if (!prev[msg.from]) return prev;
@@ -558,7 +565,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
     };
   }, [roomId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { localStream, remoteFeeds, error, replaceVideoTrack };
+  return { localStream, remoteFeeds, error, replaceVideoTrack, channelRef };
 }
 
 // ── SIDEBAR TABS ─────────────────────────────────────────────
@@ -582,9 +589,7 @@ export default function MeetRoom() {
   const [camOn,    setCamOn]    = useState(true);
   const [screenOn, setScreenOn] = useState(false);
   const [tab,      setTab]      = useState('chat');
-  const [localMirrored, setLocalMirrored] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isSwapped, setIsSwapped] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -596,25 +601,14 @@ export default function MeetRoom() {
   const resetHideTimer = useCallback(() => {
     setShowControls(true);
     clearTimeout(hideTimerRef.current);
-    if (document.fullscreenElement) {
-      hideTimerRef.current = setTimeout(() => setShowControls(false), 5000);
-    }
+    hideTimerRef.current = setTimeout(() => setShowControls(false), 3000);
   }, []);
 
   useEffect(() => {
-    if (!isFullscreen) {
-      clearTimeout(hideTimerRef.current);
-      const t = setTimeout(() => setShowControls(true), 0);
-      return () => { clearTimeout(t); clearTimeout(hideTimerRef.current); };
-    }
-    // isFullscreen = true: start hide timer via setTimeout to avoid sync setState in effect
-    const t = setTimeout(() => {
-      setShowControls(true);
-      clearTimeout(hideTimerRef.current);
-      hideTimerRef.current = setTimeout(() => setShowControls(false), 5000);
-    }, 0);
-    return () => { clearTimeout(t); clearTimeout(hideTimerRef.current); };
-  }, [isFullscreen]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    resetHideTimer();
+    return () => clearTimeout(hideTimerRef.current);
+  }, [resetHideTimer]);
 
   // Fullscreen handlers
   const toggleFullscreen = useCallback(async () => {
@@ -845,18 +839,20 @@ export default function MeetRoom() {
 
         {/* ── Navbar ── */}
         <nav style={{
-          position: isFullscreen ? 'absolute' : 'sticky',
-          top: 0, left: 0, right: 0,
-          zIndex: 100,
-          background: isFullscreen ? 'rgba(10,10,20,0.0)' : 'rgba(10,10,20,0.75)',
-          backdropFilter: isFullscreen ? 'none' : 'blur(20px)',
-          borderBottom: isFullscreen ? 'none' : '1px solid rgba(255,255,255,0.08)',
+          position: 'absolute',
+          top: 0, left: 0, right: 0, zIndex: 50,
+          opacity: showControls ? 1 : 0,
+          pointerEvents: showControls ? 'auto' : 'none',
+          background: 'rgba(10,10,20,0.75)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: isFullscreen ? '0 16px' : '0 24px',
-          height: isFullscreen ? '0px' : '64px',
+          padding: '0 24px',
+          height: '64px',
           overflow: 'visible',
           gap: '16px',
           transition: 'all 0.3s ease',
+          // eslint-disable-next-line no-dupe-keys
           pointerEvents: 'none',
         }}>
           {/* Left: room info */}
@@ -865,8 +861,6 @@ export default function MeetRoom() {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 750, fontSize: '15px', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>{groupName}</div>
                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>ID: <code style={{ color: '#c7d2fe', fontWeight: 600, background: 'rgba(255,255,255,0.05)', padding: '1px 5px', borderRadius: '4px' }}>{roomId}</code></span>
-                  <span>·</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#22c55e', fontWeight: 550 }}>
                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
                     {allFeeds.length} trực tuyến
@@ -1010,8 +1004,7 @@ export default function MeetRoom() {
                           isLocal={activeScreenShare.isLocal}
                           camOff={activeScreenShare.camOff}
                           muted={!micOn && activeScreenShare.isLocal}
-                          mirrored={activeScreenShare.isLocal ? localMirrored : false}
-                          onToggleMirror={activeScreenShare.isLocal ? () => setLocalMirrored(m => !m) : null}
+                          mirrored={activeScreenShare.isLocal}
                           screenSharing={true}
                           fullScreen={true}
                         />
@@ -1040,8 +1033,7 @@ export default function MeetRoom() {
                                 isLocal={f.isLocal}
                                 camOff={f.camOff}
                                 muted={!micOn && f.isLocal}
-                                mirrored={f.isLocal ? localMirrored : false}
-                                onToggleMirror={f.isLocal ? () => setLocalMirrored(m => !m) : null}
+                                mirrored={f.isLocal}
                                 screenSharing={false}
                                 style={{ border: '2px solid rgba(255,255,255,0.15)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
                               />
@@ -1053,87 +1045,7 @@ export default function MeetRoom() {
                   );
                 }
 
-                // TRƯỜNG HỢP: 1-on-1 FaceTime PiP Layout (tự động khi tối đa 2 người)
-                if (allFeeds.length <= 2) {
-                  const localFeed = allFeeds.find(f => f.isLocal);
-                  const remoteFeed = allFeeds.find(f => !f.isLocal);
-
-                  if (remoteFeed) {
-                    const activeFeed = isSwapped ? localFeed : remoteFeed;
-                    const floatingFeed = isSwapped ? remoteFeed : localFeed;
-
-                    return (
-                      <div style={{ width: '100%', height: '100%', position: 'relative', borderRadius: '24px', overflow: 'hidden' }}>
-                        {/* Main Full-screen video (Remote or Swapped local) */}
-                        <VideoTile
-                          key={activeFeed.id}
-                          stream={activeFeed.stream}
-                          name={activeFeed.name}
-                          avatar={activeFeed.avatar}
-                          isLocal={activeFeed.isLocal}
-                          camOff={activeFeed.camOff}
-                          muted={activeFeed.isLocal ? !micOn : activeFeed.micMuted}
-                          mirrored={activeFeed.isLocal ? localMirrored : false}
-                          onToggleMirror={activeFeed.isLocal ? () => setLocalMirrored(m => !m) : null}
-                          screenSharing={false}
-                          fullScreen={true}
-                        />
-
-                        {/* Floating mini PiP video (Local or Swapped remote) */}
-                        <div
-                          onClick={() => setIsSwapped(s => !s)}
-                          style={{
-                            position: 'absolute',
-                            bottom: '96px', // float above control dock
-                            right: '20px',
-                            width: 'clamp(130px, 20vw, 220px)',
-                            zIndex: 30,
-                            cursor: 'pointer',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          }}
-                          title="Click để đổi góc nhìn"
-                        >
-                          <VideoTile
-                            key={floatingFeed.id}
-                            stream={floatingFeed.stream}
-                            name={floatingFeed.name}
-                            avatar={floatingFeed.avatar}
-                            isLocal={floatingFeed.isLocal}
-                            camOff={floatingFeed.camOff}
-                            muted={floatingFeed.isLocal ? !micOn : floatingFeed.micMuted}
-                            mirrored={floatingFeed.isLocal ? localMirrored : false}
-                            onToggleMirror={floatingFeed.isLocal ? () => setLocalMirrored(m => !m) : null}
-                            screenSharing={false}
-                            style={{
-                              border: '2px solid rgba(255,255,255,0.2)',
-                              boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
-                              borderRadius: '20px',
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  // Chỉ có 1 người trong phòng (Bạn)
-                  return (
-                    <div style={{ width: '100%', height: '100%', position: 'relative', borderRadius: '24px', overflow: 'hidden' }}>
-                      <VideoTile
-                        key={localFeed.id}
-                        stream={localFeed.stream}
-                        name={localFeed.name}
-                        avatar={localFeed.avatar}
-                        isLocal={localFeed.isLocal}
-                        camOff={localFeed.camOff}
-                        muted={!micOn}
-                        mirrored={localMirrored}
-                        onToggleMirror={() => setLocalMirrored(m => !m)}
-                        screenSharing={false}
-                        fullScreen={true}
-                      />
-                    </div>
-                  );
-                }
+                // Bỏ giao diện PiP, tất cả dùng Grid layout
 
                 // TRƯỜNG HỢP: Phòng nhiều người (> 2), dùng Grid chuyên nghiệp
                 return (
@@ -1157,8 +1069,7 @@ export default function MeetRoom() {
                         isLocal={f.isLocal}
                         camOff={f.camOff}
                         muted={f.isLocal ? !micOn : f.micMuted}
-                        mirrored={f.isLocal ? localMirrored : false}
-                        onToggleMirror={f.isLocal ? () => setLocalMirrored(m => !m) : null}
+                        mirrored={f.isLocal}
                         screenSharing={f.screenSharing}
                       />
                     ))}
@@ -1458,6 +1369,8 @@ export default function MeetRoom() {
               backdropFilter: 'blur(20px)',
               boxShadow: '-10px 0 30px rgba(0,0,0,0.3)',
               animation: 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+              paddingTop: showControls ? '64px' : '0px',
+              transition: 'padding-top 0.3s ease',
             }}>
               {/* Tab bar */}
               <div style={{
@@ -1597,13 +1510,63 @@ export default function MeetRoom() {
                                 </div>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                              <span title={f.camOff ? "Camera tắt" : "Camera bật"} style={{ opacity: f.camOff ? 0.35 : 1 }}>
-                                <VideoSvg active={!f.camOff} size={15} />
-                              </span>
-                              <span title={f.isLocal ? (micOn ? "Mic bật" : "Mic tắt") : (f.micMuted ? "Mic tắt" : "Mic bật")} style={{ opacity: (f.isLocal ? !micOn : f.micMuted) ? 0.35 : 1 }}>
-                                <MicSvg active={!(f.isLocal ? !micOn : f.micMuted)} size={15} />
-                              </span>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              {(() => {
+                                const isCamOn = f.isLocal ? camOn : !f.camOff;
+                                const isMicOn = f.isLocal ? micOn : !f.micMuted;
+                                const localFeed = allFeeds.find(x => x.isLocal);
+                                const amLeader = localFeed && getParticipantRole(localFeed) === 'Trưởng phòng';
+                                const canForce = amLeader && !f.isLocal;
+
+                                const iconBtn = (active, type, Icon, titleOn, titleOff) => {
+                                  const color = active ? '#22c55e' : '#ef4444';
+                                  const bg = active ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
+                                  const border = active ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)';
+                                  const payload = type === 'cam'
+                                    ? { type: 'force-mute', to: f.id, room: roomId, muteCam: true, muteMic: false }
+                                    : { type: 'force-mute', to: f.id, room: roomId, muteMic: true, muteCam: false };
+                                  return (
+                                    <button
+                                      key={type}
+                                      title={canForce ? (active ? `Click để tắt ${type === 'cam' ? 'camera' : 'mic'}` : (type === 'cam' ? 'Camera đang tắt' : 'Mic đang tắt')) : (active ? titleOn : titleOff)}
+                                      onClick={canForce && active ? () => {
+                                        // eslint-disable-next-line no-undef
+                                        channelRef.current?.send({ type: 'broadcast', event: 'signal', payload });
+                                      } : undefined}
+                                      style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: '30px', height: '30px', borderRadius: '8px',
+                                        background: bg,
+                                        border: `1px solid ${border}`,
+                                        color: color,
+                                        cursor: canForce && active ? 'pointer' : 'default',
+                                        transition: 'all 0.2s ease',
+                                        flexShrink: 0,
+                                        padding: 0,
+                                      }}
+                                      onMouseEnter={canForce && active ? e => {
+                                        e.currentTarget.style.background = type === 'cam' ? 'rgba(239,68,68,0.25)' : 'rgba(239,68,68,0.25)';
+                                        e.currentTarget.style.borderColor = '#ef4444';
+                                        e.currentTarget.style.color = '#ef4444';
+                                      } : undefined}
+                                      onMouseLeave={canForce && active ? e => {
+                                        e.currentTarget.style.background = bg;
+                                        e.currentTarget.style.borderColor = border;
+                                        e.currentTarget.style.color = color;
+                                      } : undefined}
+                                    >
+                                      <Icon active={active} size={14} />
+                                    </button>
+                                  );
+                                };
+
+                                return (
+                                  <>
+                                    {iconBtn(isCamOn, 'cam', VideoSvg, 'Camera bật', 'Camera tắt')}
+                                    {iconBtn(isMicOn, 'mic', MicSvg, 'Mic bật', 'Mic tắt')}
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                         );

@@ -11,15 +11,26 @@ export const refreshCache = async (userId) => {
   if (isNaN(uid)) return;
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('messages')
       .select('*')
       .is('group_id', null)
-      .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
-      .order('created_at', { ascending: true });
+      .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`);
 
-    if (!error && data) {
-      cachedMessages = data.map(raw => ({
+    if (cachedMessages.length > 0) {
+      const lastMsg = cachedMessages[cachedMessages.length - 1];
+      query = query.gt('created_at', lastMsg.createdAt).order('created_at', { ascending: true });
+    } else {
+      query = query.order('created_at', { ascending: false }).limit(2000);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data && data.length > 0) {
+      // If we fetched the initial 2000 messages descending, we must reverse them to ascending order
+      const orderedData = cachedMessages.length === 0 ? [...data].reverse() : data;
+
+      const newMsgs = orderedData.map(raw => ({
         id: String(raw.id),
         fromUserId: String(raw.sender_id),
         toUserId: String(raw.receiver_id),
@@ -29,6 +40,14 @@ export const refreshCache = async (userId) => {
         createdAt: raw.created_at,
         read: raw.is_read
       }));
+
+      // Filter out any messages that already exist in cache just in case
+      const existingIds = new Set(cachedMessages.map(m => m.id));
+      const uniqueNewMsgs = newMsgs.filter(m => !existingIds.has(m.id));
+
+      if (uniqueNewMsgs.length > 0) {
+        cachedMessages = [...cachedMessages, ...uniqueNewMsgs];
+      }
     }
   } catch (err) {
     console.error('[chatService] Exception in refreshCache:', err);

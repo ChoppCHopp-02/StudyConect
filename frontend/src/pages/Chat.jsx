@@ -395,10 +395,10 @@ function ShareModal({ message, friends, onSend, onClose }) {
   );
 }
 
-// ── Message Context Menu ─────────────────────────────────────────
-function MessageMenu({ x, y, onReact, onSaveImage, isImage, onClose }) {
+// ── Message Context Menu (Quick Reaction + Actions) ─────────────
+function MessageMenu({ clientX, clientY, msg, onReact, onSaveImage, onShare, onDelete, onClose, isMine }) {
   const ref = useRef(null);
-  const [pos, setPos] = useState({ top: y, left: x });
+  const [pos, setPos] = useState({ top: clientY - 60, left: clientX });
 
   useEffect(() => {
     const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
@@ -406,55 +406,57 @@ function MessageMenu({ x, y, onReact, onSaveImage, isImage, onClose }) {
     return () => document.removeEventListener('mousedown', handle);
   }, [onClose]);
 
+  // Adjust to keep menu inside viewport
   useEffect(() => {
     if (!ref.current) return;
-    const parent = ref.current.offsetParent;
-    const menuW = ref.current.offsetWidth || 200;
-    const menuH = ref.current.offsetHeight || 170;
-    const containerW = parent ? parent.offsetWidth : window.innerWidth;
-    const containerH = parent ? parent.offsetHeight : window.innerHeight;
+    const menuW = ref.current.offsetWidth || 220;
+    const menuH = ref.current.offsetHeight || 130;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
     const PADDING = 8;
+    let left = clientX;
+    let top = clientY - menuH - 8; // above the button
 
-    let left = x;
-    let top = y;
-
-    if (left + menuW + PADDING > containerW) left = containerW - menuW - PADDING;
+    if (left + menuW + PADDING > vw) left = vw - menuW - PADDING;
     if (left < PADDING) left = PADDING;
-    if (top + menuH + PADDING > containerH) top = containerH - menuH - PADDING;
-    if (top < PADDING) top = PADDING;
+    if (top < PADDING) top = clientY + 32; // below if not enough space above
+    if (top + menuH + PADDING > vh) top = vh - menuH - PADDING;
 
     setPos({ top, left });
-  }, [x, y]);
+  }, [clientX, clientY]);
 
-  const hasBottomMenu = !!isImage;
+  const isImage = msg?.type === 'image' || msg?.content?.startsWith('data:image');
 
   return (
     <div ref={ref} style={{
-      position: 'absolute', top: pos.top, left: pos.left,
+      position: 'fixed', top: pos.top, left: pos.left,
       background: 'var(--bg-card)', border: '1px solid var(--border)',
       borderRadius: '14px', padding: '8px',
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-      zIndex: 100, minWidth: hasBottomMenu ? '180px' : 'fit-content',
+      zIndex: 9999, minWidth: '200px',
       animation: 'fadeIn 0.12s ease',
     }}>
       {/* Quick reactions */}
       <div style={{
         display: 'flex',
         gap: '4px',
-        padding: hasBottomMenu ? '4px 6px 8px' : '4px 6px',
-        borderBottom: hasBottomMenu ? '1px solid var(--border)' : 'none',
-        marginBottom: hasBottomMenu ? '4px' : '0'
+        padding: '4px 6px 8px',
+        borderBottom: '1px solid var(--border)',
+        marginBottom: '4px'
       }}>
         {QUICK_REACTIONS.map(em => (
           <button key={em} className="reaction-btn-pop" onClick={(e) => { onReact(em, e); onClose(); }} style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: '20px', padding: '3px 4px', borderRadius: '6px', lineHeight: 1,
+            fontSize: '22px', padding: '3px 4px', borderRadius: '6px', lineHeight: 1,
           }}>{em}</button>
         ))}
       </div>
 
       {/* Actions */}
+      <MenuBtn icon="↗️" label="Chia sẻ" onClick={() => { onShare(); onClose(); }} />
       {isImage && <MenuBtn icon="⬇️" label="Lưu ảnh" onClick={() => { onSaveImage(); onClose(); }} />}
+
+      {isMine && <MenuBtn icon="🗑️" label="Xóa tin nhắn" danger onClick={() => { onDelete(); onClose(); }} />}
     </div>
   );
 }
@@ -784,11 +786,19 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
     textareaRef.current?.focus();
   };
 
-  // Delete message
-  const handleDelete = async (msgId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tin nhắn này?')) return;
+  // Delete message — uses in-app confirm modal
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+
+  const handleDelete = (msgId) => {
+    setDeleteConfirmId(msgId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    const id = deleteConfirmId;
+    setDeleteConfirmId(null);
     try {
-      await deleteMessage(msgId);
+      await deleteMessage(id);
       await load();
     } catch (err) {
       console.error('Error deleting message:', err);
@@ -833,23 +843,11 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
     document.body.removeChild(a);
   };
 
-  const openContextMenu = (e, msg) => {
-    e.preventDefault();
-    const outer = chatOuterRef.current;
-    if (!outer) return;
-    const rect = outer.getBoundingClientRect();
-
-    const menuW = 200;
-    const menuH = 170;
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
-
-    if (x + menuW + 8 > rect.width) x = rect.width - menuW - 8;
-    if (x < 8) x = 8;
-    if (y + menuH + 8 > rect.height) y = y - menuH - 8;
-    if (y < 4) y = 4;
-
-    setContextMenu({ x, y, msg });
+  // Open quick reaction bar near a button element
+  const openReactionBar = (e, msg) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setContextMenu({ clientX: rect.left, clientY: rect.top, msg });
   };
 
   // Group messages by date
@@ -927,7 +925,8 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           opacity: 0;
           pointer-events: none;
           transition: opacity 0.15s ease, transform 0.15s ease;
-          transform: scale(0.95);
+          transform: scale(0.9);
+          flex-shrink: 0;
         }
         .msg-container:hover .msg-actions {
           opacity: 1;
@@ -947,7 +946,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           align-items: center;
           justify-content: center;
           transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
           padding: 0;
           line-height: 1;
         }
@@ -960,6 +959,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
         .msg-action-btn.danger:hover {
           color: #ff4d4d;
           border-color: #ff4d4d;
+          background: rgba(255,77,77,0.08);
         }
       `}</style>
 
@@ -1218,25 +1218,24 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 gap: '8px',
                 maxWidth: '75%'
               }}>
-                {/* Actions group */}
-                <div className="msg-actions" style={{ display: 'flex', gap: '4px' }}>
-                  <button className="msg-action-btn" title="Thả cảm xúc" onClick={(e) => openContextMenu(e, m)}>
-                    😊
+                {/* Hover action buttons on side of message */}
+                <div className="msg-actions">
+                  <button className="msg-action-btn" title="Thả cảm xúc" onClick={(e) => openReactionBar(e, m)}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
                   </button>
                   <button className="msg-action-btn" title="Chia sẻ" onClick={() => setShareMsg(m)}>
-                    ↗️
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                   </button>
                   {isMine && (
-                    <button className="msg-action-btn danger" title="Xóa tin nhắn" onClick={() => handleDelete(m.id)}>
-                      🗑️
+                    <button className="msg-action-btn danger" title="Xóa" onClick={() => handleDelete(m.id)}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                     </button>
                   )}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', gap: '2px' }}>
                   <div
-                    onContextMenu={(e) => openContextMenu(e, m)}
-                    onDoubleClick={(e) => openContextMenu(e, m)}
+
                     style={{
                       background: isMine ? 'linear-gradient(135deg, var(--primary), #5b53e0)' : 'var(--bg-input)',
                       color: isMine ? 'white' : 'var(--text-primary)',
@@ -1462,13 +1461,17 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
         </div>
       </div>
 
-      {/* Context menu */}
+      {/* Reaction picker (opened via hover button) */}
       {contextMenu && (
         <MessageMenu
-          x={contextMenu.x} y={contextMenu.y}
-          isImage={contextMenu.msg.type === 'image' || contextMenu.msg.content?.startsWith('data:image')}
+          clientX={contextMenu.clientX}
+          clientY={contextMenu.clientY}
+          msg={contextMenu.msg}
           onReact={(em, e) => handleReact(contextMenu.msg.id, em, e)}
           onSaveImage={() => handleSaveImage(contextMenu.msg)}
+          onShare={() => setShareMsg(contextMenu.msg)}
+          onDelete={() => handleDelete(contextMenu.msg.id)}
+          isMine={String(contextMenu.msg?.fromUserId) === String(user?.id)}
           onClose={() => setContextMenu(null)}
         />
       )}
@@ -1481,6 +1484,57 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           onSend={handleShare}
           onClose={() => setShareMsg(null)}
         />
+      )}
+
+      {/* In-app Delete Confirm Modal */}
+      {deleteConfirmId && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9998,
+            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={() => setDeleteConfirmId(null)}
+        >
+          <div
+            style={{
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderRadius: '18px', padding: '24px 28px', maxWidth: '340px', width: '90%',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+              animation: 'fadeIn 0.18s ease',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '32px', textAlign: 'center', marginBottom: '10px' }}>🗑️</div>
+            <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, textAlign: 'center', color: 'var(--text-primary)' }}>Xóa tin nhắn?</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5 }}>Tin nhắn sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '10px',
+                  border: '1px solid var(--border)', background: 'var(--bg-input)',
+                  color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: '14px', transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-input)'}
+              >Hủy</button>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '10px',
+                  border: 'none', background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  color: 'white', fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: '14px', transition: 'all 0.2s',
+                  boxShadow: '0 4px 14px rgba(239,68,68,0.4)',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >Xóa</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showCamera && <CameraModal onCapture={(d) => {
@@ -2051,7 +2105,6 @@ export default function Chat() {
   // Subscribe to real-time presence channel
   useEffect(() => {
     if (!user?.id) return;
-    // eslint-disable-next-line no-undef
     const channel = supabase.channel('online-users', {
       config: {
         presence: {

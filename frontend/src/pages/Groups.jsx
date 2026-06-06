@@ -19,7 +19,7 @@ const SIDEBAR_ITEMS = [
 // ── CREATE GROUP MODAL (2-Step) ────────────────────────────────────────────
 function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, isPrivate, setIsPrivate, isSubmitting, onClose, onSubmit, selectedLocation, setSelectedLocation }) {
   const [step, setStep] = useState(1); // 1 = pick mode, 2 = fill form
-
+  const [geoLoading, setGeoLoading] = useState(false);
   const [customName, setCustomName] = useState('');
 
   const handleCustomLocationChange = (name) => {
@@ -35,6 +35,8 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
   useEffect(() => {
     if (meetingMode !== 'offline' || !customName || customName.trim().length <= 5) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGeoLoading(true);
     const timer = setTimeout(async () => {
       const geo = await geocodeAddress(customName);
       if (geo) {
@@ -48,12 +50,17 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
           district,
           ward,
           lat: geo.lat,
-          lng: geo.lng
+          lng: geo.lng,
+          formattedAddress: geo.formattedAddress
         }));
       }
+      setGeoLoading(false);
     }, 1200);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      setGeoLoading(false);
+    };
   }, [customName, meetingMode, setSelectedLocation]);
 
   const handleModeSelect = (mode) => {
@@ -176,7 +183,14 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                     </div>
                   </div>
 
-                  {selectedLocation && (
+                  {/* Map preview */}
+                  {geoLoading && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #10b981', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                      Đang tìm địa điểm...
+                    </div>
+                  )}
+                  {!geoLoading && selectedLocation && customName.trim() && (
                     <div style={{ marginTop: 10, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
                       {selectedLocation.lat && selectedLocation.lng && (
                         <img
@@ -187,14 +201,19 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                         />
                       )}
                       <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>
-                          ✓ Đã chọn: {selectedLocation.name}
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>
+                            📍 {selectedLocation.name}
+                          </div>
+                          {selectedLocation.formattedAddress && selectedLocation.formattedAddress !== selectedLocation.name && (
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{selectedLocation.formattedAddress}</div>
+                          )}
                         </div>
                         <a
                           href={googleMapsSearchUrl(selectedLocation.name)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#10b981,#059669)', padding: '5px 10px', borderRadius: 6, textDecoration: 'none' }}
+                          style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#10b981,#059669)', padding: '6px 12px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}
                         >
                           Mở Maps
                         </a>

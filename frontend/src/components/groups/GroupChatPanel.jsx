@@ -88,23 +88,36 @@ export default function GroupChatPanel({
 
   const scrollContainerRef = useRef(null);
   const isFirstRender = useRef(true);
+  const prevLastMsgIdRef = useRef(null);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
-    const container = scrollContainerRef.current;
+    const container = chatContainerRef.current; // Notice: previously used scrollContainerRef which was undefined, use chatContainerRef
     const lastMsg = chatMessages[chatMessages.length - 1];
-    const isMyLastMsg = lastMsg && String(lastMsg.userId) === String(user?.id);
 
-    if (isFirstRender.current || isMyLastMsg) {
-      chatEndRef.current?.scrollIntoView({ behavior: isFirstRender.current ? 'auto' : 'smooth' });
+    if (!lastMsg) return;
+
+    if (isFirstRender.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
       isFirstRender.current = false;
+      prevLastMsgIdRef.current = lastMsg.id;
       return;
     }
 
-    if (container) {
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
-      if (isNearBottom) {
+    if (prevLastMsgIdRef.current !== lastMsg.id) {
+      prevLastMsgIdRef.current = lastMsg.id;
+      const isMyLastMsg = String(lastMsg.userId) === String(user?.id);
+
+      if (isMyLastMsg) {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      if (container) {
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+        if (isNearBottom) {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     }
   }, [chatMessages, user?.id]);

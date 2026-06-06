@@ -440,7 +440,7 @@ export default function Home() {
  
           {/* RIGHT COLUMN: Lịch & Deadline gộp 1 card */}
           <aside className="no-scrollbar" style={{ position: 'sticky', top: '80px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
 
               {/* ─ Header chung ─ */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
@@ -459,6 +459,9 @@ export default function Home() {
                   onMouseLeave={(e) => e.currentTarget.style.color = 'var(--secondary)'}>Tất cả</Link>
               </div>
 
+              {/* ─ Scrollable body ─ */}
+              <div className="no-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
+
               {/* ─ Buổi học sắp tới ─ */}
               <div style={{ padding: '10px 16px 6px' }}>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -473,7 +476,7 @@ export default function Home() {
                   </div>
                 ) : (
                   schedules.map((s) => (
-                    <Link key={s.id} to={`/groups/${s.groupId}?tab=schedule`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <Link key={s.id} to={`/groups/${s.groupId}?tab=schedule`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                       <div
                         style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.2s ease' }}
                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,122,0,0.06)'}
@@ -515,7 +518,7 @@ export default function Home() {
                   </div>
                 ) : (
                   deadlines.map((d) => (
-                    <Link key={d.id} to={`/groups/${d.groupId}?tab=deadlines`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <Link key={d.id} to={`/groups/${d.groupId}?tab=deadlines`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                       <div
                         style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)', background: d.dueSoon ? 'rgba(244,63,94,0.03)' : 'none', transition: 'all 0.2s ease', cursor: 'pointer' }}
                         onMouseEnter={(e) => e.currentTarget.style.background = d.dueSoon ? 'rgba(244,63,94,0.08)' : 'rgba(255,122,0,0.06)'}
@@ -537,6 +540,7 @@ export default function Home() {
                 )}
               </div>
 
+              </div>{/* end scrollable body */}
             </div>
 
             {/* ── Bạn bè trực tuyến ── */}
@@ -574,7 +578,7 @@ export default function Home() {
                     return sortedFriends.slice(0, 20).map((f) => {
                       const isOnline = onlineUserIds.includes(f.userId.toString());
                       return (
-                        <Link key={f.userId} to={`/friends/${f.userId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <Link key={f.userId} to={`/friends/${f.userId}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                           <div
                             style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '10px', transition: 'all 0.2s ease', cursor: 'pointer', background: 'transparent' }}
                             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-input)'}

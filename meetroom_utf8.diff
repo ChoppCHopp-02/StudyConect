@@ -1,0 +1,1014 @@
+﻿diff --git a/frontend/src/pages/Meetroom.jsx b/frontend/src/pages/Meetroom.jsx
+index 6f63ae9..6b9e196 100644
+--- a/frontend/src/pages/Meetroom.jsx
++++ b/frontend/src/pages/Meetroom.jsx
+@@ -1,11 +1,11 @@
+-// src/pages/Meetroom.jsx  â€” WebRTC Video Call (phĂ²ng há»c online thá»±c sá»±)
++ï»¿// src/pages/Meetroom.jsx  Ă¢â‚¬â€ WebRTC Video Call (phÄ‚Â²ng hĂ¡Â»Âc online thĂ¡Â»Â±c sĂ¡Â»Â±)
+ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+ import { useAuth } from '../context/AuthContext';
+ import AppLayout from '../layouts/AppLayout';
+ import { supabase } from '../config/supabaseClient';
+ 
+-// â”€â”€ Avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++// Ă¢â€â‚¬Ă¢â€â‚¬ Avatar Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+ const COLORS = ['#6c63ff','#ff6b9d','#3ecfcf','#f59e0b','#22c55e','#ef4444','#8b5cf6'];
+ const colorOf = s => COLORS[(s||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0) % COLORS.length];
+ 
+@@ -23,8 +23,8 @@ function Avatar({ src, name = '', size = 36 }) {
+   );
+ }
+ 
+-// â”€â”€ VideoTile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = false, isLocal = false, speaking = false, mirrored = false, onToggleMirror = null, screenSharing = false, fullScreen = false, style = {} }) {
++// Ă¢â€â‚¬Ă¢â€â‚¬ VideoTile Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
++function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = false, isLocal = false, speaking = false, mirrored = false, screenSharing = false, fullScreen = false, style = {} }) {
+   const ref = useRef(null);
+   useEffect(() => {
+     if (ref.current && stream) {
+@@ -33,7 +33,7 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
+     }
+   }, [stream, camOff, screenSharing]);
+ 
+-  // Khi Ä‘ang share mĂ n hĂ¬nh: khĂ´ng mirror, dĂ¹ng contain Ä‘á»ƒ tháº¥y full mĂ n hĂ¬nh
++  // Khi Ă„â€˜ang share mÄ‚Â n hÄ‚Â¬nh: khÄ‚Â´ng mirror, dÄ‚Â¹ng contain Ă„â€˜Ă¡Â»Æ’ thĂ¡ÂºÂ¥y full mÄ‚Â n hÄ‚Â¬nh
+   const effectiveMirrored = screenSharing ? false : mirrored;
+   const objectFit = screenSharing ? 'contain' : 'cover';
+ 
+@@ -71,27 +71,8 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
+               background: '#000',
+             }}
+           />
+-          {/* NĂºt láº­t camera chá»‰ hiá»‡n khi lĂ  local vĂ  KHĂ”NG Ä‘ang share mĂ n hĂ¬nh */}
+-          {isLocal && onToggleMirror && !screenSharing && (
+-            <button
+-              onClick={(e) => { e.stopPropagation(); onToggleMirror(); }}
+-              style={{
+-                position: 'absolute', top: '16px', right: '16px',
+-                background: 'rgba(15,15,26,0.75)', backdropFilter: 'blur(12px)',
+-                border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px',
+-                color: 'white', fontSize: '11px', padding: '6px 12px',
+-                cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px',
+-                fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.2s',
+-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+-              }}
+-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,15,26,0.9)'}
+-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,15,26,0.75)'}
+-              title="Láº­t/KhĂ´ng láº­t camera"
+-            >
+-              đŸ”„ Láº­t camera
+-            </button>
+-          )}
+-          {/* Badge "Äang chia sáº» mĂ n hĂ¬nh" */}
++
++          {/* Badge "Ă„Âang chia sĂ¡ÂºÂ» mÄ‚Â n hÄ‚Â¬nh" */}
+           {screenSharing && (
+             <div style={{
+               position: 'absolute', top: '16px', left: '16px',
+@@ -101,7 +82,7 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
+               display: 'flex', alignItems: 'center', gap: '6px',
+               boxShadow: '0 4px 12px rgba(139,92,246,0.3)',
+             }}>
+-              đŸ–¥ï¸ Äang chia sáº»
++              Ä‘Å¸â€“Â¥Ă¯Â¸Â Ă„Âang chia sĂ¡ÂºÂ»
+             </div>
+           )}
+         </>
+@@ -126,7 +107,7 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
+           }}>
+             <Avatar src={avatar} name={name} size={fullScreen ? 110 : 76} />
+           </div>
+-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', fontWeight: 500, letterSpacing: '0.02em' }}>Camera táº¯t</span>
++          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', fontWeight: 500, letterSpacing: '0.02em' }}>Camera tĂ¡ÂºÂ¯t</span>
+         </div>
+       )}
+ 
+@@ -141,7 +122,7 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
+       }}>
+         {speaking && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', animation: 'pulse 1s infinite' }} />}
+         <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'white', letterSpacing: '0.01em' }}>
+-          {name}{isLocal ? ' (Báº¡n)' : ''}
++          {name}{isLocal ? ' (BĂ¡ÂºÂ¡n)' : ''}
+         </span>
+       </div>
+ 
+@@ -153,18 +134,18 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
+           borderRadius: '50%',
+           width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+           fontSize: '14px', boxShadow: '0 4px 12px rgba(239,68,68,0.3)',
+-        }}>đŸ”‡</div>
++        }}>Ä‘Å¸â€â€¡</div>
+       )}
+     </div>
+   );
+ }
+ 
+-// â”€â”€ Pomodoro Timer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++// Ă¢â€â‚¬Ă¢â€â‚¬ Pomodoro Timer Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+ function StudyTimer() {
+   const MODES = {
+     pomodoro: { label: ' Pomodoro', sec: 25 * 60 },
+-    short:    { label: ' Nghá»‰ ngáº¯n',  sec: 5 * 60  },
+-    long:     { label: 'ï¸ Nghá»‰ dĂ i',   sec: 15 * 60 },
++    short:    { label: ' NghĂ¡Â»â€° ngĂ¡ÂºÂ¯n',  sec: 5 * 60  },
++    long:     { label: 'Ă¯Â¸Â NghĂ¡Â»â€° dÄ‚Â i',   sec: 15 * 60 },
+   };
+   const [mode, setMode]       = useState('pomodoro');
+   const [seconds, setSeconds] = useState(MODES.pomodoro.sec);
+@@ -223,15 +204,15 @@ function StudyTimer() {
+           color: running ? '#ef4444' : 'white',
+           border: running ? '1px solid rgba(239,68,68,0.3)' : 'none',
+           fontFamily: 'inherit', fontSize: '14px', fontWeight: 700, transition: 'var(--transition)',
+-        }}>{running ? 'â¸ Dá»«ng' : seconds === MODES[mode].sec ? 'â–¶ Báº¯t Ä‘áº§u' : 'â–¶ Tiáº¿p tá»¥c'}</button>
++        }}>{running ? 'Ă¢ÂÂ¸ DĂ¡Â»Â«ng' : seconds === MODES[mode].sec ? 'Ă¢â€“Â¶ BĂ¡ÂºÂ¯t Ă„â€˜Ă¡ÂºÂ§u' : 'Ă¢â€“Â¶ TiĂ¡ÂºÂ¿p tĂ¡Â»Â¥c'}</button>
+         <button onClick={reset} style={{
+           padding: '10px 18px', borderRadius: '20px',
+           background: 'var(--bg-input)', border: '1px solid var(--border)',
+           color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px', fontWeight: 600,
+-        }}>â†º</button>
++        }}>Ă¢â€ Âº</button>
+       </div>
+       <p style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', maxWidth: '220px', lineHeight: 1.5 }}>
+-        Ká»¹ thuáº­t Pomodoro: táº­p trung 25 phĂºt, nghá»‰ 5 phĂºt.
++        KĂ¡Â»Â¹ thuĂ¡ÂºÂ­t Pomodoro: tĂ¡ÂºÂ­p trung 25 phÄ‚Âºt nghĂ¡Â»â€° 5 phÄ‚Âºt.
+       </p>
+     </div>
+   );
+@@ -239,7 +220,7 @@ function StudyTimer() {
+ 
+ 
+ 
+-// â”€â”€ WEBRTC HOOK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++// Ă¢â€â‚¬Ă¢â€â‚¬ WEBRTC HOOK Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+ function useWebRTC({ roomId, user, micOn, camOn }) {
+   const [localStream,  setLocalStream]  = useState(null);
+   const [remoteFeeds,  setRemoteFeeds]  = useState({}); // { peerId: { stream, name, avatar, camOff, micMuted, screenSharing } }
+@@ -248,7 +229,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+   const localRef     = useRef(null);
+   const channelRef   = useRef(null);
+ 
+-  // DĂ¹ng ref Ä‘á»ƒ cĂ¡c callbacks Ä‘á»c Ä‘Æ°á»£c giĂ¡ trá»‹ má»›i nháº¥t mĂ  khĂ´ng cáº§n recreate effect
++  // DÄ‚Â¹ng ref Ă„â€˜Ă¡Â»Æ’ cÄ‚Â¡c callbacks Ă„â€˜Ă¡Â»Âc Ă„â€˜Ă†Â°Ă¡Â»Â£c giÄ‚Â¡ trĂ¡Â»â€¹ mĂ¡Â»â€ºi nhĂ¡ÂºÂ¥t mÄ‚Â  khÄ‚Â´ng cĂ¡ÂºÂ§n recreate effect
+   const micOnRef  = useRef(micOn);
+   const camOnRef  = useRef(camOn);
+   const userRef   = useRef(user);
+@@ -270,7 +251,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+     ]
+   });
+ 
+-  // â”€â”€ Start local media â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++  // Ă¢â€â‚¬Ă¢â€â‚¬ Start local media Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+   const startMedia = useCallback(async () => {
+     try {
+       const stream = await navigator.mediaDevices.getUserMedia({
+@@ -284,12 +265,12 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+       return stream;
+     } catch (err) {
+       console.warn('Media error:', err);
+-      setError(err.name === 'NotAllowedError' ? 'Vui lĂ²ng cáº¥p quyá»n camera/mic.' : 'KhĂ´ng thá»ƒ truy cáº­p camera/mic.');
++      setError(err.name === 'NotAllowedError' ? 'Vui lÄ‚Â²ng cĂ¡ÂºÂ¥p quyĂ¡Â»Ân camera/mic.' : 'KhÄ‚Â´ng thĂ¡Â»Æ’ truy cĂ¡ÂºÂ­p camera/mic.');
+       return null;
+     }
+   }, []);
+ 
+-  // â”€â”€ Toggle audio/video tracks khi state thay Ä‘á»•i (khĂ´ng recreate channel) â”€â”€
++  // Ă¢â€â‚¬Ă¢â€â‚¬ Toggle audio/video tracks khi state thay Ă„â€˜Ă¡Â»â€¢i (khÄ‚Â´ng recreate channel) Ă¢â€â‚¬Ă¢â€â‚¬
+   useEffect(() => {
+     if (!localRef.current) return;
+     localRef.current.getAudioTracks().forEach(t => { t.enabled = micOn; });
+@@ -310,7 +291,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+     });
+   }, [camOn]); // eslint-disable-line react-hooks/exhaustive-deps
+ 
+-  // â”€â”€ Create peer connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++  // Ă¢â€â‚¬Ă¢â€â‚¬ Create peer connection Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+   const createPeer = useCallback((peerId, peerName, peerAvatar, isInitiator, stream) => {
+     if (peersRef.current[peerId]) return peersRef.current[peerId];
+ 
+@@ -318,10 +299,10 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+ 
+     if (stream) stream.getTracks().forEach(t => pc.addTrack(t, stream));
+ 
+-    // DĂ¹ng má»™t MediaStream cá»‘ Ä‘á»‹nh cho má»—i peer Ä‘á»ƒ trĂ¡nh máº¥t stream khi replaceTrack
++    // DÄ‚Â¹ng mĂ¡Â»â„¢t MediaStream cĂ¡Â»â€˜ Ă„â€˜Ă¡Â»â€¹nh cho mĂ¡Â»â€”i peer Ă„â€˜Ă¡Â»Æ’ trÄ‚Â¡nh mĂ¡ÂºÂ¥t stream khi replaceTrack
+     const remoteStream = new MediaStream();
+     pc.ontrack = (e) => {
+-      // XoĂ¡ track cÅ© cĂ¹ng loáº¡i trÆ°á»›c khi thĂªm track má»›i
++      // XoÄ‚Â¡ track cĂ…Â© cÄ‚Â¹ng loĂ¡ÂºÂ¡i trĂ†Â°Ă¡Â»â€ºc khi thÄ‚Âªm track mĂ¡Â»â€ºi
+       remoteStream.getTracks().forEach(t => {
+         if (t.kind === e.track.kind) remoteStream.removeTrack(t);
+       });
+@@ -357,7 +338,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+           type: 'broadcast', event: 'signal',
+           payload: {
+             type: 'offer', from: myId.current, to: peerId,
+-            name: userRef.current?.fullName || 'NgÆ°á»i dĂ¹ng',
++            name: userRef.current?.fullName || 'NgĂ†Â°Ă¡Â»Âi dÄ‚Â¹ng',
+             avatar: userRef.current?.avatar || '',
+             offer, room: roomId,
+             camOn: camOnRef.current, micOn: micOnRef.current,
+@@ -369,7 +350,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+     return pc;
+   }, [roomId]);
+ 
+-  // â”€â”€ Replace video track (screen share) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++  // Ă¢â€â‚¬Ă¢â€â‚¬ Replace video track (screen share) Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+   const replaceVideoTrack = useCallback(async (newTrack, isScreenShare = false) => {
+     const peers = Object.entries(peersRef.current);
+     await Promise.all(
+@@ -381,7 +362,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+           try { await sender.replaceTrack(newTrack); }
+           catch (e) { console.warn('replaceTrack error:', e); }
+         } else if (newTrack) {
+-          // TrÆ°á»ng há»£p ban Ä‘áº§u khĂ´ng cĂ³ camera (khĂ´ng cĂ³ sender), ta thĂªm track má»›i vĂ  thÆ°Æ¡ng lÆ°á»£ng láº¡i
++          // TrĂ†Â°Ă¡Â»Âng hĂ¡Â»Â£p ban Ă„â€˜Ă¡ÂºÂ§u khÄ‚Â´ng cÄ‚Â³ camera (khÄ‚Â´ng cÄ‚Â³ sender), ta thÄ‚Âªm track mĂ¡Â»â€ºi vÄ‚Â  thĂ†Â°Ă†Â¡ng lĂ†Â°Ă¡Â»Â£ng lĂ¡ÂºÂ¡i
+           try {
+             pc.addTrack(newTrack, localRef.current);
+             const offer = await pc.createOffer();
+@@ -390,7 +371,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+               type: 'broadcast', event: 'signal',
+               payload: {
+                 type: 'offer', from: myId.current, to: peerId,
+-                name: userRef.current?.fullName || 'NgÆ°á»i dĂ¹ng',
++                name: userRef.current?.fullName || 'NgĂ†Â°Ă¡Â»Âi dÄ‚Â¹ng',
+                 avatar: userRef.current?.avatar || '',
+                 offer, room: roomId,
+                 camOn: camOnRef.current, micOn: micOnRef.current,
+@@ -406,7 +387,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+     });
+   }, [roomId]);
+ 
+-  // â”€â”€ Main signaling effect â€” chá»‰ cháº¡y láº¡i khi roomId thay Ä‘á»•i â”€â”€
++  // Ă¢â€â‚¬Ă¢â€â‚¬ Main signaling effect Ă¢â‚¬â€ chĂ¡Â»â€° chĂ¡ÂºÂ¡y lĂ¡ÂºÂ¡i khi roomId thay Ă„â€˜Ă¡Â»â€¢i Ă¢â€â‚¬Ă¢â€â‚¬
+   useEffect(() => {
+     if (!roomId) return;
+ 
+@@ -450,7 +431,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+           type: 'broadcast', event: 'signal',
+           payload: {
+             type: 'answer', from: myId.current, to: msg.from,
+-            name: userRef.current?.fullName || 'NgÆ°á»i dĂ¹ng',
++            name: userRef.current?.fullName || 'NgĂ†Â°Ă¡Â»Âi dÄ‚Â¹ng',
+             avatar: userRef.current?.avatar || '',
+             answer, room: roomId,
+             camOn: camOnRef.current, micOn: micOnRef.current,
+@@ -490,10 +471,17 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+         });
+       }
+ 
++      if (msg.type === 'force-mute' && msg.to === myId.current) {
++        // eslint-disable-next-line no-undef
++        if (msg.muteMic) setMicOn(false);
++        // eslint-disable-next-line no-undef
++        if (msg.muteCam) setCamOn(false);
++      }
++
+       if (msg.type === 'screen-share') {
+         setRemoteFeeds(prev => {
+           if (!prev[msg.from]) return prev;
+-          // KĂ©o video track hiá»‡n táº¡i tá»« peer connection Ä‘á»ƒ Ä‘áº£m báº£o stream má»›i nháº¥t
++          // KÄ‚Â©o video track hiĂ¡Â»â€¡n tĂ¡ÂºÂ¡i tĂ¡Â»Â« peer connection Ă„â€˜Ă¡Â»Æ’ Ă„â€˜Ă¡ÂºÂ£m bĂ¡ÂºÂ£o stream mĂ¡Â»â€ºi nhĂ¡ÂºÂ¥t
+           const pc = peersRef.current[msg.from];
+           const newState = {
+             ...prev[msg.from],
+@@ -503,9 +491,9 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+           if (pc) {
+             const receiver = pc.getReceivers().find(r => r.track && r.track.kind === 'video');
+             if (receiver && receiver.track) {
+-              // Táº¡o stream má»›i chá»©a track hiá»‡n táº¡i Ä‘á»ƒ force VideoTile remount
++              // TĂ¡ÂºÂ¡o stream mĂ¡Â»â€ºi chĂ¡Â»Â©a track hiĂ¡Â»â€¡n tĂ¡ÂºÂ¡i Ă„â€˜Ă¡Â»Æ’ force VideoTile remount
+               const freshStream = new MediaStream([receiver.track]);
+-              // Náº¿u cĂ³ audio track, thĂªm vĂ o
++              // NĂ¡ÂºÂ¿u cÄ‚Â³ audio track, thÄ‚Âªm vÄ‚Â o
+               const audioReceiver = pc.getReceivers().find(r => r.track && r.track.kind === 'audio');
+               if (audioReceiver?.track) freshStream.addTrack(audioReceiver.track);
+               newState.stream = freshStream;
+@@ -533,7 +521,7 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+               type: 'broadcast', event: 'signal',
+               payload: {
+                 type: 'join', from: myId.current,
+-                name: userRef.current?.fullName || 'NgÆ°á»i dĂ¹ng',
++                name: userRef.current?.fullName || 'NgĂ†Â°Ă¡Â»Âi dÄ‚Â¹ng',
+                 avatar: userRef.current?.avatar || '',
+                 room: roomId,
+                 camOn: camOnRef.current, micOn: micOnRef.current,
+@@ -561,18 +549,18 @@ function useWebRTC({ roomId, user, micOn, camOn }) {
+   return { localStream, remoteFeeds, error, replaceVideoTrack };
+ }
+ 
+-// â”€â”€ SIDEBAR TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++// Ă¢â€â‚¬Ă¢â€â‚¬ SIDEBAR TABS Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+ const TABS = [
+-  { key: 'chat',  icon: 'đŸ’¬', label: 'Chat'     },
+-  { key: 'timer', icon: 'â±ï¸', label: 'Äá»“ng há»“'  },
+-  { key: 'members', icon: 'đŸ‘¥', label: 'ThĂ nh viĂªn' },
++  { key: 'chat',  icon: 'Ä‘Å¸â€™Â¬', label: 'Chat'     },
++  { key: 'timer', icon: 'Ă¢ÂÂ±Ă¯Â¸Â', label: 'Ă„ÂĂ¡Â»â€œng hĂ¡Â»â€œ'  },
++  { key: 'members', icon: 'Ä‘Å¸â€˜Â¥', label: 'ThÄ‚Â nh viÄ‚Âªn' },
+ ];
+ 
+-// â”€â”€ MAIN COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++// Ă¢â€â‚¬Ă¢â€â‚¬ MAIN COMPONENT Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+ export default function MeetRoom() {
+   const { roomId }       = useParams();
+   const [searchParams]   = useSearchParams();
+-  const groupName        = (() => { try { return decodeURIComponent(searchParams.get('group') || ''); } catch { return searchParams.get('group') || ''; } })() || 'PhĂ²ng há»c';
++  const groupName        = (() => { try { return decodeURIComponent(searchParams.get('group') || ''); } catch { return searchParams.get('group') || ''; } })() || 'PhÄ‚Â²ng hĂ¡Â»Âc';
+   const groupId          = searchParams.get('groupId') || null;
+   const { user } = useAuth();
+   const navigate         = useNavigate();
+@@ -582,9 +570,8 @@ export default function MeetRoom() {
+   const [camOn,    setCamOn]    = useState(true);
+   const [screenOn, setScreenOn] = useState(false);
+   const [tab,      setTab]      = useState('chat');
+-  const [localMirrored, setLocalMirrored] = useState(true);
++  
+   const [sidebarOpen, setSidebarOpen] = useState(false);
+-  const [isSwapped, setIsSwapped] = useState(false);
+ 
+   const [isFullscreen, setIsFullscreen] = useState(false);
+   const [showControls, setShowControls] = useState(true);
+@@ -596,25 +583,14 @@ export default function MeetRoom() {
+   const resetHideTimer = useCallback(() => {
+     setShowControls(true);
+     clearTimeout(hideTimerRef.current);
+-    if (document.fullscreenElement) {
+-      hideTimerRef.current = setTimeout(() => setShowControls(false), 5000);
+-    }
++    hideTimerRef.current = setTimeout(() => setShowControls(false), 3000);
+   }, []);
+ 
+   useEffect(() => {
+-    if (!isFullscreen) {
+-      clearTimeout(hideTimerRef.current);
+-      const t = setTimeout(() => setShowControls(true), 0);
+-      return () => { clearTimeout(t); clearTimeout(hideTimerRef.current); };
+-    }
+-    // isFullscreen = true: start hide timer via setTimeout to avoid sync setState in effect
+-    const t = setTimeout(() => {
+-      setShowControls(true);
+-      clearTimeout(hideTimerRef.current);
+-      hideTimerRef.current = setTimeout(() => setShowControls(false), 5000);
+-    }, 0);
+-    return () => { clearTimeout(t); clearTimeout(hideTimerRef.current); };
+-  }, [isFullscreen]);
++    // eslint-disable-next-line react-hooks/set-state-in-effect
++    resetHideTimer();
++    return () => clearTimeout(hideTimerRef.current);
++  }, [resetHideTimer]);
+ 
+   // Fullscreen handlers
+   const toggleFullscreen = useCallback(async () => {
+@@ -646,7 +622,7 @@ export default function MeetRoom() {
+   const screenStreamRef = useRef(null);
+   const [screenStream, setScreenStream] = useState(null);
+ 
+-  // Láº¥y thĂ´ng tin trÆ°á»Ÿng nhĂ³m (TrÆ°á»Ÿng phĂ²ng) thá»±c sá»± tá»« study_groups
++  // LĂ¡ÂºÂ¥y thÄ‚Â´ng tin trĂ†Â°Ă¡Â»Å¸ng nhÄ‚Â³m (TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng) thĂ¡Â»Â±c sĂ¡Â»Â± tĂ¡Â»Â« study_groups
+   const [groupCreatorId, setGroupCreatorId] = useState(null);
+ 
+   useEffect(() => {
+@@ -672,14 +648,14 @@ export default function MeetRoom() {
+     if (groupCreatorId) {
+       const feedUserId = feed.isLocal ? user?.id : feed.id.split('_')[0];
+       if (String(feedUserId) === String(groupCreatorId)) {
+-        return 'TrÆ°á»Ÿng phĂ²ng';
++        return 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng';
+       }
+-      return 'ThĂ nh viĂªn';
++      return 'ThÄ‚Â nh viÄ‚Âªn';
+     }
+-    return feed.isLocal ? 'TrÆ°á»Ÿng phĂ²ng' : 'ThĂ nh viĂªn';
++    return feed.isLocal ? 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng' : 'ThÄ‚Â nh viÄ‚Âªn';
+   }, [groupCreatorId, user]);
+ 
+-  // Dá»n dáº¹p screen share khi component unmount (rá»i phĂ²ng, Ä‘Ă³ng tab, v.v.)
++  // DĂ¡Â»Ân dĂ¡ÂºÂ¹p screen share khi component unmount (rĂ¡Â»Âi phÄ‚Â²ng, Ă„â€˜Ä‚Â³ng tab, v.v.)
+   useEffect(() => {
+     return () => {
+       screenStreamRef.current?.getTracks().forEach(t => t.stop());
+@@ -690,7 +666,7 @@ export default function MeetRoom() {
+   const allFeeds = [
+     {
+       id: 'local',
+-      name: screenOn ? `đŸ–¥ ${user?.fullName || 'Báº¡n'} (MĂ n hĂ¬nh)` : (user?.fullName || 'Báº¡n'),
++      name: screenOn ? `Ä‘Å¸â€“Â¥ ${user?.fullName || 'BĂ¡ÂºÂ¡n'} (MÄ‚Â n hÄ‚Â¬nh)` : (user?.fullName || 'BĂ¡ÂºÂ¡n'),
+       avatar: user?.avatar,
+       stream: screenOn ? screenStream : localStream,
+       isLocal: true,
+@@ -699,7 +675,7 @@ export default function MeetRoom() {
+     },
+     ...Object.entries(remoteFeeds).map(([id, f]) => ({
+       id,
+-      name: f.screenSharing ? `đŸ–¥ ${f.name} (MĂ n hĂ¬nh)` : f.name,
++      name: f.screenSharing ? `Ä‘Å¸â€“Â¥ ${f.name} (MÄ‚Â n hÄ‚Â¬nh)` : f.name,
+       avatar: f.avatar,
+       stream: f.stream,
+       isLocal: false,
+@@ -736,7 +712,7 @@ export default function MeetRoom() {
+             return {
+               id: m.id.toString(),
+               text,
+-              sender: m.users?.full_name || 'NgÆ°á»i dĂ¹ng',
++              sender: m.users?.full_name || 'NgĂ†Â°Ă¡Â»Âi dÄ‚Â¹ng',
+               senderId: m.sender_id,
+               avatar: m.users?.avatar || '',
+               time: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+@@ -754,15 +730,15 @@ export default function MeetRoom() {
+     return () => clearInterval(interval);
+   }, [roomId]);
+ 
+-  // Screen share â€” thay track video trong táº¥t cáº£ peer connections Ä‘á»ƒ remote peers tháº¥y mĂ n hĂ¬nh
++  // Screen share Ă¢â‚¬â€ thay track video trong tĂ¡ÂºÂ¥t cĂ¡ÂºÂ£ peer connections Ă„â€˜Ă¡Â»Æ’ remote peers thĂ¡ÂºÂ¥y mÄ‚Â n hÄ‚Â¬nh
+   const toggleScreen = async () => {
+     if (screenOn) {
+-      // Dá»«ng share: tráº£ vá» camera track gá»‘c cho táº¥t cáº£ peers
++      // DĂ¡Â»Â«ng share: trĂ¡ÂºÂ£ vĂ¡Â»Â camera track gĂ¡Â»â€˜c cho tĂ¡ÂºÂ¥t cĂ¡ÂºÂ£ peers
+       screenStreamRef.current?.getTracks().forEach(t => t.stop());
+       screenStreamRef.current = null;
+       setScreenStream(null);
+       setScreenOn(false);
+-      // Láº¥y camera track hiá»‡n táº¡i vĂ  replace láº¡i vĂ o táº¥t cáº£ peer connections
++      // LĂ¡ÂºÂ¥y camera track hiĂ¡Â»â€¡n tĂ¡ÂºÂ¡i vÄ‚Â  replace lĂ¡ÂºÂ¡i vÄ‚Â o tĂ¡ÂºÂ¥t cĂ¡ÂºÂ£ peer connections
+       const camTrack = localStream?.getVideoTracks()[0] ?? null;
+       await replaceVideoTrack(camTrack, false);
+     } else {
+@@ -771,10 +747,10 @@ export default function MeetRoom() {
+         screenStreamRef.current = stream;
+         setScreenStream(stream);
+         setScreenOn(true);
+-        // Thay video track trong táº¥t cáº£ peer connections báº±ng screen track
++        // Thay video track trong tĂ¡ÂºÂ¥t cĂ¡ÂºÂ£ peer connections bĂ¡ÂºÂ±ng screen track
+         const screenTrack = stream.getVideoTracks()[0];
+         await replaceVideoTrack(screenTrack, true);
+-        // Khi ngÆ°á»i dĂ¹ng báº¥m Stop trĂªn trĂ¬nh duyá»‡t
++        // Khi ngĂ†Â°Ă¡Â»Âi dÄ‚Â¹ng bĂ¡ÂºÂ¥m Stop trÄ‚Âªn trÄ‚Â¬nh duyĂ¡Â»â€¡t
+         screenTrack.onended = async () => {
+           screenStreamRef.current = null;
+           setScreenOn(false);
+@@ -818,7 +794,7 @@ export default function MeetRoom() {
+         const newMsg = {
+           id: m.id.toString(),
+           text: text,
+-          sender: user.fullName || 'Báº¡n',
++          sender: user.fullName || 'BĂ¡ÂºÂ¡n',
+           senderId: user.id,
+           avatar: user.avatar,
+           time: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+@@ -841,11 +817,11 @@ export default function MeetRoom() {
+ 
+   return (
+     <AppLayout hideSidebar={true} hideNavbar={true}>
+-      <div ref={containerRef} onMouseMove={isFullscreen ? resetHideTimer : undefined} style={{ height: '100vh', background: '#0a0a14', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', overflow: 'hidden' }}>
++      <div ref={containerRef} onMouseMove={resetHideTimer} style={{ height: '100vh', background: '#0a0a14', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', overflow: 'hidden' }}>
+ 
+-        {/* â”€â”€ Navbar â”€â”€ */}
++        {/* Ă¢â€â‚¬Ă¢â€â‚¬ Navbar Ă¢â€â‚¬Ă¢â€â‚¬ */}
+         <nav style={{
+-          position: isFullscreen ? 'absolute' : 'sticky',
++          position: 'absolute',
+           top: 0, left: 0, right: 0,
+           zIndex: 100,
+           background: isFullscreen ? 'rgba(10,10,20,0.0)' : 'rgba(10,10,20,0.75)',
+@@ -857,7 +833,8 @@ export default function MeetRoom() {
+           overflow: 'visible',
+           gap: '16px',
+           transition: 'all 0.3s ease',
+-          pointerEvents: 'none',
++          pointerEvents: isFullscreen ? 'none' : (showControls ? 'auto' : 'none'),
++          opacity: showControls ? 1 : 0,
+         }}>
+           {/* Left: room info */}
+           {!isFullscreen && (
+@@ -865,11 +842,9 @@ export default function MeetRoom() {
+               <div style={{ minWidth: 0 }}>
+                 <div style={{ fontWeight: 750, fontSize: '15px', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>{groupName}</div>
+                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+-                  <span>ID: <code style={{ color: '#c7d2fe', fontWeight: 600, background: 'rgba(255,255,255,0.05)', padding: '1px 5px', borderRadius: '4px' }}>{roomId}</code></span>
+-                  <span>Â·</span>
+                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#22c55e', fontWeight: 550 }}>
+                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
+-                    {allFeeds.length} trá»±c tuyáº¿n
++                    {allFeeds.length} trĂ¡Â»Â±c tuyĂ¡ÂºÂ¿n
+                   </span>
+                 </div>
+               </div>
+@@ -927,12 +902,12 @@ export default function MeetRoom() {
+               onMouseEnter={e => { if(!copied) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+               onMouseLeave={e => { if(!copied) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+               >
+-                {copied ? 'âœ“ ÄĂ£ sao chĂ©p link' : 'đŸ”— Chia sáº» link'}
++                {copied ? 'Ă¢Å“â€œ Ă„ÂÄ‚Â£ sao chÄ‚Â©p link' : 'Ä‘Å¸â€â€” Chia sĂ¡ÂºÂ» link'}
+               </button>
+             )}
+ 
+             {/* Fullscreen toggle */}
+-            <button onClick={toggleFullscreen} title={isFullscreen ? 'ThoĂ¡t toĂ n mĂ n hĂ¬nh' : 'ToĂ n mĂ n hĂ¬nh'} style={{
++            <button onClick={toggleFullscreen} title={isFullscreen ? 'ThoÄ‚Â¡t toÄ‚Â n mÄ‚Â n hÄ‚Â¬nh' : 'ToÄ‚Â n mÄ‚Â n hÄ‚Â¬nh'} style={{
+               background: 'rgba(255,255,255,0.06)',
+               border: '1px solid rgba(255,255,255,0.1)',
+               borderRadius: '12px', width: '36px', height: '36px', cursor: 'pointer',
+@@ -957,7 +932,7 @@ export default function MeetRoom() {
+ 
+             {/* Chat button (fullscreen) */}
+             {isFullscreen && (
+-              <button onClick={() => setFsChatOpen(o => !o)} title="Chat & ThĂ nh viĂªn" style={{
++              <button onClick={() => setFsChatOpen(o => !o)} title="Chat & ThÄ‚Â nh viÄ‚Âªn" style={{
+                 height: '36px', borderRadius: '12px', flexShrink: 0,
+                 padding: '0 16px',
+                 background: fsChatOpen ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'rgba(255,255,255,0.06)',
+@@ -971,22 +946,22 @@ export default function MeetRoom() {
+                 boxShadow: fsChatOpen ? '0 4px 16px rgba(139,92,246,0.3)' : 'none',
+               }}>
+                 <ChatSvg size={14} />
+-                TrĂ² chuyá»‡n
++                TrÄ‚Â² chuyĂ¡Â»â€¡n
+               </button>
+             )}
+           </div>
+         </nav>
+ 
+-        {/* â”€â”€ Body â”€â”€ */}
++        {/* Ă¢â€â‚¬Ă¢â€â‚¬ Body Ă¢â€â‚¬Ă¢â€â‚¬ */}
+         <div className="meet-body" style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 64px)', position: 'relative' }}>
+ 
+-          {/* â”€â”€ Video Area â”€â”€ */}
++          {/* Ă¢â€â‚¬Ă¢â€â‚¬ Video Area Ă¢â€â‚¬Ă¢â€â‚¬ */}
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: isFullscreen ? '0' : '20px', position: 'relative' }}>
+ 
+             {/* Error banner */}
+             {error && (
+               <div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 120, background: 'rgba(239,68,68,0.92)', backdropFilter: 'blur(12px)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '10px 20px', fontSize: '13px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+-                â ï¸ {error} â€” Báº¡n chá»‰ á»Ÿ cháº¿ Ä‘á»™ nghe.
++                Ă¢ÂÂ Ă¯Â¸Â {error} Ă¢â‚¬â€ BĂ¡ÂºÂ¡n chĂ¡Â»â€° Ă¡Â»Å¸ chĂ¡ÂºÂ¿ Ă„â€˜Ă¡Â»â„¢ nghe.
+               </div>
+             )}
+ 
+@@ -996,7 +971,7 @@ export default function MeetRoom() {
+                 const activeScreenShare = allFeeds.find(f => f.screenSharing);
+                 const otherFeeds = allFeeds.filter(f => !f.screenSharing);
+ 
+-                // TRÆ¯á»œNG Há»¢P: Äang chia sáº» mĂ n hĂ¬nh
++                // TRĂ†Â¯Ă¡Â»Å“NG HĂ¡Â»Â¢P: Ă„Âang chia sĂ¡ÂºÂ» mÄ‚Â n hÄ‚Â¬nh
+                 if (activeScreenShare) {
+                   return (
+                     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative' }}>
+@@ -1010,8 +985,7 @@ export default function MeetRoom() {
+                           isLocal={activeScreenShare.isLocal}
+                           camOff={activeScreenShare.camOff}
+                           muted={!micOn && activeScreenShare.isLocal}
+-                          mirrored={activeScreenShare.isLocal ? localMirrored : false}
+-                          onToggleMirror={activeScreenShare.isLocal ? () => setLocalMirrored(m => !m) : null}
++                          mirrored={activeScreenShare.isLocal}
+                           screenSharing={true}
+                           fullScreen={true}
+                         />
+@@ -1040,7 +1014,7 @@ export default function MeetRoom() {
+                                 isLocal={f.isLocal}
+                                 camOff={f.camOff}
+                                 muted={!micOn && f.isLocal}
+-                                mirrored={f.isLocal ? localMirrored : false}
++                                mirrored={f.isLocal}
+                                 onToggleMirror={f.isLocal ? () => setLocalMirrored(m => !m) : null}
+                                 screenSharing={false}
+                                 style={{ border: '2px solid rgba(255,255,255,0.15)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+@@ -1053,89 +1027,9 @@ export default function MeetRoom() {
+                   );
+                 }
+ 
+-                // TRÆ¯á»œNG Há»¢P: 1-on-1 FaceTime PiP Layout (tá»± Ä‘á»™ng khi tá»‘i Ä‘a 2 ngÆ°á»i)
+-                if (allFeeds.length <= 2) {
+-                  const localFeed = allFeeds.find(f => f.isLocal);
+-                  const remoteFeed = allFeeds.find(f => !f.isLocal);
+-
+-                  if (remoteFeed) {
+-                    const activeFeed = isSwapped ? localFeed : remoteFeed;
+-                    const floatingFeed = isSwapped ? remoteFeed : localFeed;
+-
+-                    return (
+-                      <div style={{ width: '100%', height: '100%', position: 'relative', borderRadius: '24px', overflow: 'hidden' }}>
+-                        {/* Main Full-screen video (Remote or Swapped local) */}
+-                        <VideoTile
+-                          key={activeFeed.id}
+-                          stream={activeFeed.stream}
+-                          name={activeFeed.name}
+-                          avatar={activeFeed.avatar}
+-                          isLocal={activeFeed.isLocal}
+-                          camOff={activeFeed.camOff}
+-                          muted={activeFeed.isLocal ? !micOn : activeFeed.micMuted}
+-                          mirrored={activeFeed.isLocal ? localMirrored : false}
+-                          onToggleMirror={activeFeed.isLocal ? () => setLocalMirrored(m => !m) : null}
+-                          screenSharing={false}
+-                          fullScreen={true}
+-                        />
++                // BĂ¡Â»Â giao diĂ¡Â»â€¡n PiP, tĂ¡ÂºÂ¥t cĂ¡ÂºÂ£ dÄ‚Â¹ng Grid layout
+ 
+-                        {/* Floating mini PiP video (Local or Swapped remote) */}
+-                        <div
+-                          onClick={() => setIsSwapped(s => !s)}
+-                          style={{
+-                            position: 'absolute',
+-                            bottom: '96px', // float above control dock
+-                            right: '20px',
+-                            width: 'clamp(130px, 20vw, 220px)',
+-                            zIndex: 30,
+-                            cursor: 'pointer',
+-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+-                          }}
+-                          title="Click Ä‘á»ƒ Ä‘á»•i gĂ³c nhĂ¬n"
+-                        >
+-                          <VideoTile
+-                            key={floatingFeed.id}
+-                            stream={floatingFeed.stream}
+-                            name={floatingFeed.name}
+-                            avatar={floatingFeed.avatar}
+-                            isLocal={floatingFeed.isLocal}
+-                            camOff={floatingFeed.camOff}
+-                            muted={floatingFeed.isLocal ? !micOn : floatingFeed.micMuted}
+-                            mirrored={floatingFeed.isLocal ? localMirrored : false}
+-                            onToggleMirror={floatingFeed.isLocal ? () => setLocalMirrored(m => !m) : null}
+-                            screenSharing={false}
+-                            style={{
+-                              border: '2px solid rgba(255,255,255,0.2)',
+-                              boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+-                              borderRadius: '20px',
+-                            }}
+-                          />
+-                        </div>
+-                      </div>
+-                    );
+-                  }
+-
+-                  // Chá»‰ cĂ³ 1 ngÆ°á»i trong phĂ²ng (Báº¡n)
+-                  return (
+-                    <div style={{ width: '100%', height: '100%', position: 'relative', borderRadius: '24px', overflow: 'hidden' }}>
+-                      <VideoTile
+-                        key={localFeed.id}
+-                        stream={localFeed.stream}
+-                        name={localFeed.name}
+-                        avatar={localFeed.avatar}
+-                        isLocal={localFeed.isLocal}
+-                        camOff={localFeed.camOff}
+-                        muted={!micOn}
+-                        mirrored={localMirrored}
+-                        onToggleMirror={() => setLocalMirrored(m => !m)}
+-                        screenSharing={false}
+-                        fullScreen={true}
+-                      />
+-                    </div>
+-                  );
+-                }
+-
+-                // TRÆ¯á»œNG Há»¢P: PhĂ²ng nhiá»u ngÆ°á»i (> 2), dĂ¹ng Grid chuyĂªn nghiá»‡p
++                // TRĂ†Â¯Ă¡Â»Å“NG HĂ¡Â»Â¢P: PhÄ‚Â²ng nhiĂ¡Â»Âu ngĂ†Â°Ă¡Â»Âi (> 2), dÄ‚Â¹ng Grid chuyÄ‚Âªn nghiĂ¡Â»â€¡p
+                 return (
+                   <div style={{
+                     display: 'grid',
+@@ -1157,8 +1051,7 @@ export default function MeetRoom() {
+                         isLocal={f.isLocal}
+                         camOff={f.camOff}
+                         muted={f.isLocal ? !micOn : f.micMuted}
+-                        mirrored={f.isLocal ? localMirrored : false}
+-                        onToggleMirror={f.isLocal ? () => setLocalMirrored(m => !m) : null}
++                        mirrored={f.isLocal}
+                         screenSharing={f.screenSharing}
+                       />
+                     ))}
+@@ -1167,7 +1060,7 @@ export default function MeetRoom() {
+               })()}
+             </div>
+ 
+-            {/* â”€â”€ Fullscreen: Participants avatars top-left â”€â”€ */}
++            {/* Ă¢â€â‚¬Ă¢â€â‚¬ Fullscreen: Participants avatars top-left Ă¢â€â‚¬Ă¢â€â‚¬ */}
+             {isFullscreen && allFeeds.length > 0 && (
+               <div style={{
+                 position: 'absolute', top: '20px', left: '20px',
+@@ -1192,11 +1085,11 @@ export default function MeetRoom() {
+                   background: 'rgba(10,10,20,0.6)', backdropFilter: 'blur(10px)',
+                   padding: '4px 10px', borderRadius: '10px', marginLeft: '6px',
+                   border: '1px solid rgba(255,255,255,0.06)',
+-                }}>{allFeeds.length} trá»±c tuyáº¿n</span>
++                }}>{allFeeds.length} trĂ¡Â»Â±c tuyĂ¡ÂºÂ¿n</span>
+               </div>
+             )}
+ 
+-            {/* â”€â”€ Fullscreen: Chat + Members overlay drawer â”€â”€ */}
++            {/* Ă¢â€â‚¬Ă¢â€â‚¬ Fullscreen: Chat + Members overlay drawer Ă¢â€â‚¬Ă¢â€â‚¬ */}
+             {isFullscreen && fsChatOpen && (
+               <div style={{
+                 position: 'absolute', top: '64px', right: '20px',
+@@ -1248,7 +1141,7 @@ export default function MeetRoom() {
+                       <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                         {messages.length === 0 && (
+                           <div style={{ textAlign: 'center', padding: '30px 12px', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
+-                            ChÆ°a cĂ³ tin nháº¯n nĂ o.
++                            ChĂ†Â°a cÄ‚Â³ tin nhĂ¡ÂºÂ¯n nÄ‚Â o.
+                           </div>
+                         )}
+                         {messages.map(msg => {
+@@ -1274,7 +1167,7 @@ export default function MeetRoom() {
+                         <input
+                           value={input} onChange={e => setInput(e.target.value)}
+                           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+-                          placeholder="Nháº¯n tin..."
++                          placeholder="NhĂ¡ÂºÂ¯n tin..."
+                           style={{
+                             flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                             borderRadius: '16px', padding: '7px 13px', color: 'white',
+@@ -1310,14 +1203,50 @@ export default function MeetRoom() {
+                                   background: '#22c55e', border: '1px solid #0f0f1a'
+                                 }} />
+                               </div>
+-                              <span style={{ fontSize: '12px', fontWeight: 600, color: 'white', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+-                                <span>{f.name}{f.isLocal ? ' (Báº¡n)' : ''}</span>
+-                                {role === 'TrÆ°á»Ÿng phĂ²ng' && <span title="TrÆ°á»Ÿng phĂ²ng" style={{ fontSize: '10px' }}>đŸ‘‘</span>}
+-                              </span>
++                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flex: 1 }}>
++                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
++                                  {f.name}{f.isLocal ? ' (BĂ¡ÂºÂ¡n)' : ''}
++                                </span>
++                                {role === 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng' && <span title="TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng" style={{ fontSize: '10px', flexShrink: 0 }}>Ä‘Å¸â€˜â€˜</span>}
++                              </div>
+                             </div>
+                             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+-                              <span style={{ opacity: f.camOff ? 0.3 : 1 }}><VideoSvg active={!f.camOff} size={13} /></span>
+-                              <span style={{ opacity: (f.isLocal ? !micOn : f.micMuted) ? 0.3 : 1 }}><MicSvg active={!(f.isLocal ? !micOn : f.micMuted)} size={13} /></span>
++                              {!f.isLocal && getParticipantRole(allFeeds.find(x => x.isLocal)) === 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng' && (
++                                <>
++                                  <button
++                                    onClick={() => {
++                                      // eslint-disable-next-line no-undef
++                                      channelRef.current?.send({
++                                        type: 'broadcast', event: 'signal',
++                                        payload: { type: 'force-mute', to: f.id, room: roomId, muteCam: true }
++                                      });
++                                    }}
++                                    title="TĂ¡ÂºÂ¯t camera ngĂ†Â°Ă¡Â»Âi nÄ‚Â y"
++                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: f.camOff ? 0.3 : 1 }}
++                                  >
++                                    <VideoSvg active={!f.camOff} size={13} />
++                                  </button>
++                                  <button
++                                    onClick={() => {
++                                      // eslint-disable-next-line no-undef
++                                      channelRef.current?.send({
++                                        type: 'broadcast', event: 'signal',
++                                        payload: { type: 'force-mute', to: f.id, room: roomId, muteMic: true }
++                                      });
++                                    }}
++                                    title="TĂ¡ÂºÂ¯t mic ngĂ†Â°Ă¡Â»Âi nÄ‚Â y"
++                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: f.micMuted ? 0.3 : 1 }}
++                                  >
++                                    <MicSvg active={!f.micMuted} size={13} />
++                                  </button>
++                                </>
++                              )}
++                              {(f.isLocal || getParticipantRole(allFeeds.find(x => x.isLocal)) !== 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng') && (
++                                <>
++                                  <span style={{ opacity: f.camOff ? 0.3 : 1 }}><VideoSvg active={!f.camOff} size={13} /></span>
++                                  <span style={{ opacity: (f.isLocal ? !micOn : f.micMuted) ? 0.3 : 1 }}><MicSvg active={!(f.isLocal ? !micOn : f.micMuted)} size={13} /></span>
++                                </>
++                              )}
+                             </div>
+                           </div>
+                         );
+@@ -1328,10 +1257,10 @@ export default function MeetRoom() {
+               </div>
+             )}
+ 
+-            {/* â”€â”€ Control bar (Frosted Glass Floating Pill) â”€â”€ */}
++            {/* Ă¢â€â‚¬Ă¢â€â‚¬ Control bar (Frosted Glass Floating Pill) Ă¢â€â‚¬Ă¢â€â‚¬ */}
+             <div style={{
+               position: 'absolute',
+-              bottom: isFullscreen ? (showControls ? '24px' : '-90px') : '24px',
++              bottom: showControls ? '24px' : '-90px',
+               left: '50%',
+               transform: 'translateX(-50%)',
+               transition: 'bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+@@ -1352,7 +1281,7 @@ export default function MeetRoom() {
+                 onClick={() => setMicOn(m => !m)}
+                 danger={!micOn}
+                 icon={<MicSvg active={micOn} />}
+-                label={micOn ? "Táº¯t Mic" : "Báº­t Mic"}
++                label={micOn ? "TĂ¡ÂºÂ¯t Mic" : "BĂ¡ÂºÂ­t Mic"}
+               />
+ 
+               {/* Camera toggle */}
+@@ -1361,7 +1290,7 @@ export default function MeetRoom() {
+                 onClick={() => setCamOn(c => !c)}
+                 danger={!camOn}
+                 icon={<VideoSvg active={camOn} />}
+-                label={camOn ? "Táº¯t Camera" : "Báº­t Camera"}
++                label={camOn ? "TĂ¡ÂºÂ¯t Camera" : "BĂ¡ÂºÂ­t Camera"}
+               />
+ 
+               {/* Screen share toggle */}
+@@ -1370,7 +1299,7 @@ export default function MeetRoom() {
+                 onClick={toggleScreen}
+                 highlight={screenOn}
+                 icon={<MonitorSvg active={screenOn} />}
+-                label={screenOn ? "Dá»«ng chia sáº»" : "Chia sáº» mĂ n hĂ¬nh"}
++                label={screenOn ? "DĂ¡Â»Â«ng chia sĂ¡ÂºÂ»" : "Chia sĂ¡ÂºÂ» mÄ‚Â n hÄ‚Â¬nh"}
+               />
+ 
+               {/* Divider */}
+@@ -1385,7 +1314,7 @@ export default function MeetRoom() {
+                     else { setTab('chat'); setSidebarOpen(true); }
+                   }}
+                   icon={<ChatSvg />}
+-                  label="TrĂ² chuyá»‡n"
++                  label="TrÄ‚Â² chuyĂ¡Â»â€¡n"
+                   badge={messages.length}
+                 />
+               )}
+@@ -1399,7 +1328,7 @@ export default function MeetRoom() {
+                     else { setTab('members'); setSidebarOpen(true); }
+                   }}
+                   icon={<UsersSvg />}
+-                  label="ThĂ nh viĂªn"
++                  label="ThÄ‚Â nh viÄ‚Âªn"
+                   badge={allFeeds.length}
+                 />
+               )}
+@@ -1413,7 +1342,7 @@ export default function MeetRoom() {
+                     else { setTab('timer'); setSidebarOpen(true); }
+                   }}
+                   icon={<ClockSvg />}
+-                  label="Äá»“ng há»“ há»c"
++                  label="Ă„ÂĂ¡Â»â€œng hĂ¡Â»â€œ hĂ¡Â»Âc"
+                 />
+               )}
+ 
+@@ -1428,7 +1357,7 @@ export default function MeetRoom() {
+                   if (groupId) navigate(`/groups/${groupId}`);
+                   else navigate('/groups');
+                 }}
+-                title="Rá»i phĂ²ng"
++                title="RĂ¡Â»Âi phÄ‚Â²ng"
+                 style={{
+                   background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                   border: 'none',
+@@ -1449,12 +1378,14 @@ export default function MeetRoom() {
+             </div>
+           </div>
+ 
+-          {/* â”€â”€ Sidebar (Frosted Drawer) â”€â”€ */}
++          {/* Ă¢â€â‚¬Ă¢â€â‚¬ Sidebar (Frosted Drawer) Ă¢â€â‚¬Ă¢â€â‚¬ */}
+           {!isFullscreen && sidebarOpen && (
+             <div className="meet-sidebar" style={{
+               width: '350px', flexShrink: 0,
+               background: 'rgba(15,15,26,0.75)', borderLeft: '1px solid rgba(255,255,255,0.08)',
+               display: 'flex', flexDirection: 'column', height: '100%',
++              paddingTop: showControls ? '64px' : '0px',
++              transition: 'padding-top 0.3s ease',
+               backdropFilter: 'blur(20px)',
+               boxShadow: '-10px 0 30px rgba(0,0,0,0.3)',
+               animation: 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+@@ -1504,7 +1435,7 @@ export default function MeetRoom() {
+                     <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                       {messages.length === 0 && (
+                         <div style={{ textAlign: 'center', padding: '40px 16px', color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>
+-                          ChÆ°a cĂ³ tin nháº¯n nĂ o.
++                          ChĂ†Â°a cÄ‚Â³ tin nhĂ¡ÂºÂ¯n nÄ‚Â o.
+                         </div>
+                       )}
+                       {messages.map(msg => {
+@@ -1531,7 +1462,7 @@ export default function MeetRoom() {
+                       <input
+                         value={input} onChange={e => setInput(e.target.value)}
+                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+-                        placeholder="Nháº¯n tin..."
++                        placeholder="NhĂ¡ÂºÂ¯n tin..."
+                         style={{
+                           flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                           borderRadius: '20px', padding: '9px 16px', color: 'white',
+@@ -1559,7 +1490,7 @@ export default function MeetRoom() {
+                 {tab === 'members' && (
+                   <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                     <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+-                      <span>Danh sĂ¡ch trá»±c tuyáº¿n</span>
++                      <span>Danh sÄ‚Â¡ch trĂ¡Â»Â±c tuyĂ¡ÂºÂ¿n</span>
+                       <span style={{ background: 'rgba(139,92,246,0.15)', color: '#c7d2fe', fontSize: '11px', padding: '2px 8px', borderRadius: '10px' }}>{allFeeds.length}</span>
+                     </h4>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+@@ -1567,8 +1498,8 @@ export default function MeetRoom() {
+                         const role = getParticipantRole(f);
+                         return (
+                           <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px' }}>
+-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+-                              <div style={{ position: 'relative' }}>
++                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
++                              <div style={{ position: 'relative', flexShrink: 0 }}>
+                                 <Avatar src={f.avatar} name={f.name} size={34} />
+                                 <div style={{
+                                   position: 'absolute', bottom: '-1px', right: '-1px',
+@@ -1576,10 +1507,12 @@ export default function MeetRoom() {
+                                   background: '#22c55e', border: '1.5px solid #0f0f1a'
+                                 }} />
+                               </div>
+-                              <div>
++                              <div style={{ flex: 1, minWidth: 0 }}>
+                                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}>
+-                                  <span>{f.name} {f.isLocal ? ' (Báº¡n)' : ''}</span>
+-                                  {role === 'TrÆ°á»Ÿng phĂ²ng' && (
++                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
++                                    {f.name} {f.isLocal ? ' (BĂ¡ÂºÂ¡n)' : ''}
++                                  </span>
++                                  {role === 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng' && (
+                                     <span style={{
+                                       background: 'rgba(245,158,11,0.15)',
+                                       color: '#fbbf24',
+@@ -1588,22 +1521,57 @@ export default function MeetRoom() {
+                                       padding: '2px 6px',
+                                       borderRadius: '5px',
+                                       border: '1px solid rgba(245,158,11,0.3)',
+-                                      lineHeight: 1
+-                                    }}>đŸ‘‘ TrÆ°á»Ÿng phĂ²ng</span>
++                                      lineHeight: 1,
++                                      flexShrink: 0
++                                    }}>Ä‘Å¸â€˜â€˜ TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng</span>
+                                   )}
+                                 </div>
+-                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
++                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                   {role}
+                                 </div>
+                               </div>
+                             </div>
+-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+-                              <span title={f.camOff ? "Camera táº¯t" : "Camera báº­t"} style={{ opacity: f.camOff ? 0.35 : 1 }}>
+-                                <VideoSvg active={!f.camOff} size={15} />
+-                              </span>
+-                              <span title={f.isLocal ? (micOn ? "Mic báº­t" : "Mic táº¯t") : (f.micMuted ? "Mic táº¯t" : "Mic báº­t")} style={{ opacity: (f.isLocal ? !micOn : f.micMuted) ? 0.35 : 1 }}>
+-                                <MicSvg active={!(f.isLocal ? !micOn : f.micMuted)} size={15} />
+-                              </span>
++                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
++                              {!f.isLocal && getParticipantRole(allFeeds.find(x => x.isLocal)) === 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng' && (
++                                <>
++                                  <button
++                                    onClick={() => {
++                                      // eslint-disable-next-line no-undef
++                                      channelRef.current?.send({
++                                        type: 'broadcast', event: 'signal',
++                                        payload: { type: 'force-mute', to: f.id, room: roomId, muteCam: true }
++                                      });
++                                    }}
++                                    title="TĂ¡ÂºÂ¯t camera ngĂ†Â°Ă¡Â»Âi nÄ‚Â y"
++                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: f.camOff ? 0.35 : 1 }}
++                                  >
++                                    <VideoSvg active={!f.camOff} size={15} />
++                                  </button>
++                                  <button
++                                    onClick={() => {
++                                      // eslint-disable-next-line no-undef
++                                      channelRef.current?.send({
++                                        type: 'broadcast', event: 'signal',
++                                        payload: { type: 'force-mute', to: f.id, room: roomId, muteMic: true }
++                                      });
++                                    }}
++                                    title="TĂ¡ÂºÂ¯t mic ngĂ†Â°Ă¡Â»Âi nÄ‚Â y"
++                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: f.micMuted ? 0.35 : 1 }}
++                                  >
++                                    <MicSvg active={!f.micMuted} size={15} />
++                                  </button>
++                                </>
++                              )}
++                              {(f.isLocal || getParticipantRole(allFeeds.find(x => x.isLocal)) !== 'TrĂ†Â°Ă¡Â»Å¸ng phÄ‚Â²ng') && (
++                                <>
++                                  <span title={f.camOff ? "Camera tĂ¡ÂºÂ¯t" : "Camera bĂ¡ÂºÂ­t"} style={{ opacity: f.camOff ? 0.35 : 1 }}>
++                                    <VideoSvg active={!f.camOff} size={15} />
++                                  </span>
++                                  <span title={f.isLocal ? (micOn ? "Mic bĂ¡ÂºÂ­t" : "Mic tĂ¡ÂºÂ¯t") : (f.micMuted ? "Mic tĂ¡ÂºÂ¯t" : "Mic bĂ¡ÂºÂ­t")} style={{ opacity: (f.isLocal ? !micOn : f.micMuted) ? 0.35 : 1 }}>
++                                    <MicSvg active={!(f.isLocal ? !micOn : f.micMuted)} size={15} />
++                                  </span>
++                                </>
++                              )}
+                             </div>
+                           </div>
+                         );
+@@ -1635,7 +1603,7 @@ export default function MeetRoom() {
+   );
+ }
+ 
+-// â”€â”€ SVG Icon Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++// Ă¢â€â‚¬Ă¢â€â‚¬ SVG Icon Helpers Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+ function MicSvg({ active, size = 20 }) {
+   return (
+     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+@@ -1738,7 +1706,7 @@ function ClockSvg({ size = 20 }) {
+   );
+ }
+ 
+-// â”€â”€ Control Button helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++// Ă¢â€â‚¬Ă¢â€â‚¬ Control Button helper Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬Ă¢â€â‚¬
+ function CtrlBtn({ active, onClick, danger, highlight, icon, label, badge = null }) {
+   const [hover, setHover] = useState(false);
+ 
+@@ -1801,4 +1769,4 @@ function CtrlBtn({ active, onClick, danger, highlight, icon, label, badge = null
+       )}
+     </button>
+   );
+-}
+\ No newline at end of file
++}

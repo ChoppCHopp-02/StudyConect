@@ -25,11 +25,12 @@ export const ToastProvider = ({ children }) => {
     }, 300);
   }, []);
 
-  const addToast = useCallback((message, type = 'success', duration = 7000, link = null, icon = null) => {
+  const addToast = useCallback((message, type = 'success', duration = 6000, link = null, icon = null) => {
     const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type, link, icon, isDismissing: false }]);
+    // Replace any existing toast instantly (only show 1 at a time)
+    setToasts([{ id, message, type, link, icon, isDismissing: false }]);
     
-    // Auto-remove after duration (default 7 seconds)
+    // Auto-remove after duration (default 6 seconds)
     setTimeout(() => {
       dismissToast(id);
     }, duration);
