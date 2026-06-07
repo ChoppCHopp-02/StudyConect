@@ -8,6 +8,7 @@ import { getFriends } from '../services/friendService.js';
 import {
   sendMessage,
   getConversation,
+  getConversationFromCache,
   markAsRead,
   getUnreadCount,
   getLastMessages,
@@ -646,12 +647,27 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
   const saveReactions = (r) => localStorage.setItem(REACTIONS_KEY, JSON.stringify(r));
 
   const load = useCallback(async () => {
+    // Bước 1: Render ngay từ cache (0ms delay)
+    const cached = getConversationFromCache(user.id, friend.userId);
+    if (cached.messages.length > 0) {
+      setMessages(cached.messages);
+      const newBg = cached.background || '';
+      if (prevBgRef.current !== null && newBg !== prevBgRef.current) {
+        const lastBgMsg = cached.messages.filter(m => m.content?.startsWith('[chat_background]')).slice(-1)[0];
+        if (lastBgMsg && String(lastBgMsg.fromUserId) !== String(user.id)) {
+          setBgToast({ name: nickname || friend.fullName });
+          setTimeout(() => setBgToast(null), 4000);
+        }
+      }
+      prevBgRef.current = newBg;
+      setChatBg(newBg);
+    }
+
+    // Bước 2: Sync DB ngầm để lấy tin mới
     const res = await getConversation(user.id, friend.userId);
     setMessages(res.messages || []);
     const newBg = res.background || '';
-    // Nếu nền thay đổi bởi người kia → hiện toast
     if (prevBgRef.current !== null && newBg !== prevBgRef.current) {
-      // Lấy tin nhắn background cuối cùng để xác định ai đổi
       const lastBgMsg = (res.messages || []).filter(m => m.content?.startsWith('[chat_background]')).slice(-1)[0];
       if (lastBgMsg && String(lastBgMsg.fromUserId) !== String(user.id)) {
         setBgToast({ name: nickname || friend.fullName });

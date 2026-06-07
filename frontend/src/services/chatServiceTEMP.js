@@ -4,6 +4,49 @@ import { supabase } from '../config/supabaseClient';
 
 let cachedMessages = [];
 
+// ─── HELPER: parse raw DB row → message object ────────────
+const parseRaw = (raw) => ({
+  id: String(raw.id),
+  fromUserId: String(raw.sender_id),
+  toUserId: String(raw.receiver_id),
+  content: raw.content,
+  fileAttachment: raw.file_attachment || null,
+  type: raw.content?.startsWith('[chat_background]:')
+    ? 'background'
+    : (raw.content?.startsWith('data:image') ||
+      (raw.content?.startsWith('http') &&
+        (raw.content?.match(/\.(jpeg|jpg|gif|png)/i) || raw.content?.includes('supabase'))))
+      ? 'image'
+      : 'text',
+  createdAt: raw.created_at,
+  read: raw.is_read,
+});
+
+// ─── LẤY TIN NHẮN TỪ CACHE (KHÔNG CẦN MẠNG) ─────────────
+export const getConversationFromCache = (userId, friendId) => {
+  const uid = String(userId);
+  const fid = String(friendId);
+
+  let background = '';
+  const messages = [];
+
+  cachedMessages.forEach(m => {
+    const isMatch =
+      (m.fromUserId === uid && m.toUserId === fid) ||
+      (m.fromUserId === fid && m.toUserId === uid);
+    if (!isMatch) return;
+
+    if (m.content?.startsWith('[chat_background]:')) {
+      background = m.content.replace('[chat_background]:', '');
+      messages.push(m);
+    } else {
+      messages.push(m);
+    }
+  });
+
+  return { messages, background };
+};
+
 // ─── TẢI CACHE TRỰC TIẾP TỪ DATABASE ────────────────────────
 export const refreshCache = async (userId) => {
   if (!userId) return;
@@ -27,24 +70,10 @@ export const refreshCache = async (userId) => {
     const { data, error } = await query;
 
     if (!error && data && data.length > 0) {
-      // If we fetched the initial 2000 messages descending, we must reverse them to ascending order
       const orderedData = cachedMessages.length === 0 ? [...data].reverse() : data;
-
-      const newMsgs = orderedData.map(raw => ({
-        id: String(raw.id),
-        fromUserId: String(raw.sender_id),
-        toUserId: String(raw.receiver_id),
-        content: raw.content,
-        type: raw.content?.startsWith('[chat_background]:') ? 'background' : ((raw.content?.startsWith('data:image') || (raw.content?.startsWith('http') && (raw.content?.match(/\.(jpeg|jpg|gif|png)/i) || raw.content?.includes('supabase')))) ? 'image' : 'text'),
-        fileAttachment: raw.file_attachment || null,
-        createdAt: raw.created_at,
-        read: raw.is_read
-      }));
-
-      // Filter out any messages that already exist in cache just in case
+      const newMsgs = orderedData.map(parseRaw);
       const existingIds = new Set(cachedMessages.map(m => m.id));
       const uniqueNewMsgs = newMsgs.filter(m => !existingIds.has(m.id));
-
       if (uniqueNewMsgs.length > 0) {
         cachedMessages = [...cachedMessages, ...uniqueNewMsgs];
       }
@@ -55,49 +84,80 @@ export const refreshCache = async (userId) => {
 };
 
 // ─── GỬI TIN NHẮN ────────────────────────────────────────
-// type: 'text' | 'image' | 'file'
 export const sendMessage = async (fromUserId, toUserId, content, type = 'text', fileAttachment = null) => {
   if (type === 'text' && !content?.trim() && !fileAttachment) throw new Error('Nội dung tin nhắn không được trống.');
 
   const cleanContent = type === 'text' && content ? content.trim() : (content || '');
-  
+
   const { data, error } = await supabase
     .from('messages')
-    .insert([
-      {
-        sender_id: parseInt(fromUserId, 10),
-        receiver_id: parseInt(toUserId, 10),
-        group_id: null,
-        content: cleanContent,
-        file_attachment: fileAttachment,
-        is_read: false
-      }
-    ])
+    .insert([{
+      sender_id: parseInt(fromUserId, 10),
+      receiver_id: parseInt(toUserId, 10),
+      group_id: null,
+      content: cleanContent,
+      file_attachment: fileAttachment,
+      is_read: false
+    }])
     .select();
 
-  if (error) {
-    throw new Error(`Gửi tin nhắn thất bại: ${error.message}`);
-  }
+  if (error) throw new Error(`Gửi tin nhắn thất bại: ${error.message}`);
 
-  const raw = data[0];
-  const newMsg = {
-    id: String(raw.id),
-    fromUserId: String(raw.sender_id),
-    toUserId: String(raw.receiver_id),
-    content: raw.content,
-    fileAttachment: raw.file_attachment || null,
-    type: raw.content?.startsWith('[chat_background]:') ? 'background' : ((raw.content?.startsWith('data:image') || (raw.content?.startsWith('http') && (raw.content?.match(/\.(jpeg|jpg|gif|png)/i) || raw.content?.includes('supabase')))) ? 'image' : 'text'),
-    createdAt: raw.created_at,
-    read: raw.is_read
-  };
-
-  // Cập nhật ngay lập tức vào cache để UI phản hồi tức thì
+  const newMsg = parseRaw(data[0]);
   cachedMessages.push(newMsg);
   return newMsg;
 };
 
-// ─── LẤY TIN NHẮN GIỮA 2 USER ────────────────────────────
+// ─── LẤY TIN NHẮN GIỮA 2 USER (SYNC TỪ DB) ──────────────
+// Chỉ gọi khi cần sync mới nhất, KHÔNG dùng để render lần đầu
+export const syncConversation = async (userId, friendId) => {
+  const uid = parseInt(userId, 10);
+  const fid = parseInt(friendId, 10);
+
+  // Lấy createdAt của tin cuối cùng trong cache giữa 2 người này
+  const existing = cachedMessages.filter(m =>
+    (m.fromUserId === String(uid) && m.toUserId === String(fid)) ||
+    (m.fromUserId === String(fid) && m.toUserId === String(uid))
+  );
+  const lastCreatedAt = existing.length > 0
+    ? existing[existing.length - 1].createdAt
+    : null;
+
+  let query = supabase
+    .from('messages')
+    .select('*')
+    .is('group_id', null)
+    .or(`and(sender_id.eq.${uid},receiver_id.eq.${fid}),and(sender_id.eq.${fid},receiver_id.eq.${uid})`)
+    .order('created_at', { ascending: true });
+
+  // Chỉ lấy tin mới hơn tin cuối trong cache
+  if (lastCreatedAt) {
+    query = query.gt('created_at', lastCreatedAt);
+  }
+
+  const { data, error } = await query;
+  if (error) return;
+
+  if (data && data.length > 0) {
+    const newMsgs = data.map(parseRaw);
+    const existingIds = new Set(cachedMessages.map(m => m.id));
+    const uniqueNew = newMsgs.filter(m => !existingIds.has(m.id));
+    if (uniqueNew.length > 0) {
+      cachedMessages = [...cachedMessages, ...uniqueNew];
+    }
+  }
+};
+
+// ─── LẤY TIN NHẮN GIỮA 2 USER (GIỮ TƯƠNG THÍCH) ─────────
+// Gọi full query khi cần thiết (lần đầu mở app, cache rỗng)
 export const getConversation = async (userId, friendId) => {
+  // Nếu cache đã có dữ liệu, dùng cache trước rồi sync thêm mới
+  if (cachedMessages.length > 0) {
+    await syncConversation(userId, friendId);
+    return getConversationFromCache(userId, friendId);
+  }
+
+  // Cache rỗng: lấy full từ DB
   const uid = parseInt(userId, 10);
   const fid = parseInt(friendId, 10);
 
@@ -113,39 +173,13 @@ export const getConversation = async (userId, friendId) => {
     return { messages: [], background: '' };
   }
 
-  let background = '';
-  const messages = [];
+  // Đưa vào cache
+  const newMsgs = data.map(parseRaw);
+  const existingIds = new Set(cachedMessages.map(m => m.id));
+  const unique = newMsgs.filter(m => !existingIds.has(m.id));
+  if (unique.length > 0) cachedMessages = [...cachedMessages, ...unique];
 
-  data.forEach(raw => {
-    if (raw.content?.startsWith('[chat_background]:')) {
-      // Cập nhật background mới nhất
-      background = raw.content.replace('[chat_background]:', '');
-      // Vẫn đưa vào danh sách messages để hiển thị thông báo hệ thống
-      messages.push({
-        id: String(raw.id),
-        fromUserId: String(raw.sender_id),
-        toUserId: String(raw.receiver_id),
-        content: raw.content,
-        fileAttachment: null,
-        type: 'background',
-        createdAt: raw.created_at,
-        read: raw.is_read
-      });
-    } else {
-      messages.push({
-        id: String(raw.id),
-        fromUserId: String(raw.sender_id),
-        toUserId: String(raw.receiver_id),
-        content: raw.content,
-        fileAttachment: raw.file_attachment || null,
-        type: (raw.content?.startsWith('data:image') || (raw.content?.startsWith('http') && (raw.content?.match(/\.(jpeg|jpg|gif|png)/i) || raw.content?.includes('supabase')))) ? 'image' : 'text',
-        createdAt: raw.created_at,
-        read: raw.is_read
-      });
-    }
-  });
-
-  return { messages, background };
+  return getConversationFromCache(userId, friendId);
 };
 
 // ─── ĐÁNH DẤU ĐÃ ĐỌC ─────────────────────────────────────
@@ -204,10 +238,6 @@ export const deleteMessage = async (msgId) => {
     .delete()
     .eq('id', id);
 
-  if (error) {
-    throw new Error(`Xóa tin nhắn thất bại: ${error.message}`);
-  }
-
-  // Cập nhật cache
+  if (error) throw new Error(`Xóa tin nhắn thất bại: ${error.message}`);
   cachedMessages = cachedMessages.filter(m => m.id !== String(msgId));
 };
