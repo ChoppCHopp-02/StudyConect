@@ -52,6 +52,7 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
+  overscroll-behavior: none;
 }
 
 /* GLOBAL BUTTON STYLES */

@@ -167,7 +167,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
     .toUpperCase() || '?';
 
   return (
-    <div className="app-layout-wrapper" style={{ minHeight: '100vh', background: 'var(--bg)', position: 'relative' }}>
+    <div className="app-layout-wrapper" style={{ height: '100vh', overflow: 'hidden', overscrollBehavior: 'none', background: 'var(--bg)', position: 'relative' }}>
       {/* Decorative background glows */}
       <div style={{
         position: 'fixed', top: '-200px', right: '-200px',
