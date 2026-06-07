@@ -531,8 +531,8 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const [chatBg, setChatBg] = useState('');
   const [showBgModal, setShowBgModal] = useState(false);
-  const [bgInputVal, setBgInputVal] = useState('');
   const [bgFilePreview, setBgFilePreview] = useState('');
+  const [bgPos, setBgPos] = useState('center');
   const [viewingImage, setViewingImage] = useState(null);
   const [attachedFile, setAttachedFile] = useState(null);
 
@@ -1100,8 +1100,10 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 <button
                   onClick={() => {
                     setShowMenuDropdown(false);
-                    setBgInputVal(chatBg.startsWith('data:') ? '' : chatBg);
-                    setBgFilePreview(chatBg.startsWith('data:') ? chatBg : '');
+                    const savedUrl = chatBg ? chatBg.split('|')[0] : '';
+                    const savedPos = chatBg && chatBg.includes('|') ? chatBg.split('|')[1] : 'center';
+                    setBgFilePreview(savedUrl.startsWith('data:') ? savedUrl : '');
+                    setBgPos(savedPos);
                     setShowBgModal(true);
                   }}
                   style={{
@@ -1183,7 +1185,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           position: 'relative',
           overscrollBehavior: 'contain',
           background: chatBg 
-            ? `linear-gradient(rgba(10, 10, 20, 0.6), rgba(10, 10, 20, 0.6)), url(${chatBg}) top center/cover no-repeat`
+            ? `linear-gradient(rgba(10, 10, 20, 0.6), rgba(10, 10, 20, 0.6)), url(${chatBg.split('|')[0]}) ${chatBg.split('|')[1] || 'center'}/cover no-repeat`
             : undefined,
           transition: 'background 0.3s ease',
         }}>
@@ -1847,39 +1849,34 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
               </label>
             </div>
 
-            {/* Vùng dán URL ảnh */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}>
-                Hoặc nhập liên kết ảnh
-              </label>
-              <input
-                type="text"
-                value={bgInputVal}
-                onChange={e => {
-                  setBgInputVal(e.target.value);
-                  setBgFilePreview('');
-                }}
-                placeholder="Nhập đường dẫn hình ảnh..."
-                style={{
-                  width: '100%',
-                  background: 'var(--bg-input, #0e0e1e)',
-                  border: '1px solid var(--border, rgba(255,255,255,0.1))',
-                  borderRadius: '14px',
-                  padding: '12px 16px',
-                  color: '#fff',
-                  fontSize: '14px',
-                  fontFamily: 'inherit',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={e => e.currentTarget.style.borderColor = 'var(--primary, #6c63ff)'}
-                onBlur={e => e.currentTarget.style.borderColor = 'var(--border, rgba(255,255,255,0.1))'}
-              />
-            </div>
+            {/* Vùng điều chỉnh vị trí ảnh */}
+            {bgFilePreview && (
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}>
+                  Điều chỉnh vị trí ảnh (Gốc ảnh)
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {['top', 'center', 'bottom'].map(pos => (
+                    <button
+                      key={pos}
+                      onClick={() => setBgPos(pos)}
+                      style={{
+                        flex: 1, padding: '8px', borderRadius: '10px',
+                        background: bgPos === pos ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${bgPos === pos ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`,
+                        color: bgPos === pos ? 'white' : 'var(--text-secondary)',
+                        cursor: 'pointer', fontSize: '12px', fontWeight: 600, transition: 'all 0.2s',
+                      }}
+                    >
+                      {pos === 'top' ? 'Trên cùng' : pos === 'center' ? 'Chính giữa' : 'Dưới cùng'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Xem trước ảnh nền */}
-            {(bgFilePreview || bgInputVal) && (
+            {bgFilePreview && (
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}>
                   Xem trước hình nền
@@ -1887,9 +1884,9 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 <div
                   style={{
                     width: '100%',
-                    height: '120px',
+                    height: '160px',
                     borderRadius: '14px',
-                    background: `linear-gradient(rgba(10, 10, 20, 0.5), rgba(10, 10, 20, 0.5)), url(${bgFilePreview || bgInputVal}) top center/cover no-repeat`,
+                    background: `linear-gradient(rgba(10, 10, 20, 0.5), rgba(10, 10, 20, 0.5)), url(${bgFilePreview}) ${bgPos}/cover no-repeat`,
                     border: '1px solid rgba(255, 255, 255, 0.08)',
                   }}
                 />
@@ -1952,8 +1949,8 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
               </button>
               
               <button
-                onClick={() => handleSaveBg(bgFilePreview || bgInputVal)}
-                disabled={!bgFilePreview && !bgInputVal}
+                onClick={() => handleSaveBg(bgFilePreview ? `${bgFilePreview}|${bgPos}` : '')}
+                disabled={!bgFilePreview}
                 style={{
                   flex: 1,
                   padding: '12px',
@@ -1967,13 +1964,13 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                   fontSize: '14px',
                   boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)',
                   transition: 'all 0.2s',
-                  opacity: (!bgFilePreview && !bgInputVal) ? 0.5 : 1,
+                  opacity: (!bgFilePreview) ? 0.5 : 1,
                 }}
                 onMouseEnter={e => {
-                  if (bgFilePreview || bgInputVal) e.currentTarget.style.opacity = '0.9';
+                  if (bgFilePreview) e.currentTarget.style.opacity = '0.9';
                 }}
                 onMouseLeave={e => {
-                  if (bgFilePreview || bgInputVal) e.currentTarget.style.opacity = '1';
+                  if (bgFilePreview) e.currentTarget.style.opacity = '1';
                 }}
               >
                 Áp dụng
