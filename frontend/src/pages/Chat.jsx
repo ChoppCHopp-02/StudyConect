@@ -535,6 +535,8 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
   const [bgPos, setBgPos] = useState('center');
   const [viewingImage, setViewingImage] = useState(null);
   const [attachedFile, setAttachedFile] = useState(null);
+  const [bgToast, setBgToast] = useState(null); // { name }
+  const prevBgRef = useRef(null);
 
   useEffect(() => {
     const n = localStorage.getItem(`sc_nickname_${user.id}_${friend.userId}`) || '';
@@ -646,10 +648,21 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
   const load = useCallback(async () => {
     const res = await getConversation(user.id, friend.userId);
     setMessages(res.messages || []);
-    setChatBg(res.background || '');
+    const newBg = res.background || '';
+    // Nếu nền thay đổi bởi người kia → hiện toast
+    if (prevBgRef.current !== null && newBg !== prevBgRef.current) {
+      // Lấy tin nhắn background cuối cùng để xác định ai đổi
+      const lastBgMsg = (res.messages || []).filter(m => m.content?.startsWith('[chat_background]')).slice(-1)[0];
+      if (lastBgMsg && String(lastBgMsg.fromUserId) !== String(user.id)) {
+        setBgToast({ name: nickname || friend.fullName });
+        setTimeout(() => setBgToast(null), 4000);
+      }
+    }
+    prevBgRef.current = newBg;
+    setChatBg(newBg);
     setReactions(loadReactions());
     await markAsRead(user.id, friend.userId);
-  }, [user.id, friend.userId, loadReactions]);
+  }, [user.id, friend.userId, loadReactions, nickname, friend.fullName]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -977,6 +990,26 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           {p.char}
         </span>
       ))}
+
+      {/* Toast: bạn bè đổi hình nền */}
+      {bgToast && (
+        <div style={{
+          position: 'absolute', top: '16px', right: '16px', zIndex: 9999,
+          background: 'rgba(20,20,40,0.95)', border: '1px solid rgba(108,99,255,0.4)',
+          borderRadius: '14px', padding: '12px 16px',
+          display: 'flex', alignItems: 'center', gap: '10px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          animation: 'fadeIn 0.3s ease',
+          backdropFilter: 'blur(12px)',
+          maxWidth: '260px',
+        }}>
+          <span style={{ fontSize: '22px' }}>🖼️</span>
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', marginBottom: '2px' }}>{bgToast.name}</div>
+            <div style={{ fontSize: '12px', color: '#a0aec0' }}>đã thay đổi hình nền trò chuyện</div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '12px',
