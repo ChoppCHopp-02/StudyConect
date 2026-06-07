@@ -648,7 +648,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                   );
                 })}
               </aside>
-              <div style={{ minWidth: 0, height: '100%', overflow: 'hidden' }}>
+              <div style={{ minWidth: 0, minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {children}
               </div>
             </div>

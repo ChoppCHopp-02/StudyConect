@@ -65,6 +65,15 @@ body {
   overflow: hidden;
 }
 
+/* ─── Utility: hide scrollbar visually but keep scroll functional ─── */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* GLOBAL BUTTON STYLES */
 button {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
