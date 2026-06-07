@@ -1826,39 +1826,41 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
             </p>
 
             {/* Vùng chọn ảnh từ thiết bị */}
-            <div style={{ marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  padding: '16px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '2px dashed rgba(255, 255, 255, 0.15)',
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.borderColor = 'var(--primary, #6c63ff)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                }}
-              >
-                Chọn ảnh từ thiết bị
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBgFileChange}
-                  style={{ display: 'none' }}
-                />
-              </label>
-            </div>
+            {!bgFilePreview && (
+              <div style={{ marginBottom: '20px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    textAlign: 'center',
+                    padding: '16px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '2px dashed rgba(255, 255, 255, 0.15)',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                    e.currentTarget.style.borderColor = 'var(--primary, #6c63ff)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  }}
+                >
+                  Chọn ảnh từ thiết bị
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBgFileChange}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </div>
+            )}
 
             {/* Vùng điều chỉnh vị trí ảnh */}
             {bgFilePreview && (
@@ -1889,9 +1891,18 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
             {/* Xem trước ảnh nền */}
             {bgFilePreview && (
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}>
-                  Xem trước hình nền
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, margin: 0 }}>
+                    Xem trước hình nền
+                  </label>
+                  <label style={{
+                    fontSize: '11px', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer',
+                    background: 'rgba(108,99,255,0.1)', padding: '4px 10px', borderRadius: '6px', margin: 0
+                  }}>
+                    Đổi ảnh
+                    <input type="file" accept="image/*" onChange={handleBgFileChange} style={{ display: 'none' }} />
+                  </label>
+                </div>
                 <div
                   style={{
                     width: '100%',
