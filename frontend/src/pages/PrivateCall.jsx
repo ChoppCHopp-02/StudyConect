@@ -395,7 +395,7 @@ export default function PrivateCall() {
 
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
-  const [localMirrored, setLocalMirrored] = useState(true);
+  const localMirrored = true;
   const [showControls, setShowControls] = useState(true);
   const [pipSwapped, setPipSwapped] = useState(false);
   const hideTimer = useRef(null);
