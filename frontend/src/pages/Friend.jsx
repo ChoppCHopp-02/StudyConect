@@ -1,4 +1,4 @@
-// src/pages/Friends.jsx
+﻿// src/pages/Friends.jsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -96,7 +96,7 @@ function PersonCard({ person, actions, isOnline }) {
               fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px',
               display: 'inline-flex', alignItems: 'center', gap: '4px'
             }}>
-              📍 {person.proximityBadge}
+              đŸ“ {person.proximityBadge}
             </span>
           )}
         </div>
@@ -112,7 +112,7 @@ function PersonCard({ person, actions, isOnline }) {
         )}
         {person.friendSince && (
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
-            Bạn bè từ {new Date(person.friendSince).toLocaleDateString('vi-VN')}
+            Báº¡n bĂ¨ tá»« {new Date(person.friendSince).toLocaleDateString('vi-VN')}
           </div>
         )}
         {person.sentAt && !person.friendSince && (
@@ -128,7 +128,7 @@ function PersonCard({ person, actions, isOnline }) {
   );
 }
 
-//  Nút nhỏ 
+//  NĂºt nhá» 
 function Btn({ children, onClick, variant = 'primary', disabled = false }) {
   const styles = {
     primary: { background: 'var(--primary)', color: 'white', border: 'none' },
@@ -222,7 +222,7 @@ export default function Friends() {
   const { addToast } = useToast();
 
   const parseUserBioLocation = (bioString) => {
-    if (bioString && bioString.startsWith('[📍 ')) {
+    if (bioString && bioString.startsWith('[đŸ“ ')) {
       const endIdx = bioString.indexOf(']');
       if (endIdx > 0) {
         const locPart = bioString.substring(4, endIdx);
@@ -241,7 +241,7 @@ export default function Friends() {
     let city = '';
     let dist = '';
     const bio = person.bio || '';
-    if (bio.startsWith('[📍 ')) {
+    if (bio.startsWith('[đŸ“ ')) {
       const endIdx = bio.indexOf(']');
       if (endIdx > 0) {
         const locPart = bio.substring(4, endIdx);
@@ -259,20 +259,20 @@ export default function Friends() {
         dist = myLoc.district;
       } else if (seed % 3 === 1) {
         city = myLoc.province;
-        const dists = ['Quận Cầu Giấy', 'Quận Đống Đa', 'Quận Hai Bà Trưng', 'Quận Hoàn Kiếm', 'Quận 1', 'Quận 3', 'Quận Phú Nhuận', 'Quận Sơn Trà', 'Quận Hải Châu'];
+        const dists = ['Quáº­n Cáº§u Giáº¥y', 'Quáº­n Äá»‘ng Äa', 'Quáº­n Hai BĂ  TrÆ°ng', 'Quáº­n HoĂ n Kiáº¿m', 'Quáº­n 1', 'Quáº­n 3', 'Quáº­n PhĂº Nhuáº­n', 'Quáº­n SÆ¡n TrĂ ', 'Quáº­n Háº£i ChĂ¢u'];
         const otherDists = dists.filter(d => d !== myLoc.district);
         dist = otherDists[seed % otherDists.length];
       } else {
-        city = myLoc.province === 'Hà Nội' ? 'TP. Hồ Chí Minh' : 'Hà Nội';
-        dist = city === 'Hà Nội' ? 'Quận Cầu Giấy' : 'Quận 1';
+        city = myLoc.province === 'HĂ  Ná»™i' ? 'TP. Há»“ ChĂ­ Minh' : 'HĂ  Ná»™i';
+        dist = city === 'HĂ  Ná»™i' ? 'Quáº­n Cáº§u Giáº¥y' : 'Quáº­n 1';
       }
     }
 
     if (city === myLoc.province) {
       if (dist === myLoc.district) {
-        return { level: 1, label: `Cùng ${dist}`, city, dist };
+        return { level: 1, label: `CĂ¹ng ${dist}`, city, dist };
       } else {
-        return { level: 2, label: `Lân cận (${dist})`, city, dist };
+        return { level: 2, label: `LĂ¢n cáº­n (${dist})`, city, dist };
       }
     }
     return null;
@@ -319,8 +319,8 @@ export default function Friends() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  // Auto-refresh mỗi 5 giây để cập nhật lời mời kết bạn mới
-  // Dùng ref để track id của từng lời mời (tránh false-positive khi count bằng nhau)
+  // Auto-refresh má»—i 5 giĂ¢y Ä‘á»ƒ cáº­p nháº­t lá»i má»i káº¿t báº¡n má»›i
+  // DĂ¹ng ref Ä‘á»ƒ track id cá»§a tá»«ng lá»i má»i (trĂ¡nh false-positive khi count báº±ng nhau)
   const knownReqIds = useRef(null);
   useEffect(() => {
     const t = setInterval(async () => {
@@ -329,14 +329,14 @@ export default function Friends() {
         const p = await getPendingRequests(String(user.id));
         const newIds = p.map(r => r.requestId).sort().join(',');
         if (knownReqIds.current === null) {
-          // Lần đầu chạy  chỉ ghi nhận, không trigger
+          // Láº§n Ä‘áº§u cháº¡y  chá»‰ ghi nháº­n, khĂ´ng trigger
           knownReqIds.current = newIds;
           return;
         }
         if (newIds !== knownReqIds.current) {
           knownReqIds.current = newIds;
           setPending(p);
-          // Nếu có lời mời mới hơn trước  alert + chuyển tab
+          // Náº¿u cĂ³ lá»i má»i má»›i hÆ¡n trÆ°á»›c  alert + chuyá»ƒn tab
           if (p.length > pending.length) {
             setNewPendingAlert(true);
             setTab('pending');
@@ -355,13 +355,13 @@ export default function Friends() {
     setAction(req.requestId, true);
     try {
       await acceptFriendRequest(req.requestId);
-      addToast(`Đã kết bạn với ${req.fullName}`, 'success');
+      addToast(`ÄĂ£ káº¿t báº¡n vá»›i ${req.fullName}`, 'success');
       await loadAll();
     } catch (e) { addToast(e.message, 'error'); }
     finally { setAction(req.requestId, false); }
   };
 
-  const handleReject = async (req, label = 'Đã từ chối') => {
+  const handleReject = async (req, label = 'ÄĂ£ tá»« chá»‘i') => {
     setAction(req.requestId, true);
     try {
       await removeFriend(req.requestId);
@@ -375,7 +375,7 @@ export default function Friends() {
     setAction(person.userId, true);
     try {
       await sendFriendRequest(String(user.id), String(person.userId));
-      addToast(`Đã gửi lời mời đến ${person.fullName}`, 'success');
+      addToast(`ÄĂ£ gá»­i lá»i má»i Ä‘áº¿n ${person.fullName}`, 'success');
       await loadAll();
     } catch (e) { addToast(e.message, 'error'); }
     finally { setAction(person.userId, false); }
@@ -391,8 +391,8 @@ export default function Friends() {
       <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', padding: '40px' }}>
           
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Vui lòng đăng nhập để sử dụng chức năng kết bạn.</p>
-          <Link to="/login" className="btn btn-primary" style={{ padding: '12px 28px', fontSize: '15px', width: 'auto', borderRadius: '24px' }}>Đăng nhập</Link>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Vui lĂ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ sá»­ dá»¥ng chá»©c nÄƒng káº¿t báº¡n.</p>
+          <Link to="/login" className="btn btn-primary" style={{ padding: '12px 28px', fontSize: '15px', width: 'auto', borderRadius: '24px' }}>ÄÄƒng nháº­p</Link>
         </div>
       </div>
     );
@@ -401,50 +401,53 @@ export default function Friends() {
   return (
     <>
       <AppLayout>
-
-      {/* Main content */}
       <main className="friend-page-container">
-          {/* Header */}
-          <div className="premium-panel">
-            <h1 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '4px', color: '#fff' }}>Kết bạn</h1>
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '12px' }}>
-              Kết nối với sinh viên cùng trường, cùng ngành và mở rộng mạng lưới học tập.
-            </p>
-
-            {/* Search */}
-            <div className="search-container">
-              <span style={{ fontSize: '14px' }}>🔍</span>
+          {/* Header Banner */}
+          <div className="friend-header-banner">
+            <div className="friend-header-content">
+              <div className="friend-header-icon">đŸ‘¥</div>
+              <div>
+                <h1 className="friend-header-title">Káº¿t báº¡n</h1>
+                <p className="friend-header-sub">Káº¿t ná»‘i vá»›i sinh viĂªn cĂ¹ng trÆ°á»ng, cĂ¹ng ngĂ nh vĂ  má»Ÿ rá»™ng máº¡ng lÆ°á»›i há»c táº­p.</p>
+              </div>
+            </div>
+            <div className="friend-search-wrap">
+              <span style={{ fontSize: '16px', flexShrink: 0 }}>đŸ”</span>
               <input
-                className="search-input"
-                placeholder="Tìm kiếm theo tên, trường..."
+                className="friend-search-input"
+                placeholder="TĂ¬m kiáº¿m theo tĂªn, trÆ°á»ng..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
+              {search && (
+                <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: 0, lineHeight: 1 }}>âœ•</button>
+              )}
             </div>
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <TabBtn label="Bạn bè" count={friends.length} active={tab === 'friends'} onClick={() => setTab('friends')} />
-            <TabBtn label="Lời mời nhận" count={pending.length} active={tab === 'pending'} onClick={() => { setTab('pending'); setNewPendingAlert(false); }} highlight={newPendingAlert && tab !== 'pending'} />
-            <TabBtn label="Đã gửi" count={sent.length} active={tab === 'sent'} onClick={() => setTab('sent')} />
-            <TabBtn label="Lân cận" count={myLocation.province ? nearbySuggestions.length : 0} active={tab === 'nearby'} onClick={() => setTab('nearby')} />
-            <TabBtn label="Gợi ý" count={suggestions.length} active={tab === 'suggestions'} onClick={() => setTab('suggestions')} />
+          <div className="friend-tabs">
+            <TabBtn label="Báº¡n bĂ¨" count={friends.length} active={tab === 'friends'} onClick={() => setTab('friends')} />
+            <TabBtn label="Lá»i má»i nháº­n" count={pending.length} active={tab === 'pending'} onClick={() => { setTab('pending'); setNewPendingAlert(false); }} highlight={newPendingAlert && tab !== 'pending'} />
+            <TabBtn label="ÄĂ£ gá»­i" count={sent.length} active={tab === 'sent'} onClick={() => setTab('sent')} />
+            <TabBtn label="LĂ¢n cáº­n" count={myLocation.province ? nearbySuggestions.length : 0} active={tab === 'nearby'} onClick={() => setTab('nearby')} />
+            <TabBtn label="Gá»£i Ă½" count={suggestions.length} active={tab === 'suggestions'} onClick={() => setTab('suggestions')} />
           </div>
 
-          {/* Content  min-height cố định tránh giật layout */}
-          <div style={{ minHeight: '400px' }}>
+          {/* Content */}
+          <div className="friend-list-wrap">
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)', fontSize: '15px' }}>
-                Đang tải...
+              <div className="friend-loading">
+                <div className="friend-loading-spinner" />
+                <span>Äang táº£i...</span>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-                {/*  Bạn bè  */}
+                {/* Báº¡n bĂ¨ */}
                 {tab === 'friends' && (
                   filter(friends).length === 0
-                    ? <EmptyState icon="" text={search ? 'Không tìm thấy bạn bè nào.' : 'Bạn chưa có bạn bè nào. Hãy kết bạn ngay!'} />
+                    ? <EmptyState icon="đŸ¤" text={search ? 'KhĂ´ng tĂ¬m tháº¥y báº¡n bĂ¨ nĂ o.' : 'Báº¡n chÆ°a cĂ³ báº¡n bĂ¨ nĂ o. HĂ£y káº¿t báº¡n ngay!'} />
                     : (() => {
                         const sorted = [...filter(friends)].sort((a, b) => {
                           const aOn = onlineUserIds.includes(a.userId.toString()) ? 1 : 0;
@@ -458,7 +461,7 @@ export default function Friends() {
                             isOnline={onlineUserIds.includes(p.userId.toString())}
                             actions={
                               <Btn variant="danger" disabled={actionLoading[p.requestId]} onClick={() => setConfirmUnfriend({ person: p })}>
-                                Hủy kết bạn
+                                Há»§y káº¿t báº¡n
                               </Btn>
                             }
                           />
@@ -466,70 +469,60 @@ export default function Friends() {
                       })()
                 )}
 
-                {/*  Lời mời nhận  */}
+                {/* Lá»i má»i nháº­n */}
                 {tab === 'pending' && (
                   filter(pending).length === 0
-                    ? <EmptyState icon="" text="Không có lời mời kết bạn nào." />
+                    ? <EmptyState icon="đŸ“­" text="KhĂ´ng cĂ³ lá»i má»i káº¿t báº¡n nĂ o." />
                     : filter(pending).map(p => (
                       <PersonCard key={p.requestId} person={p} actions={<>
-                        <Btn variant="success" disabled={actionLoading[p.requestId]} onClick={() => handleAccept(p)}>
-                           Chấp nhận
-                        </Btn>
-                        <Btn variant="secondary" disabled={actionLoading[p.requestId]} onClick={() => handleReject(p, 'Đã từ chối lời mời')}>
-                          Từ chối
-                        </Btn>
+                        <Btn variant="success" disabled={actionLoading[p.requestId]} onClick={() => handleAccept(p)}>âœ“ Cháº¥p nháº­n</Btn>
+                        <Btn variant="secondary" disabled={actionLoading[p.requestId]} onClick={() => handleReject(p, 'ÄĂ£ tá»« chá»‘i lá»i má»i')}>Tá»« chá»‘i</Btn>
                       </>} />
                     ))
                 )}
 
-                {/*  Đã gửi  */}
+                {/* ÄĂ£ gá»­i */}
                 {tab === 'sent' && (
                   filter(sent).length === 0
-                    ? <EmptyState icon="" text="Chưa gửi lời mời kết bạn nào." />
+                    ? <EmptyState icon="đŸ“¤" text="ChÆ°a gá»­i lá»i má»i káº¿t báº¡n nĂ o." />
                     : filter(sent).map(p => (
                       <PersonCard key={p.requestId} person={p} actions={
-                        <Btn variant="secondary" disabled={actionLoading[p.requestId]} onClick={() => handleReject(p, 'Đã thu hồi lời mời')}>
-                          Thu hồi
-                        </Btn>
+                        <Btn variant="secondary" disabled={actionLoading[p.requestId]} onClick={() => handleReject(p, 'ÄĂ£ thu há»“i lá»i má»i')}>Thu há»“i</Btn>
                       } />
                     ))
                 )}
 
-                {/*  Lân cận  */}
+                {/* LĂ¢n cáº­n */}
                 {tab === 'nearby' && (
                   !myLocation.province ? (
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '32px 24px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '40px', marginBottom: '12px' }}>📍</div>
-                      <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Chưa thiết lập vị trí</h3>
-                      <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', maxWidth: '340px', margin: '0 auto 16px', lineHeight: 1.5 }}>
-                        Cập nhật địa phương sinh sống (Tỉnh/Thành phố & Quận/Huyện) trong trang cá nhân của bạn để tìm các bạn học quanh đây nhé!
+                    <div className="friend-empty-location">
+                      <div style={{ fontSize: '56px', marginBottom: '16px' }}>đŸ“</div>
+                      <h3 style={{ margin: '0 0 10px', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>ChÆ°a thiáº¿t láº­p vá»‹ trĂ­</h3>
+                      <p style={{ fontSize: '14px', color: 'var(--text-muted)', maxWidth: '360px', margin: '0 auto 20px', lineHeight: 1.6 }}>
+                        Cáº­p nháº­t Tá»‰nh/ThĂ nh phá»‘ trong trang cĂ¡ nhĂ¢n Ä‘á»ƒ tĂ¬m báº¡n há»c quanh Ä‘Ă¢y nhĂ©!
                       </p>
-                      <Link to="/profile" className="btn btn-primary" style={{ padding: '8px 20px', borderRadius: '24px', fontSize: '13.5px', fontWeight: 600, display: 'inline-block', textDecoration: 'none' }}>
-                        Đến Trang cá nhân
+                      <Link to="/profile" style={{ padding: '10px 24px', borderRadius: '24px', fontSize: '14px', fontWeight: 600, display: 'inline-block', textDecoration: 'none', background: 'var(--primary)', color: 'white' }}>
+                        Äáº¿n Trang cĂ¡ nhĂ¢n
                       </Link>
                     </div>
                   ) : (
                     filter(nearbySuggestions).length === 0
-                      ? <EmptyState icon="📍" text={search ? 'Không tìm thấy bạn học lân cận nào phù hợp.' : 'Không tìm thấy bạn học lân cận nào xung quanh.'} />
+                      ? <EmptyState icon="đŸ“" text={search ? 'KhĂ´ng tĂ¬m tháº¥y báº¡n há»c lĂ¢n cáº­n nĂ o.' : 'KhĂ´ng cĂ³ báº¡n há»c lĂ¢n cáº­n nĂ o.'} />
                       : filter(nearbySuggestions).map(p => (
                         <PersonCard key={p.userId} person={p} actions={
-                          <Btn variant="primary" disabled={actionLoading[p.userId]} onClick={() => handleSend(p)}>
-                            + Kết bạn
-                          </Btn>
+                          <Btn variant="primary" disabled={actionLoading[p.userId]} onClick={() => handleSend(p)}>+ Káº¿t báº¡n</Btn>
                         } />
                       ))
                   )
                 )}
 
-                {/*  Gợi ý  */}
+                {/* Gá»£i Ă½ */}
                 {tab === 'suggestions' && (
                   filter(suggestions).length === 0
-                    ? <EmptyState icon="" text={search ? 'Không tìm thấy người dùng phù hợp.' : 'Không còn gợi ý kết bạn nào.'} />
+                    ? <EmptyState icon="đŸ’¡" text={search ? 'KhĂ´ng tĂ¬m tháº¥y ngÆ°á»i dĂ¹ng phĂ¹ há»£p.' : 'KhĂ´ng cĂ²n gá»£i Ă½ káº¿t báº¡n nĂ o.'} />
                     : filter(suggestions).map(p => (
                       <PersonCard key={p.userId} person={p} actions={
-                        <Btn variant="primary" disabled={actionLoading[p.userId]} onClick={() => handleSend(p)}>
-                          + Kết bạn
-                        </Btn>
+                        <Btn variant="primary" disabled={actionLoading[p.userId]} onClick={() => handleSend(p)}>+ Káº¿t báº¡n</Btn>
                       } />
                     ))
                 )}
@@ -541,74 +534,27 @@ export default function Friends() {
 
       {/* Confirm Unfriend Modal */}
       {confirmUnfriend && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(0,0,0,0.6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '20px',
-          }}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
           onClick={() => setConfirmUnfriend(null)}
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-              borderRadius: '20px',
-              padding: '32px 28px',
-              maxWidth: '420px',
-              width: '100%',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-              animation: 'slideIn 0.2s ease',
-            }}
-          >
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '12px' }}>👥</div>
-              <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
-                Hủy kết bạn?
-              </h2>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px', padding: '36px 32px', maxWidth: '440px', width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,0.5)', animation: 'slideIn 0.2s ease' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ fontSize: '52px', marginBottom: '14px' }}>đŸ‘¥</div>
+              <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 10px' }}>Há»§y káº¿t báº¡n?</h2>
               <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
-                Bạn có chắc muốn hủy kết bạn với{' '}
-                <strong style={{ color: 'var(--text-primary)' }}>{confirmUnfriend.person.fullName}</strong>?
-                Hành động này không thể hoàn tác.
+                Báº¡n cĂ³ cháº¯c muá»‘n há»§y káº¿t báº¡n vá»›i <strong style={{ color: 'var(--text-primary)' }}>{confirmUnfriend.person.fullName}</strong>? HĂ nh Ä‘á»™ng nĂ y khĂ´ng thá»ƒ hoĂ n tĂ¡c.
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => setConfirmUnfriend(null)}
-                style={{
-                  flex: 1, padding: '10px 0', borderRadius: '12px',
-                  border: '1px solid var(--border)',
-                  background: 'transparent', color: 'var(--text-secondary)',
-                  fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'inherit', transition: 'var(--transition)',
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-              >
-                Giữ lại
+              <button onClick={() => setConfirmUnfriend(null)} style={{ flex: 1, padding: '12px 0', borderRadius: '14px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '15px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Giá»¯ láº¡i
               </button>
               <button
-                onClick={async () => {
-                  const p = confirmUnfriend.person;
-                  setConfirmUnfriend(null);
-                  await handleReject(p, `Đã hủy kết bạn với ${p.fullName}`);
-                }}
+                onClick={async () => { const p = confirmUnfriend.person; setConfirmUnfriend(null); await handleReject(p, `ÄĂ£ há»§y káº¿t báº¡n vá»›i ${p.fullName}`); }}
                 disabled={actionLoading[confirmUnfriend.person.requestId]}
-                style={{
-                  flex: 1, padding: '10px 0', borderRadius: '12px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  color: 'white',
-                  fontSize: '14px', fontWeight: 700, cursor: 'pointer',
-                  fontFamily: 'inherit', transition: 'var(--transition)',
-                  boxShadow: '0 4px 12px rgba(239,68,68,0.3)',
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                style={{ flex: 1, padding: '12px 0', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', fontSize: '15px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(239,68,68,0.35)' }}
               >
-                Hủy kết bạn
+                Há»§y káº¿t báº¡n
               </button>
             </div>
           </div>
@@ -617,107 +563,156 @@ export default function Friends() {
 
       <style>{`
         .friend-page-container {
-          padding: 16px;
-          max-width: 1000px;
+          padding: 24px 28px;
+          max-width: 860px;
           margin: 0 auto;
-          font-family: 'Inter', sans-serif;
         }
-        .premium-panel {
-          background: rgba(255, 255, 255, 0.03);
+
+        /* â”€â”€ Header Banner â”€â”€ */
+        .friend-header-banner {
+          background: linear-gradient(135deg, rgba(108,99,255,0.12) 0%, rgba(255,122,0,0.08) 100%);
+          border: 1px solid rgba(108,99,255,0.2);
+          border-radius: 20px;
+          padding: 24px 28px;
+          margin-bottom: 20px;
           backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          padding: 16px 20px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .friend-header-content {
+          display: flex;
+          align-items: center;
+          gap: 16px;
           margin-bottom: 16px;
         }
-        .search-container {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(0,0,0,0.2);
+        .friend-header-icon {
+          font-size: 36px;
+          width: 60px; height: 60px;
+          background: rgba(108,99,255,0.15);
+          border: 1px solid rgba(108,99,255,0.25);
+          border-radius: 16px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .friend-header-title {
+          font-size: 24px; font-weight: 800;
+          color: var(--text-primary);
+          margin: 0 0 4px;
+          letter-spacing: -0.5px;
+        }
+        .friend-header-sub {
+          font-size: 14px; color: var(--text-muted);
+          margin: 0; line-height: 1.5;
+        }
+        .friend-search-wrap {
+          display: flex; align-items: center; gap: 10px;
+          background: rgba(0,0,0,0.25);
           border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 12px;
-          padding: 8px 12px;
+          border-radius: 14px;
+          padding: 12px 16px;
           transition: all 0.3s;
         }
-        .search-container:focus-within {
-          border-color: #6366f1;
-          background: rgba(0,0,0,0.3);
-          box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+        .friend-search-wrap:focus-within {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
         }
-        .search-input {
+        .friend-search-input {
           background: none; border: none; outline: none; flex: 1;
-          color: #fff; font-size: 13px; font-family: inherit;
+          color: var(--text-primary); font-size: 14px; font-family: inherit;
         }
-        
+        .friend-search-input::placeholder { color: var(--text-muted); }
+
+        /* â”€â”€ Tabs â”€â”€ */
+        .friend-tabs {
+          display: flex; gap: 10px;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
         .tab-btn {
-          padding: 6px 14px;
-          border-radius: 16px;
+          padding: 9px 18px;
+          border-radius: 20px;
           cursor: pointer;
           font-family: inherit;
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           transition: all 0.2s;
-          background: rgba(255,255,255,0.05);
-          color: #94a3b8;
-          border: 1px solid rgba(255,255,255,0.1);
+          background: var(--bg-card);
+          color: var(--text-muted);
+          border: 1px solid var(--border);
           white-space: nowrap;
-          display: flex;
-          align-items: center;
-          gap: 6px;
+          display: flex; align-items: center; gap: 7px;
         }
         .tab-btn:hover {
-          background: rgba(255,255,255,0.1);
-          color: #fff;
+          background: rgba(108,99,255,0.08);
+          color: var(--text-primary);
+          border-color: rgba(108,99,255,0.3);
         }
         .tab-btn.active {
           background: linear-gradient(135deg, #6366f1, #8b5cf6);
           color: white;
-          border: none;
-          box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+          border-color: transparent;
+          box-shadow: 0 4px 16px rgba(99,102,241,0.35);
         }
         .tab-btn.highlight {
           border-color: rgba(239,68,68,0.5);
           color: #ef4444;
-          background: rgba(239,68,68,0.1);
+          background: rgba(239,68,68,0.08);
           animation: pulse 1.2s ease-in-out infinite;
         }
         .tab-badge {
-          background: rgba(255,255,255,0.25);
+          background: rgba(255,255,255,0.3);
           color: white;
-          font-size: 11px;
-          font-weight: 800;
-          padding: 1px 7px;
-          border-radius: 12px;
-          min-width: 18px;
-          text-align: center;
+          font-size: 11px; font-weight: 800;
+          padding: 2px 7px; border-radius: 12px;
+          min-width: 20px; text-align: center;
         }
         .tab-btn:not(.active) .tab-badge {
-          background: rgba(255,255,255,0.1);
+          background: rgba(108,99,255,0.15);
+          color: var(--primary-light);
         }
-        .tab-btn.highlight:not(.active) .tab-badge {
+        .tab-btn.highlight .tab-badge {
           background: rgba(239,68,68,0.2);
           color: #fca5a5;
         }
 
+        /* â”€â”€ Person Card â”€â”€ */
         .person-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 12px;
-          padding: 10px 12px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          transition: all 0.3s;
-          margin-bottom: 8px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 18px;
+          padding: 16px 20px;
+          display: flex; align-items: center; gap: 16px;
+          transition: all 0.25s ease;
         }
         .person-card:hover {
-          background: rgba(255,255,255,0.06);
-          border-color: rgba(108,99,255,0.3);
+          border-color: rgba(108,99,255,0.35);
+          box-shadow: 0 8px 28px rgba(108,99,255,0.12);
           transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(108,99,255,0.15);
+        }
+
+        /* â”€â”€ List wrap â”€â”€ */
+        .friend-list-wrap {
+          padding-bottom: 32px;
+        }
+
+        /* â”€â”€ Loading â”€â”€ */
+        .friend-loading {
+          display: flex; flex-direction: column; align-items: center;
+          gap: 14px; padding: 80px 0; color: var(--text-muted); font-size: 15px;
+        }
+        .friend-loading-spinner {
+          width: 36px; height: 36px;
+          border: 3px solid var(--border);
+          border-top-color: var(--primary);
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        /* â”€â”€ Empty location â”€â”€ */
+        .friend-empty-location {
+          text-align: center;
+          padding: 60px 24px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 20px;
         }
 
         @keyframes slideIn {
@@ -727,6 +722,9 @@ export default function Friends() {
         @keyframes pulse {
           0%, 100% { box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
           50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0.3); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </>
