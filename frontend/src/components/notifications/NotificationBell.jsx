@@ -29,7 +29,7 @@ export default function NotificationBell({ style }) {
     if (!btnRef.current) return;
     const rect = btnRef.current.getBoundingClientRect();
     // Tìm khung profile cha (card chứa chuông + avatar)
-    const card = btnRef.current.closest('[data-profile-card]');
+    const card = btnRef.current.closest('[data-profilecard]');
     if (card) {
       const cardRect = card.getBoundingClientRect();
       setPos({

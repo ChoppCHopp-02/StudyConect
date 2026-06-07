@@ -420,7 +420,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
               <aside className="desktop-only no-scrollbar" style={{ position: 'sticky', top: 0, display: 'flex', flexDirection: 'column', gap: '2px', zIndex: 10, maxHeight: '100%', overflowY: 'auto' }}>
                 {/* Profile Widget */}
                 {user && (
-                  <div data-profile-card style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px', marginBottom: '8px', overflow: 'visible', paddingRight: '8px' }}>
+                  <div data-profilecard="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px', marginBottom: '8px', overflow: 'visible', paddingRight: '8px' }}>
                     <Link to="/profile" style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
                       <div
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 10px 10px 12px', transition: 'var(--transition)' }}
