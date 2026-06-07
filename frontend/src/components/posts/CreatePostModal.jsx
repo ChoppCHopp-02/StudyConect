@@ -2,12 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import Avatar from '@/components/common/Avatar';
 import { createPost } from '@/services/interactionService';
 
-const TAGS = ['Toán - Lý', 'Lập trình', 'Kinh tế', 'Ngoại ngữ', 'Thông báo', 'Khác'];
 
 export default function CreatePostModal({ user, onClose, onSubmit }) {
   const [text, setText] = useState('');
-  const [tag, setTag] = useState('');
-  const [customTag, setCustomTag] = useState('');
   const [loading, setLoading] = useState(false);
   const textareaRef = useRef(null);
 
@@ -21,11 +18,10 @@ export default function CreatePostModal({ user, onClose, onSubmit }) {
     setLoading(true);
 
     try {
-      const chosenTag = tag === 'Khác' ? customTag.trim() : tag;
       const newPost = await createPost(null, {
         content: text.trim(),
         userId: user.id,
-        tag: chosenTag || null
+        tag: null
       });
       setLoading(false);
       onSubmit(newPost);
@@ -122,58 +118,8 @@ export default function CreatePostModal({ user, onClose, onSubmit }) {
               boxSizing: 'border-box',
             }}
           />
-          {/* Tag selector */}
-          <div style={{ marginTop: '12px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600 }}>
-              Chọn chủ đề:
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {TAGS.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTag(tag === t ? '' : t)}
-                  style={{
-                    background: tag === t ? 'rgba(108,99,255,0.2)' : 'var(--bg-input)',
-                    border: `1px solid ${tag === t ? 'var(--primary)' : 'var(--border)'}`,
-                    borderRadius: '12px',
-                    padding: '5px 13px',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    color: tag === t ? 'var(--primary-light)' : 'var(--text-secondary)',
-                    fontFamily: 'inherit',
-                    transition: 'var(--transition)',
-                    fontWeight: tag === t ? 700 : 400,
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-            {tag === 'Khác' && (
-              <input
-                type="text"
-                placeholder="Nhập môn học hoặc chủ đề của bạn..."
-                value={customTag}
-                onChange={(e) => setCustomTag(e.target.value)}
-                maxLength={40}
-                style={{
-                  marginTop: '8px',
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--primary)',
-                  borderRadius: '12px',
-                  padding: '8px 14px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  fontFamily: 'inherit',
-                  outline: 'none',
-                }}
-              />
-            )}
-          </div>
         </div>
+
 
         {/* Footer */}
         <div
