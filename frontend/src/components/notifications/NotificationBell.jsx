@@ -22,22 +22,22 @@ export default function NotificationBell({ style }) {
   } = useNotificationContext();
 
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 280 });
   const btnRef = useRef(null);
 
-  // Tính vị trí dropdown ngay dưới nút chuông, không đè lên sidebar
+  // Dropdown nằm trong vùng sidebar, dưới chuông, không đè content
   const calcPos = () => {
     if (!btnRef.current) return;
     const rect = btnRef.current.getBoundingClientRect();
-    const dropW = 280;
-    const gap = 8;
-    // Đặt sang phải của nút chuông (không đè lên sidebar)
-    let left = rect.right + gap;
-    // Nếu tràn phải màn hình thì đẩy vào
-    if (left + dropW > window.innerWidth - gap) {
-      left = window.innerWidth - dropW - gap;
-    }
-    setPos({ top: rect.top, left });
+    const gap = 6;
+    // Lấy sidebar (element cha gần nhất có class aside hoặc tính từ rect.left về 0)
+    // Dropdown rộng bằng từ left=8 đến rect.right (tức nằm gọn trong sidebar)
+    const dropW = Math.max(rect.right - 8, 200); // rộng bằng sidebar tính từ lề
+    setPos({
+      top: rect.bottom + gap,
+      left: 8,
+      width: Math.min(dropW, rect.right), // không vượt quá mép phải sidebar
+    });
   };
 
   const handleOpen = () => {
@@ -126,7 +126,7 @@ export default function NotificationBell({ style }) {
         )}
       </button>
 
-      {/* Dropdown — dùng fixed để không bị clip bởi overflow của sidebar */}
+      {/* Dropdown — fixed, nằm gọn trong vùng sidebar */}
       {open && (
         <>
           {/* Backdrop */}
@@ -138,7 +138,7 @@ export default function NotificationBell({ style }) {
             position: 'fixed',
             top: pos.top,
             left: pos.left,
-            width: 280,
+            width: pos.width,
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
             borderRadius: '14px',
@@ -188,14 +188,14 @@ export default function NotificationBell({ style }) {
               )}
             </div>
 
-            {/* Danh sách — scroll trong khung cố định */}
+            {/* Danh sách — scroll, ~2 items */}
             <div style={{
               overflowY: 'auto',
               maxHeight: '160px',
               overscrollBehavior: 'contain',
             }}>
               {notifs.length === 0 ? (
-                <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                   Không có thông báo nào
                 </div>
               ) : (
