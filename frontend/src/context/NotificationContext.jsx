@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { useToast } from './ToastContext';
 import useNotifications from '../hooks/useNotifications';
 
 const NotificationContext = createContext(null);
@@ -16,8 +15,6 @@ export const useNotificationContext = () => {
 
 export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
-  const { addToast } = useToast();
-  
   const userId = user?.id;
   const notifications = useNotifications(userId);
   const { notifs } = notifications;
@@ -27,7 +24,6 @@ export const NotificationProvider = ({ children }) => {
   const isInitialLoadRef = useRef(true);
 
   // Tracks if toast popups are enabled
-  // eslint-disable-next-line no-undef
   const [toastEnabled, setToastEnabled] = useState(() => {
     return localStorage.getItem('studyconect_toast_enabled') !== 'false';
   });
