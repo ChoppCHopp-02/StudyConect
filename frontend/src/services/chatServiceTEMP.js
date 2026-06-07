@@ -86,7 +86,7 @@ export const sendMessage = async (fromUserId, toUserId, content, type = 'text', 
     toUserId: String(raw.receiver_id),
     content: raw.content,
     fileAttachment: raw.file_attachment || null,
-    type: (raw.content?.startsWith('data:image') || (raw.content?.startsWith('http') && (raw.content?.match(/\.(jpeg|jpg|gif|png)/i) || raw.content?.includes('supabase')))) ? 'image' : 'text',
+    type: raw.content?.startsWith('[chat_background]:') ? 'background' : ((raw.content?.startsWith('data:image') || (raw.content?.startsWith('http') && (raw.content?.match(/\.(jpeg|jpg|gif|png)/i) || raw.content?.includes('supabase')))) ? 'image' : 'text'),
     createdAt: raw.created_at,
     read: raw.is_read
   };
@@ -186,7 +186,6 @@ export const getLastMessages = (userId) => {
   const convMap = {};
   cachedMessages.forEach(m => {
     if (m.fromUserId !== uid && m.toUserId !== uid) return;
-    if (m.type === 'background') return; // Bỏ qua tin nhắn đổi hình nền
     const otherId = m.fromUserId === uid ? m.toUserId : m.fromUserId;
     if (!convMap[otherId] || new Date(m.createdAt) > new Date(convMap[otherId].createdAt)) {
       convMap[otherId] = m;
