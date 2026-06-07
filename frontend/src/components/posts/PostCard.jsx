@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Avatar from '@/components/common/Avatar';
 import { timeAgo } from '@/utils';
 import LikeCommentBar from './LikeCommentBar';
@@ -18,6 +19,7 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
   const isLiked = !!myLike;
   const likedEmoji = typeof myLike === 'object' ? myLike?.emoji : null;
   const isOwner = post?.userId === currentUser?.id;
+  const profileUrl = isOwner ? '/profile' : `/friends/${post.userId}`;
 
   const handleComment = () => {
     if (!commentText.trim()) return;
@@ -57,12 +59,19 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
     >
       {/* Author row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 18px 0' }}>
-        <Avatar src={post.userAvatar} initial={post.userFullName || 'U'} size={46} />
+        <Link to={profileUrl} style={{ textDecoration: 'none' }}>
+          <Avatar src={post.userAvatar} initial={post.userFullName || 'U'} size={46} />
+        </Link>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>
-              {post.userFullName}
-            </span>
+            <Link to={profileUrl} style={{ textDecoration: 'none' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+              >
+                {post.userFullName}
+              </span>
+            </Link>
             {post.isPinned && (
               <span
                 style={{
