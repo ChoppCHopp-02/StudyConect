@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // src/pages/PrivateCall.jsx
 // Trang gọi video riêng tư 1-1 — hoàn toàn khác với Meetroom
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -321,6 +322,7 @@ function VideoTile({ stream, name, avatar, muted = false, camOff = false, mirror
         <video
           ref={ref}
           autoPlay playsInline muted={muted}
+          disablePictureInPicture
           style={{
             width: '100%', height: '100%',
             objectFit: 'cover',
@@ -374,10 +376,29 @@ export default function PrivateCall() {
   const friendAvatar = (() => { try { return decodeURIComponent(searchParams.get('friendAvatar') || ''); } catch { return ''; } })() || '';
   const friendId = searchParams.get('friendId') || null;
 
+  // Giữ trạng thái Online (Presence) khi đang gọi điện
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase.channel('online-users', {
+      config: { presence: { key: user.id.toString() } },
+    });
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.track({
+          id: user.id.toString(),
+          onlineAt: new Date().toISOString(),
+        });
+      }
+    });
+    return () => { channel.unsubscribe(); };
+  }, [user?.id]);
+
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [localMirrored, setLocalMirrored] = useState(true);
   const [showControls, setShowControls] = useState(true);
+  const [layoutMode, setLayoutMode] = useState('pip'); // 'pip' hoặc 'grid'
+  const [pipSwapped, setPipSwapped] = useState(false);
   const hideTimer = useRef(null);
 
   // Theo dõi thời gian cuộc gọi ở cấp component
@@ -518,24 +539,113 @@ export default function PrivateCall() {
         </div>
 
         {/* ── Video Area ── */}
-        <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-          {/* Video đối phương — chiếm toàn màn hình */}
-          <VideoTile
-            stream={remoteStream}
-            name={friendName}
-            avatar={friendAvatar}
-            muted={false}
-            camOff={!remoteStream}
-            mirrored={false}
-            style={{ position: 'absolute', inset: 0, borderRadius: 0 }}
-          />
+        <div style={{
+          flex: 1, position: 'relative', overflow: 'hidden',
+          display: 'flex', padding: layoutMode === 'grid' ? (isFullscreen ? '24px' : '40px') : 0,
+        }}>
+          {layoutMode === 'grid' ? (
+            <div style={{
+              display: 'flex', flex: 1, gap: '20px',
+              flexDirection: typeof window !== 'undefined' && window.innerWidth < 768 ? 'column' : 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <div style={{ flex: 1, width: '100%', height: '100%', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <VideoTile
+                  stream={remoteStream}
+                  name={friendName}
+                  avatar={friendAvatar}
+                  muted={false}
+                  camOff={!remoteStream}
+                  mirrored={false}
+                  style={{ width: '100%', height: '100%', borderRadius: 0 }}
+                />
+              </div>
+              <div
+                style={{ flex: 1, width: '100%', height: '100%', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                onClick={() => setLocalMirrored(m => !m)}
+                title="Nhấn để lật camera"
+              >
+                <VideoTile
+                  stream={localStream}
+                  name={user?.fullName || 'Bạn'}
+                  avatar={user?.avatar}
+                  muted={true}
+                  camOff={!camOn}
+                  mirrored={localMirrored}
+                  style={{ width: '100%', height: '100%', borderRadius: 0 }}
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Video chính — chiếm toàn màn hình */}
+              <VideoTile
+                stream={pipSwapped ? localStream : remoteStream}
+                name={pipSwapped ? (user?.fullName || 'Bạn') : friendName}
+                avatar={pipSwapped ? user?.avatar : friendAvatar}
+                muted={pipSwapped ? true : false}
+                camOff={pipSwapped ? !camOn : !remoteStream}
+                mirrored={pipSwapped ? localMirrored : false}
+                style={{ position: 'absolute', inset: 0, borderRadius: 0 }}
+              />
+
+              {/* Video phụ — Picture in Picture (góc dưới phải) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: showControls ? '120px' : '30px',
+                  right: '30px',
+                  width: '180px', height: '260px',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  zIndex: 40, cursor: 'pointer',
+                  animation: 'pc-fade-in 0.4s ease forwards',
+                }}
+                onClick={() => setPipSwapped(s => !s)}
+                title="Nhấn để đổi màn hình chính"
+              >
+                <VideoTile
+                  stream={pipSwapped ? remoteStream : localStream}
+                  name={pipSwapped ? friendName : (user?.fullName || 'Bạn')}
+                  avatar={pipSwapped ? friendAvatar : user?.avatar}
+                  muted={pipSwapped ? false : true}
+                  camOff={pipSwapped ? !remoteStream : !camOn}
+                  mirrored={pipSwapped ? false : localMirrored}
+                  style={{ borderRadius: 0, width: '100%', height: '100%' }}
+                />
+                <div style={{
+                  position: 'absolute', top: '8px', right: '8px',
+                  background: 'rgba(0,0,0,0.65)', borderRadius: '6px',
+                  padding: '6px 10px', fontSize: '11px', color: '#fff',
+                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.85)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.65)'}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                  </svg>
+                  Phóng to
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Lỗi */}
           {error && (
             <div style={{
               position: 'absolute', inset: 0, display: 'flex',
               alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.8)', zIndex: 5,
+              background: 'rgba(0,0,0,0.8)', zIndex: 15,
               flexDirection: 'column', gap: '16px', padding: '32px',
               textAlign: 'center',
             }}>
@@ -564,43 +674,6 @@ export default function PrivateCall() {
               <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)', maxWidth: '300px', lineHeight: 1.6 }}>Đối phương đã gác máy. Đang quay lại phòng chat...</div>
             </div>
           )}
-
-          {/* Video bản thân — Picture in Picture (góc dưới phải) */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '120px', right: '24px',
-              width: '160px', height: '220px',
-              borderRadius: '16px',
-              overflow: 'hidden',
-              border: '2px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
-              zIndex: 5,
-              cursor: 'pointer',
-              animation: 'pc-fade-in 0.4s ease forwards',
-              transition: 'transform 0.2s',
-            }}
-            onClick={() => setLocalMirrored(m => !m)}
-            title="Nhấn để lật camera"
-          >
-            <VideoTile
-              stream={localStream}
-              name={user?.fullName || 'Bạn'}
-              avatar={user?.avatar}
-              muted={true}
-              camOff={!camOn}
-              mirrored={localMirrored}
-              style={{ borderRadius: 0, width: '100%', height: '100%' }}
-            />
-            {/* Tip lật camera */}
-            <div style={{
-              position: 'absolute', bottom: '6px', right: '6px',
-              background: 'rgba(0,0,0,0.6)', borderRadius: '6px',
-              padding: '2px 6px', fontSize: '10px', color: 'rgba(255,255,255,0.7)',
-            }}>
-              🔄 Lật
-            </div>
-          </div>
         </div>
 
         {/* ── Thanh điều khiển ── */}
@@ -623,6 +696,15 @@ export default function PrivateCall() {
             {/* Mic */}
             <CtrlBtn onClick={() => setMicOn(m => !m)} title={micOn ? 'Tắt mic' : 'Bật mic'} active={micOn}>
               {micOn ? '🎙️' : '🔇'}
+            </CtrlBtn>
+
+            {/* Chuyển đổi Layout (PiP / Grid) */}
+            <CtrlBtn
+              onClick={() => setLayoutMode(prev => prev === 'pip' ? 'grid' : 'pip')}
+              title={layoutMode === 'pip' ? 'Chia đôi màn hình' : 'Ảnh trong ảnh'}
+              active={true}
+            >
+              {layoutMode === 'pip' ? '🔲' : '🔳'}
             </CtrlBtn>
 
             {/* Kết thúc cuộc gọi — nút lớn ở giữa */}

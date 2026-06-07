@@ -56,7 +56,32 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
       maxHeight: '100%',
       ...style
     }}>
-      {stream && !camOff ? (
+      {isLocal && screenSharing ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px',
+          width: '100%',
+          height: '100%',
+          justifyContent: 'center',
+          background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, rgba(13, 13, 24, 1) 100%)',
+        }}>
+          <div style={{
+            padding: '20px',
+            borderRadius: '50%',
+            background: 'rgba(139,92,246,0.2)',
+            border: '2px solid rgba(139,92,246,0.4)',
+            color: '#a78bfa',
+            boxShadow: '0 8px 32px rgba(139,92,246,0.25)',
+          }}>
+            <MonitorSvg active={true} size={48} />
+          </div>
+          <span style={{ fontSize: '16px', color: 'white', fontWeight: 600 }}>
+            Bạn đang chia sẻ màn hình
+          </span>
+        </div>
+      ) : stream && !camOff ? (
         <>
           <video
             ref={ref}
@@ -92,16 +117,18 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
             </button>
           )}
           {/* Badge "Đang chia sẻ màn hình" */}
-          {screenSharing && (
+          {screenSharing && !isLocal && (
             <div style={{
               position: 'absolute', top: '16px', left: '16px',
               background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-              borderRadius: '8px', padding: '5px 10px',
-              fontSize: '11px', fontWeight: 700, color: 'white',
+              borderRadius: '8px', padding: '6px 12px',
+              fontSize: '12px', fontWeight: 700, color: 'white',
               display: 'flex', alignItems: 'center', gap: '6px',
               boxShadow: '0 4px 12px rgba(139,92,246,0.3)',
+              zIndex: 10,
             }}>
-              🖥️ Đang chia sẻ
+              <MonitorSvg active={true} size={14} />
+              Đang chia sẻ màn hình
             </div>
           )}
         </>
@@ -249,12 +276,14 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
   const channelRef   = useRef(null);
 
   // Dùng ref để các callbacks đọc được giá trị mới nhất mà không cần recreate effect
-  const micOnRef  = useRef(micOn);
-  const camOnRef  = useRef(camOn);
-  const userRef   = useRef(user);
-  useEffect(() => { micOnRef.current  = micOn;  }, [micOn]);
-  useEffect(() => { camOnRef.current  = camOn;  }, [camOn]);
-  useEffect(() => { userRef.current   = user;   }, [user]);
+  const micOnRef        = useRef(micOn);
+  const camOnRef        = useRef(camOn);
+  const userRef         = useRef(user);
+  const onForceMuteRef  = useRef(onForceMute);
+  useEffect(() => { micOnRef.current       = micOn;       }, [micOn]);
+  useEffect(() => { camOnRef.current       = camOn;       }, [camOn]);
+  useEffect(() => { userRef.current        = user;        }, [user]);
+  useEffect(() => { onForceMuteRef.current = onForceMute; }, [onForceMute]);
 
   const myIdValue = useMemo(
     // eslint-disable-next-line react-hooks/purity
@@ -483,24 +512,26 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
             if (localRef.current) {
               localRef.current.getVideoTracks().forEach(t => { t.enabled = false; });
             }
+            camOnRef.current = false;
             // Broadcast để peer khác cập nhật UI
             channelRef.current?.send({
               type: 'broadcast', event: 'signal',
               payload: { type: 'state-change', from: myId.current, room: roomId, camOn: false, micOn: micOnRef.current }
             });
-            if (onForceMute) onForceMute('cam');
+            if (onForceMuteRef.current) onForceMuteRef.current('cam');
           }
           if (msg.muteMic) {
             // Tắt track audio ngay lập tức
             if (localRef.current) {
               localRef.current.getAudioTracks().forEach(t => { t.enabled = false; });
             }
+            micOnRef.current = false;
             // Broadcast để peer khác cập nhật UI
             channelRef.current?.send({
               type: 'broadcast', event: 'signal',
               payload: { type: 'state-change', from: myId.current, room: roomId, camOn: camOnRef.current, micOn: false }
             });
-            if (onForceMute) onForceMute('mic');
+            if (onForceMuteRef.current) onForceMuteRef.current('mic');
           }
         }
       }
@@ -657,13 +688,57 @@ export default function MeetRoom() {
   const [copied,   setCopied]   = useState(false);
   const msgEndRef  = useRef(null);
 
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
+
+  useEffect(() => {
+    if ((!isFullscreen && sidebarOpen && tab === 'chat') || (isFullscreen && fsChatOpen && fsChatTab === 'chat')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUnreadChatCount(0);
+    }
+  }, [sidebarOpen, tab, fsChatOpen, fsChatTab, isFullscreen]);
+
+  useEffect(() => {
+    if (messages.length > lastMessageCount) {
+      const isChatOpen = (!isFullscreen && sidebarOpen && tab === 'chat') || (isFullscreen && fsChatOpen && fsChatTab === 'chat');
+      if (!isChatOpen) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUnreadChatCount(c => c + (messages.length - lastMessageCount));
+      }
+    }
+    setLastMessageCount(messages.length);
+  }, [messages, lastMessageCount, sidebarOpen, tab, isFullscreen, fsChatOpen, fsChatTab]);
+
   // WebRTC
-  const { localStream, remoteFeeds, error, replaceVideoTrack } = useWebRTC({ roomId, user, micOn, camOn });
+  const { localStream, remoteFeeds, error, replaceVideoTrack, channelRef } = useWebRTC({
+    roomId, user, micOn, camOn,
+    onForceMute: (type) => {
+      if (type === 'cam') setCamOn(false);
+      if (type === 'mic') setMicOn(false);
+    },
+  });
   const screenStreamRef = useRef(null);
   const [screenStream, setScreenStream] = useState(null);
 
   // Lấy thông tin trưởng nhóm (Trưởng phòng) thực sự từ study_groups
   const [groupCreatorId, setGroupCreatorId] = useState(null);
+
+  // Giữ trạng thái Online (Presence) khi đang trong phòng học
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase.channel('online-users', {
+      config: { presence: { key: user.id.toString() } },
+    });
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.track({
+          id: user.id.toString(),
+          onlineAt: new Date().toISOString(),
+        });
+      }
+    });
+    return () => { channel.unsubscribe(); };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!groupId) return;
@@ -703,25 +778,29 @@ export default function MeetRoom() {
     };
   }, []);
 
+  // Lọc remote feeds: loại bỏ peer có cùng userId với mình (tránh duplicate khi reload)
+  const myUserId = String(user?.id || '');
   const allFeeds = [
     {
       id: 'local',
-      name: screenOn ? `🖥 ${user?.fullName || 'Bạn'} (Màn hình)` : (user?.fullName || 'Bạn'),
+      name: user?.fullName || 'Bạn',
       avatar: user?.avatar,
       stream: screenOn ? screenStream : localStream,
       isLocal: true,
       camOff: !camOn && !screenOn,
       screenSharing: screenOn,
     },
-    ...Object.entries(remoteFeeds).map(([id, f]) => ({
-      id,
-      name: f.screenSharing ? `🖥 ${f.name} (Màn hình)` : f.name,
-      avatar: f.avatar,
-      stream: f.stream,
-      isLocal: false,
-      camOff: f.camOff ?? false,
-      screenSharing: f.screenSharing ?? false,
-    })),
+    ...Object.entries(remoteFeeds)
+      .filter(([id]) => myUserId === '' || id.split('_')[0] !== myUserId)
+      .map(([id, f]) => ({
+        id,
+        name: f.name,
+        avatar: f.avatar,
+        stream: f.stream,
+        isLocal: false,
+        camOff: f.camOff ?? false,
+        screenSharing: f.screenSharing ?? false,
+      })),
   ];
 
   // Auto scroll chat
@@ -857,7 +936,7 @@ export default function MeetRoom() {
 
   return (
     <AppLayout hideSidebar={true} hideNavbar={true}>
-      <div ref={containerRef} onMouseMove={isFullscreen ? resetHideTimer : undefined} style={{ height: '100vh', background: '#0a0a14', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', overflow: 'hidden' }}>
+      <div ref={containerRef} onMouseMove={resetHideTimer} style={{ height: '100vh', background: '#0a0a14', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', overflow: 'hidden' }}>
 
         {/* ── Navbar ── */}
         <nav style={{
@@ -873,9 +952,7 @@ export default function MeetRoom() {
           height: '64px',
           overflow: 'visible',
           gap: '16px',
-          transition: 'all 0.3s ease',
-          // eslint-disable-next-line no-dupe-keys
-          pointerEvents: 'none',
+          transition: 'opacity 0.3s ease',
         }}>
           {/* Left: room info */}
           {!isFullscreen && (
@@ -1015,9 +1092,9 @@ export default function MeetRoom() {
                 // TRƯỜNG HỢP: Đang chia sẻ màn hình
                 if (activeScreenShare) {
                   return (
-                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', height: '100%', width: '100%', gap: '16px', position: 'relative' }}>
                       {/* Main focused screenshare */}
-                      <div style={{ flex: 1, minWidth: 0, height: '100%', borderRadius: '24px', overflow: 'hidden' }}>
+                      <div style={{ flex: 1, minWidth: 0, height: '100%', borderRadius: isFullscreen ? '0' : '24px', overflow: 'hidden' }}>
                         <VideoTile
                           key={`${activeScreenShare.id}-screen`}
                           stream={activeScreenShare.stream}
@@ -1032,22 +1109,20 @@ export default function MeetRoom() {
                         />
                       </div>
                       
-                      {/* Floating overlay cameras row (FaceTime styles) */}
+                      {/* Sidebar cameras column on the right */}
                       {otherFeeds.length > 0 && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '16px',
-                          left: '16px',
-                          right: '16px',
+                        <div className="screenshare-sidebar" style={{
+                          width: '220px',
                           display: 'flex',
+                          flexDirection: 'column',
                           gap: '12px',
-                          overflowX: 'auto',
+                          overflowY: 'auto',
                           zIndex: 20,
-                          padding: '4px 0',
-                          scrollbarWidth: 'none',
+                          paddingRight: '4px',
+                          paddingBottom: '100px', // chừa chỗ cho control bar ở dưới
                         }}>
                           {otherFeeds.map(f => (
-                            <div key={`${f.id}-cam`} style={{ width: '160px', height: '90px', flexShrink: 0 }}>
+                            <div key={`${f.id}-cam`} style={{ width: '100%', flexShrink: 0 }}>
                               <VideoTile
                                 stream={f.stream}
                                 name={f.name}
@@ -1057,7 +1132,7 @@ export default function MeetRoom() {
                                 muted={!micOn && f.isLocal}
                                 mirrored={f.isLocal}
                                 screenSharing={false}
-                                style={{ border: '2px solid rgba(255,255,255,0.15)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+                                style={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}
                               />
                             </div>
                           ))}
@@ -1249,8 +1324,62 @@ export default function MeetRoom() {
                               </span>
                             </div>
                             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                              <span style={{ opacity: f.camOff ? 0.3 : 1 }}><VideoSvg active={!f.camOff} size={13} /></span>
-                              <span style={{ opacity: (f.isLocal ? !micOn : f.micMuted) ? 0.3 : 1 }}><MicSvg active={!(f.isLocal ? !micOn : f.micMuted)} size={13} /></span>
+                              {(() => {
+                                const isCamOn = f.isLocal ? camOn : !f.camOff;
+                                const isMicOn = f.isLocal ? micOn : !f.micMuted;
+                                const localFeed = allFeeds.find(x => x.isLocal);
+                                const amLeader = localFeed && getParticipantRole(localFeed) === 'Trưởng phòng';
+                                const canForce = amLeader && !f.isLocal;
+
+                                const iconBtn = (active, type, Icon, titleOn, titleOff) => {
+                                  const color = active ? '#22c55e' : '#ef4444';
+                                  const bg = active ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
+                                  const border = active ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)';
+                                  const payload = type === 'cam'
+                                    ? { type: 'force-mute', to: f.id, room: roomId, muteCam: true, muteMic: false }
+                                    : { type: 'force-mute', to: f.id, room: roomId, muteMic: true, muteCam: false };
+                                  return (
+                                    <button
+                                      key={type}
+                                      title={canForce ? (active ? `Click để tắt ${type === 'cam' ? 'camera' : 'mic'}` : (type === 'cam' ? 'Camera đang tắt' : 'Mic đang tắt')) : (active ? titleOn : titleOff)}
+                                      onClick={canForce && active ? () => {
+                                        // eslint-disable-next-line no-undef
+                                        channelRef.current?.send({ type: 'broadcast', event: 'signal', payload });
+                                      } : undefined}
+                                      style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: '28px', height: '28px', borderRadius: '8px',
+                                        background: bg,
+                                        border: `1px solid ${border}`,
+                                        color: color,
+                                        cursor: canForce && active ? 'pointer' : 'default',
+                                        transition: 'all 0.2s ease',
+                                        flexShrink: 0,
+                                        padding: 0,
+                                      }}
+                                      onMouseEnter={canForce && active ? e => {
+                                        e.currentTarget.style.background = type === 'cam' ? 'rgba(239,68,68,0.25)' : 'rgba(239,68,68,0.25)';
+                                        e.currentTarget.style.borderColor = '#ef4444';
+                                        e.currentTarget.style.color = '#ef4444';
+                                      } : undefined}
+                                      onMouseLeave={canForce && active ? e => {
+                                        e.currentTarget.style.background = bg;
+                                        e.currentTarget.style.borderColor = border;
+                                        e.currentTarget.style.color = color;
+                                      } : undefined}
+                                    >
+                                      <Icon active={active} size={13} />
+                                    </button>
+                                  );
+                                };
+
+                                return (
+                                  <>
+                                    {iconBtn(isCamOn, 'cam', VideoSvg, 'Camera bật', 'Camera tắt')}
+                                    {iconBtn(isMicOn, 'mic', MicSvg, 'Mic bật', 'Mic tắt')}
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                         );
@@ -1264,7 +1393,7 @@ export default function MeetRoom() {
             {/* ── Control bar (Frosted Glass Floating Pill) ── */}
             <div style={{
               position: 'absolute',
-              bottom: isFullscreen ? (showControls ? '24px' : '-90px') : '24px',
+              bottom: showControls ? '24px' : '-90px',
               left: '50%',
               transform: 'translateX(-50%)',
               transition: 'bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1319,7 +1448,7 @@ export default function MeetRoom() {
                   }}
                   icon={<ChatSvg />}
                   label="Trò chuyện"
-                  badge={messages.length}
+                  badge={unreadChatCount > 0 ? true : null}
                 />
               )}
 
@@ -1333,7 +1462,6 @@ export default function MeetRoom() {
                   }}
                   icon={<UsersSvg />}
                   label="Thành viên"
-                  badge={allFeeds.length}
                 />
               )}
 
@@ -1391,9 +1519,14 @@ export default function MeetRoom() {
               backdropFilter: 'blur(20px)',
               boxShadow: '-10px 0 30px rgba(0,0,0,0.3)',
               animation: 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-              paddingTop: showControls ? '64px' : '0px',
-              transition: 'padding-top 0.3s ease',
             }}>
+              {/* Navbar spacer — đẩy nội dung xuống dưới thanh nav */}
+              <div style={{
+                height: '64px',
+                flexShrink: 0,
+                transition: 'height 0.3s ease',
+              }} />
+
               {/* Tab bar */}
               <div style={{
                 display: 'flex',
@@ -1512,8 +1645,15 @@ export default function MeetRoom() {
                                 }} />
                               </div>
                               <div>
-                                <div style={{ fontSize: '13px', fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '130px' }}>
-                                  {f.name}{f.isLocal ? ' (Bạn)' : ''}
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: 'white', maxWidth: '140px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {f.name}{f.isLocal ? ' (Bạn)' : ''}
+                                  </span>
+                                  {f.screenSharing && (
+                                    <span title="Đang chia sẻ màn hình" style={{ display: 'flex', alignItems: 'center', color: '#a78bfa', flexShrink: 0 }}>
+                                      <MonitorSvg active={true} size={14} />
+                                    </span>
+                                  )}
                                 </div>
                                 <div style={{ marginTop: '3px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                   {role === 'Trưởng phòng' ? (
@@ -1691,7 +1831,7 @@ function MonitorSvg({ active, size = 20 }) {
 function ChatSvg({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
     </svg>
   );
 }
@@ -1769,22 +1909,35 @@ function CtrlBtn({ active, onClick, danger, highlight, icon, label, badge = null
       }}
     >
       {icon}
-      {badge !== null && badge > 0 && (
-        <span style={{
-          position: 'absolute',
-          top: '-4px',
-          right: '-4px',
-          background: '#ef4444',
-          color: 'white',
-          fontSize: '9.5px',
-          fontWeight: 700,
-          borderRadius: '10px',
-          padding: '2px 5.5px',
-          border: '1.5px solid #0a0a14',
-          lineHeight: 1,
-        }}>
-          {badge}
-        </span>
+      {badge !== null && (
+        typeof badge === 'boolean' && badge === true ? (
+          <span style={{
+            position: 'absolute',
+            top: '0px',
+            right: '0px',
+            width: '10px',
+            height: '10px',
+            background: '#ef4444',
+            borderRadius: '50%',
+            border: '2px solid #0a0a14',
+          }} />
+        ) : badge > 0 ? (
+          <span style={{
+            position: 'absolute',
+            top: '-4px',
+            right: '-4px',
+            background: '#ef4444',
+            color: 'white',
+            fontSize: '9.5px',
+            fontWeight: 700,
+            borderRadius: '10px',
+            padding: '2px 5.5px',
+            border: '1.5px solid #0a0a14',
+            lineHeight: 1,
+          }}>
+            {badge > 99 ? '99+' : badge}
+          </span>
+        ) : null
       )}
     </button>
   );
