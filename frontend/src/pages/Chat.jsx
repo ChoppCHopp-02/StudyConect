@@ -848,9 +848,21 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
   };
 
   const addEmoji = (em) => {
-    setInput(prev => prev + em);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newValue = input.substring(0, start) + em + input.substring(end);
+      setInput(newValue);
+      // Đặt lại vị trí con trỏ sau emoji vừa chèn
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + em.length, start + em.length);
+      }, 0);
+    } else {
+      setInput(prev => prev + em);
+    }
     setShowEmoji(false);
-    textareaRef.current?.focus();
   };
 
   // Delete message — uses in-app confirm modal

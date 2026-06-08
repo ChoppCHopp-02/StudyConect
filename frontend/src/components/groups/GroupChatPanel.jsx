@@ -89,6 +89,7 @@ export default function GroupChatPanel({
   const scrollContainerRef = useRef(null);
   const isFirstRender = useRef(true);
   const prevLastMsgIdRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -785,7 +786,19 @@ export default function GroupChatPanel({
                   key={emoji}
                   type="button"
                   onClick={() => {
-                    setChatInput((v) => v + emoji);
+                    const inp = chatInputRef.current;
+                    if (inp) {
+                      const start = inp.selectionStart;
+                      const end = inp.selectionEnd;
+                      const newVal = chatInput.substring(0, start) + emoji + chatInput.substring(end);
+                      setChatInput(newVal);
+                      setTimeout(() => {
+                        inp.focus();
+                        inp.setSelectionRange(start + emoji.length, start + emoji.length);
+                      }, 0);
+                    } else {
+                      setChatInput((v) => v + emoji);
+                    }
                     document.getElementById('emoji-picker-popup').style.display = 'none';
                   }}
                   style={{
@@ -892,6 +905,7 @@ export default function GroupChatPanel({
 
           {/* Text input */}
           <input
+            ref={chatInputRef}
             type="text"
             placeholder="Nhập tin nhắn... (@ để tag thành viên)"
             value={chatInput}
