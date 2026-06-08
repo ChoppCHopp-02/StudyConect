@@ -622,8 +622,18 @@ export default function Groups() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const [groups, setGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState(() => {
+    try {
+      const cached = localStorage.getItem('studyconect_groups');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('studyconect_groups');
+      return !cached;
+    } catch { return true; }
+  });
   const [showModal, setShowModal] = useState(false);
   const [showNearbyModal, setShowNearbyModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -641,9 +651,13 @@ export default function Groups() {
 
   const fetchGroups = useCallback(async () => {
     try {
-      setLoading(true);
+      const hasCached = localStorage.getItem('studyconect_groups');
+      if (!hasCached) {
+        setLoading(true);
+      }
       const data = await getAllGroups();
       setGroups(data);
+      localStorage.setItem('studyconect_groups', JSON.stringify(data));
     } catch (err) {
       addToast(err.message || 'Lỗi tải danh sách nhóm', 'error');
     } finally {

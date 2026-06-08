@@ -281,33 +281,51 @@ export const createComment = async (postId, { content, userId, parentId }) => {
   };
 };
 
+let cachedSuggestions = null;
+
+const getSearchSuggestionsBackground = async () => {
+  try {
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, full_name, avatar, university, major')
+      .neq('role', 'admin')
+      .limit(100);
+      
+    const { data: groups } = await supabase
+      .from('groups')
+      .select('id, name, description, category')
+      .limit(100);
+      
+    const result = {
+      users: (users || []).map(u => ({
+        id: u.id.toString(),
+        fullName: u.full_name,
+        avatar: u.avatar || '',
+        university: u.university || '',
+        major: u.major || ''
+      })),
+      groups: (groups || []).map(g => ({
+        id: g.id.toString(),
+        name: g.name,
+        description: g.description || '',
+        category: g.category || ''
+      }))
+    };
+    cachedSuggestions = result;
+    return result;
+  } catch (err) {
+    console.error('Error fetching search suggestions:', err);
+    return cachedSuggestions || { users: [], groups: [] };
+  }
+};
+
 export const getSearchSuggestions = async () => {
-  const { data: users } = await supabase
-    .from('users')
-    .select('id, full_name, avatar, university, major')
-    .neq('role', 'admin')
-    .limit(100);
-    
-  const { data: groups } = await supabase
-    .from('groups')
-    .select('id, name, description, category')
-    .limit(100);
-    
-  return {
-    users: (users || []).map(u => ({
-      id: u.id.toString(),
-      fullName: u.full_name,
-      avatar: u.avatar || '',
-      university: u.university || '',
-      major: u.major || ''
-    })),
-    groups: (groups || []).map(g => ({
-      id: g.id.toString(),
-      name: g.name,
-      description: g.description || '',
-      category: g.category || ''
-    }))
-  };
+  if (cachedSuggestions) {
+    // Trả về cache ngay lập tức để render tức thì, đồng thời update ngầm
+    getSearchSuggestionsBackground();
+    return cachedSuggestions;
+  }
+  return await getSearchSuggestionsBackground();
 };
 
 export const deleteComment = async (commentId) => {
