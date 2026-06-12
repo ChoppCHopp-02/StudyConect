@@ -5,11 +5,12 @@ import { createPost } from '@/services/interactionService';
 // ── tiny avatar for suggestion rows ───────────────────────────────
 function SuggestAvatar({ src, initial }) {
   if (src) return <img src={src} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />;
+  const firstChar = (initial || '?')[0];
   const colors = ['#6c63ff', '#ff6b9d', '#3ecfcf', '#f59e0b', '#22c55e'];
-  const color = colors[(initial?.charCodeAt(0) || 0) % colors.length];
+  const color = colors[(firstChar.charCodeAt(0) || 0) % colors.length];
   return (
-    <div style={{ width: 28, height: 28, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-      {(initial || '?').toUpperCase()}
+    <div style={{ width: 28, height: 28, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+      {firstChar.toUpperCase()}
     </div>
   );
 }
