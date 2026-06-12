@@ -234,6 +234,7 @@ export default function GroupDetail() {
             files={h.files}
             selectedFile={h.selectedFile} setSelectedFile={h.setSelectedFile}
             customFileName={h.customFileName} setCustomFileName={h.setCustomFileName}
+            uploadSubject={h.uploadSubject} setUploadSubject={h.setUploadSubject}
             isUploadingFile={h.isUploadingFile}
             handleFileUpload={h.handleFileUpload}
             handleFileDelete={h.handleFileDelete}

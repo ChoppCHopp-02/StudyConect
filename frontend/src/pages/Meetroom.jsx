@@ -643,6 +643,7 @@ export default function MeetRoom() {
   const [screenOn, setScreenOn] = useState(false);
   const [tab,      setTab]      = useState('chat');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pipSwapped, setPipSwapped] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -1142,9 +1143,94 @@ export default function MeetRoom() {
                   );
                 }
 
-                // Bỏ giao diện PiP, tất cả dùng Grid layout
+                // TRƯỜNG HỢP: Phòng chỉ có 2 người, sử dụng giao diện PiP (1 to - 1 nhỏ)
+                if (allFeeds.length === 2) {
+                  const localFeed = allFeeds.find(f => f.isLocal);
+                  const remoteFeed = allFeeds.find(f => !f.isLocal);
 
-                // TRƯỜNG HỢP: Phòng nhiều người (> 2), dùng Grid chuyên nghiệp
+                  // Xác định feed nào to, feed nào nhỏ dựa trên pipSwapped
+                  const mainFeed = pipSwapped ? localFeed : remoteFeed;
+                  const pipFeed = pipSwapped ? remoteFeed : localFeed;
+
+                  return (
+                    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                      {/* Video chính — chiếm toàn màn hình */}
+                      <div
+                        style={{ position: 'absolute', inset: 0, cursor: 'pointer' }}
+                        onClick={() => setPipSwapped(s => !s)}
+                        title="Nhấn để đổi màn hình chính"
+                      >
+                        <VideoTile
+                          key={`${mainFeed.id}-main`}
+                          stream={mainFeed.stream}
+                          name={mainFeed.name}
+                          avatar={mainFeed.avatar}
+                          isLocal={mainFeed.isLocal}
+                          camOff={mainFeed.camOff}
+                          muted={mainFeed.isLocal ? !micOn : mainFeed.micMuted}
+                          mirrored={mainFeed.isLocal}
+                          screenSharing={mainFeed.screenSharing}
+                          style={{ width: '100%', height: '100%', borderRadius: isFullscreen ? '0' : '24px' }}
+                        />
+                      </div>
+
+                      {/* Video phụ — Picture in Picture (góc dưới phải) */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: showControls ? '120px' : '30px',
+                          right: '30px',
+                          width: '180px',
+                          height: '260px',
+                          borderRadius: '16px',
+                          overflow: 'hidden',
+                          border: '2px solid rgba(255,255,255,0.2)',
+                          boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          zIndex: 40,
+                          cursor: 'pointer',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPipSwapped(s => !s);
+                        }}
+                        title="Nhấn để đổi màn hình chính"
+                      >
+                        <VideoTile
+                          key={`${pipFeed.id}-pip`}
+                          stream={pipFeed.stream}
+                          name={pipFeed.name}
+                          avatar={pipFeed.avatar}
+                          isLocal={pipFeed.isLocal}
+                          camOff={pipFeed.camOff}
+                          muted={pipFeed.isLocal ? !micOn : pipFeed.micMuted}
+                          mirrored={pipFeed.isLocal}
+                          screenSharing={pipFeed.screenSharing}
+                          style={{ width: '100%', height: '100%', borderRadius: 0 }}
+                        />
+                        <div style={{
+                          position: 'absolute', top: '8px', right: '8px',
+                          background: 'rgba(0,0,0,0.65)', borderRadius: '6px',
+                          padding: '6px 10px', fontSize: '11px', color: '#fff',
+                          fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                          transition: 'all 0.2s',
+                          zIndex: 50
+                        }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <polyline points="9 21 3 21 3 15"></polyline>
+                            <line x1="21" y1="3" x2="14" y2="10"></line>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                          </svg>
+                          Đổi
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // TRƯỜNG HỢP: Phòng nhiều người (> 2 hoặc = 1), dùng Grid chuyên nghiệp
                 return (
                   <div style={{
                     display: 'grid',

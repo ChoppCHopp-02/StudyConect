@@ -1,4 +1,21 @@
+import { useState } from 'react';
 import { formatBytes } from '@/utils';
+
+// Helper parse subject và tên hiển thị của tài liệu
+// eslint-disable-next-line react-refresh/only-export-components
+export const parseFileSubject = (fileName) => {
+  const match = fileName.match(/^\[([^\]]+)\]\s*(.*)$/);
+  if (match) {
+    return {
+      subject: match[1],
+      displayName: match[2]
+    };
+  }
+  return {
+    subject: 'Chung',
+    displayName: fileName
+  };
+};
 
 export default function GroupDocuments({
   group,
@@ -8,16 +25,23 @@ export default function GroupDocuments({
   setSelectedFile,
   customFileName,
   setCustomFileName,
+  uploadSubject,
+  setUploadSubject,
   isUploadingFile,
   handleFileUpload,
   handleFileDelete,
   addToast,
 }) {
+  const [selectedFilterSubject, setSelectedFilterSubject] = useState('All');
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
       setCustomFileName(file.name);
+      if (!uploadSubject) {
+        setUploadSubject(group?.subject || 'Chung');
+      }
     }
   };
 
@@ -34,11 +58,22 @@ export default function GroupDocuments({
       if (addToast) addToast('Không thể tải xuống tài liệu này', 'error');
     }
   };
+
+  // Trích xuất danh sách tất cả các môn học hiện có
+  const allSubjects = Array.from(
+    new Set(
+      files.map((file) => parseFileSubject(file.fileName).subject)
+    )
+  ).filter(Boolean);
+
+  // Lọc file theo môn học được chọn
+  const filteredFiles = selectedFilterSubject === 'All'
+    ? files
+    : files.filter(file => parseFileSubject(file.fileName).subject === selectedFilterSubject);
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-      <div
-        className="document-share-card"
-      >
+      <div className="document-share-card">
         <h3 style={{ marginBottom: '16px', fontSize: '18px', color: 'var(--text-primary)' }}>
           Chia sẻ tài liệu học tập mới
         </h3>
@@ -62,6 +97,7 @@ export default function GroupDocuments({
                 height: '100%',
                 opacity: 0,
                 cursor: 'pointer',
+                zIndex: 2
               }}
             />
             <div
@@ -107,17 +143,33 @@ export default function GroupDocuments({
               </div>
             )}
           </div>
+
           {selectedFile && (
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Tên tài liệu hiển thị</label>
-              <div className="form-input-wrap">
-                <input
-                  type="text"
-                  className="form-input no-icon"
-                  placeholder="Đặt tên cho tài liệu dễ nhận biết..."
-                  value={customFileName}
-                  onChange={(e) => setCustomFileName(e.target.value)}
-                />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tên tài liệu hiển thị</label>
+                <div className="form-input-wrap">
+                  <input
+                    type="text"
+                    className="form-input no-icon"
+                    placeholder="Đặt tên cho tài liệu dễ nhận biết..."
+                    value={customFileName}
+                    onChange={(e) => setCustomFileName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Môn học / Phân loại *</label>
+                <div className="form-input-wrap">
+                  <input
+                    type="text"
+                    className="form-input no-icon"
+                    placeholder="Nhập môn học (ví dụ: Toán, Lý, Hóa...)"
+                    value={uploadSubject}
+                    onChange={(e) => setUploadSubject(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -133,8 +185,37 @@ export default function GroupDocuments({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>Danh sách tài liệu ({files.length})</h3>
-        {files.length === 0 ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <h3 style={{ fontSize: '18px', margin: 0 }}>Danh sách tài liệu ({filteredFiles.length})</h3>
+          
+          {/* Bộ lọc theo môn học */}
+          {allSubjects.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Bộ lọc môn:</span>
+              <select
+                value={selectedFilterSubject}
+                onChange={(e) => setSelectedFilterSubject(e.target.value)}
+                style={{
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  outline: 'none',
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="All">Tất cả môn học</option>
+                {allSubjects.map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {filteredFiles.length === 0 ? (
           <div
             style={{
               textAlign: 'center',
@@ -144,16 +225,19 @@ export default function GroupDocuments({
               border: '1px solid var(--border)',
             }}
           >
-            <p style={{ color: 'var(--text-muted)' }}>Chưa có tài liệu nào được chia sẻ trong nhóm.</p>
+            <p style={{ color: 'var(--text-muted)' }}>Không tìm thấy tài liệu phù hợp.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {files.map((file) => {
+            {filteredFiles.map((file) => {
               const canDelete = file.userId === user.id || group.creatorId === user.id;
+              const { subject, displayName } = parseFileSubject(file.fileName);
+              
               let icon = 'file';
               if (file.fileType?.includes('image/')) icon = 'img';
               else if (file.fileType?.includes('pdf')) icon = 'pdf';
               else if (file.fileType?.includes('zip') || file.fileType?.includes('rar')) icon = 'zip';
+              
               return (
                 <div
                   key={file.id}
@@ -187,21 +271,36 @@ export default function GroupDocuments({
                       {icon}
                     </span>
                     <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
-                      <h4
-                        style={{
-                          fontSize: '15px',
-                          fontWeight: 600,
-                          color: 'var(--text-primary)',
-                          margin: 0,
-                          textOverflow: 'ellipsis',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          width: '100%'
-                        }}
-                      >
-                        {file.fileName}
-                      </h4>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', marginBottom: 0, display: 'flex', flexWrap: 'wrap', gap: '4px 6px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            background: 'rgba(108,99,255,0.15)',
+                            color: 'var(--primary-light)',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(108,99,255,0.2)'
+                          }}
+                        >
+                          {subject}
+                        </span>
+                        <h4
+                          style={{
+                            fontSize: '15px',
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            margin: 0,
+                            textOverflow: 'ellipsis',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            maxWidth: '400px'
+                          }}
+                        >
+                          {displayName}
+                        </h4>
+                      </div>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '6px', marginBottom: 0, display: 'flex', flexWrap: 'wrap', gap: '4px 6px', alignItems: 'center' }}>
                         <span>Dung lượng: {formatBytes(file.fileSize)}</span>
                         <span style={{ color: 'var(--border)' }}>•</span>
                         <span>Chia sẻ bởi: {file.userFullName}</span>

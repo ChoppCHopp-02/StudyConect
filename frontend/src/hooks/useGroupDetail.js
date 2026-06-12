@@ -58,6 +58,7 @@ export default function useGroupDetail(groupId, user, addToast) {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [customFileName, setCustomFileName] = useState('');
+  const [uploadSubject, setUploadSubject] = useState('');
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   // Schedule state
@@ -551,8 +552,12 @@ export default function useGroupDetail(groupId, user, addToast) {
         r.onerror = rej;
       });
 
+      const finalSubject = uploadSubject.trim() || group?.subject || 'Chung';
+      const cleanFileName = customFileName.trim() || selectedFile.name;
+      const prefixedName = `[${finalSubject}] ${cleanFileName}`;
+
       await uploadFile(groupId, {
-        fileName: customFileName.trim() || selectedFile.name,
+        fileName: prefixedName,
         fileSize: selectedFile.size,
         fileType: selectedFile.type,
         fileData: base64Data,
@@ -562,6 +567,7 @@ export default function useGroupDetail(groupId, user, addToast) {
       addToast('Upload tài liệu thành công!', 'success');
       setSelectedFile(null);
       setCustomFileName('');
+      setUploadSubject('');
       const fileInput = document.getElementById('file-upload-input');
       if (fileInput) fileInput.value = '';
       fetchGroupFiles();
@@ -904,6 +910,8 @@ export default function useGroupDetail(groupId, user, addToast) {
     setSelectedFile,
     customFileName,
     setCustomFileName,
+    uploadSubject,
+    setUploadSubject,
     isUploadingFile,
     schedules,
     newScheduleTopic,
