@@ -31,18 +31,25 @@ export const CallProvider = ({ children }) => {
   const incomingCallRef = useRef(incomingCall);
   useEffect(() => { incomingCallRef.current = incomingCall; }, [incomingCall]);
 
-  // ── Khởi tạo channel lắng nghe toàn cục ─────────────────────────
-  useEffect(() => {
-    if (!user?.id) return;
+  // Ref để đọc pathname hiện tại trong callback mà không cần re-run effect
+  const locationRef = useRef(location.pathname);
+  useEffect(() => { locationRef.current = location.pathname; }, [location.pathname]);
 
-    const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname === '/admin-login';
-    if (isAdminRoute) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Admin route: tắt call state khi vào trang admin
+  useEffect(() => {
+    const isAdmin = location.pathname.startsWith('/admin') || location.pathname === '/admin-login';
+    if (isAdmin) {
+      clearTimeout(ringTimerRef.current);
+      clearTimeout(statusTimerRef.current);
       setIncomingCall(null);
       setOutgoingCall(null);
       setCallStatus(null);
-      return;
     }
+  }, [location.pathname]);
+
+  // ── Khởi tạo channel lắng nghe toàn cục ─────────────────────────
+  useEffect(() => {
+    if (!user?.id) return;
 
     const ch = supabase.channel('private_calls_global', {
       config: { broadcast: { self: false } }
@@ -51,6 +58,9 @@ export const CallProvider = ({ children }) => {
 
     ch.on('broadcast', { event: 'call_signal' }, ({ payload }) => {
       if (!payload) return;
+      // Bỏ qua tất cả nếu đang ở trang admin
+      const isAdmin = locationRef.current.startsWith('/admin') || locationRef.current === '/admin-login';
+      if (isAdmin) return;
 
       // Nhận cuộc gọi đến
       if (payload.type === 'call' && String(payload.receiverId) === String(user.id)) {
@@ -60,14 +70,13 @@ export const CallProvider = ({ children }) => {
           callerName: payload.callerName,
           callerAvatar: payload.callerAvatar,
         });
-        // Tự động hủy sau 10s (missed call)
         clearTimeout(ringTimerRef.current);
         ringTimerRef.current = setTimeout(() => {
           setIncomingCall(null);
           setCallStatus('missed');
           clearTimeout(statusTimerRef.current);
           statusTimerRef.current = setTimeout(() => setCallStatus(null), 3000);
-          if (location.pathname.startsWith('/call/')) {
+          if (locationRef.current.startsWith('/call/')) {
             navigate('/chat');
           }
         }, 10000);
@@ -76,7 +85,7 @@ export const CallProvider = ({ children }) => {
       // Đối phương chấp nhận (người gọi nhận)
       if (payload.type === 'accept' && outgoingCallRef.current?.callId === payload.callId) {
         const outCall = outgoingCallRef.current;
-        clearTimeout(ringTimerRef.current);   // ← QUAN TRỌNG: dừng timer 10s
+        clearTimeout(ringTimerRef.current);
         clearTimeout(statusTimerRef.current);
         setOutgoingCall(null);
         setCallStatus(null);
@@ -85,11 +94,12 @@ export const CallProvider = ({ children }) => {
 
       // Đối phương từ chối (người gọi nhận)
       if (payload.type === 'reject' && outgoingCallRef.current?.callId === payload.callId) {
+        clearTimeout(ringTimerRef.current);
         setOutgoingCall(null);
         setCallStatus('rejected');
         clearTimeout(statusTimerRef.current);
         statusTimerRef.current = setTimeout(() => setCallStatus(null), 4000);
-        if (location.pathname.startsWith('/call/')) {
+        if (locationRef.current.startsWith('/call/')) {
           navigate('/chat');
         }
       }
@@ -104,7 +114,7 @@ export const CallProvider = ({ children }) => {
         setCallStatus('missed');
         clearTimeout(statusTimerRef.current);
         statusTimerRef.current = setTimeout(() => setCallStatus(null), 3000);
-        if (location.pathname.startsWith('/call/')) {
+        if (locationRef.current.startsWith('/call/')) {
           navigate('/chat');
         }
       }
@@ -113,12 +123,11 @@ export const CallProvider = ({ children }) => {
     ch.subscribe();
 
     return () => {
-      clearTimeout(ringTimerRef.current);
-      clearTimeout(statusTimerRef.current);
+      // KHÔNG clearTimeout timer ở đây — timer phải sống qua các lần navigate
       ch.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, location.pathname]);
+  }, [user?.id]);
 
   // ── Bắt đầu gọi ─────────────────────────────────────────────────
   const initiateCall = useCallback(async (friend) => {
