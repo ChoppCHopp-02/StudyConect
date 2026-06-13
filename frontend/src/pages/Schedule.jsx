@@ -19,15 +19,7 @@ const getProcessedDeadlines = (deadList) => {
 };
 
 const getSubmissionsCount = (groupId, deadlineId) => {
-  try {
-    const cached = localStorage.getItem(`studyconect_submissions_${groupId}`);
-    if (!cached) return 0;
-    const all = JSON.parse(cached);
-    const list = all[deadlineId] || [];
-    return list.length;
-  } catch {
-    return 0;
-  }
+  return 0;
 };
 
 const formatDate = (dateStr) => {
@@ -120,12 +112,6 @@ export default function Schedule() {
   const incompleteDeadlines = deadlines.filter(d => !d.completed);
   const completedDeadlines = deadlines.filter(d => d.completed);
 
-  const stats = [
-    { label: 'Buổi học sắp tới', value: schedules.length, color: 'var(--primary)', bg: 'rgba(108,99,255,0.12)' },
-    { label: 'Deadline chờ xử lý', value: incompleteDeadlines.length, color: 'var(--warning)', bg: 'rgba(245,158,11,0.12)' },
-    { label: 'Đã hoàn thành', value: completedDeadlines.length, color: 'var(--success)', bg: 'rgba(34,197,94,0.12)' },
-  ];
-
   return (
     <AppLayout hideSidebar={true}>
       <div className="schedule-container">
@@ -133,20 +119,6 @@ export default function Schedule() {
         <div>
           <h1 className="page-title">Lịch học & Deadline</h1>
           <p className="page-subtitle">Quản lý buổi học nhóm và thời hạn nộp bài tập của bạn</p>
-
-          {/* Stats bar */}
-          {!loading && (
-            <div className="stats-grid">
-              {stats.map((stat, i) => (
-                <div key={i} className="stat-card" style={{ borderColor: stat.color.replace(')', ', 0.3)').replace('rgb', 'rgba') }}>
-                  <div>
-                    <div className="stat-value" style={{ color: stat.color }}>{stat.value}</div>
-                    <div className="stat-label">{stat.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Urgent Banner */}
@@ -295,7 +267,7 @@ export default function Schedule() {
               )}
 
               {completedDeadlines.length > 0 && (
-                <div style={{ marginTop: '24px' }}>
+                <div id="completed-deadlines-section" style={{ marginTop: '24px' }}>
                   <div className="section-header" style={{ borderBottomColor: 'rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
                     <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#64748b', margin: 0 }}>Đã hoàn thành ({completedDeadlines.length})</h3>
                   </div>

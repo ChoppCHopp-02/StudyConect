@@ -312,9 +312,23 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
       stream.getVideoTracks().forEach(t => { t.enabled = camOnRef.current; });
       return stream;
     } catch (err) {
-      console.warn('Media error:', err);
-      setError(err.name === 'NotAllowedError' ? 'Vui lòng cấp quyền camera/mic.' : 'Không thể truy cập camera/mic.');
-      return null;
+      console.warn('Full media request failed in Meetroom, trying audio only...', err);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: false,
+          audio: true,
+        });
+        localRef.current = stream;
+        setLocalStream(stream);
+        stream.getAudioTracks().forEach(t => { t.enabled = micOnRef.current; });
+        return stream;
+      } catch (err2) {
+        console.error('Audio-only media request failed too in Meetroom', err2);
+        setError(err.name === 'NotAllowedError' || err2.name === 'NotAllowedError'
+          ? 'Vui lòng cấp quyền camera/mic.'
+          : 'Không thể truy cập camera/mic.');
+        return null;
+      }
     }
   }, []);
 
@@ -439,179 +453,180 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
   useEffect(() => {
     if (!roomId) return;
 
-    const ch = supabase.channel(`studyconect_room_${roomId}`, {
-      config: { broadcast: { self: false } }
-    });
-    channelRef.current = ch;
+    let cancelled = false;
+    let ch = null;
 
-    const handleMsg = async (msg) => {
-      if (!msg || msg.room !== roomId) return;
-      if (msg.to && msg.to !== myId.current) return;
+    const startRoom = async () => {
+      // 1. Khởi động media trước
+      await startMedia();
+      if (cancelled) return;
 
-      const stream = localRef.current;
+      // 2. Sau khi đã có stream (hoặc kể cả null nếu không có mic/cam), mới kết nối kênh Supabase
+      ch = supabase.channel(`studyconect_room_${roomId}`, {
+        config: { broadcast: { self: false } }
+      });
+      channelRef.current = ch;
 
-      if (msg.type === 'join' && msg.from !== myId.current) {
-        setRemoteFeeds(prev => ({
-          ...prev,
-          [msg.from]: {
-            stream: prev[msg.from]?.stream || null,
-            name: msg.name, avatar: msg.avatar,
-            camOff: !msg.camOn, micMuted: !msg.micOn, screenSharing: false,
-          }
-        }));
-        if (stream) createPeer(msg.from, msg.name, msg.avatar, true, stream);
-      }
+      const handleMsg = async (msg) => {
+        if (!msg || msg.room !== roomId || cancelled) return;
+        if (msg.to && msg.to !== myId.current) return;
 
-      if (msg.type === 'offer') {
-        setRemoteFeeds(prev => ({
-          ...prev,
-          [msg.from]: {
-            stream: prev[msg.from]?.stream || null,
-            name: msg.name, avatar: msg.avatar,
-            camOff: !msg.camOn, micMuted: !msg.micOn, screenSharing: false,
-          }
-        }));
-        const pc = createPeer(msg.from, msg.name, msg.avatar, false, stream);
-        await pc.setRemoteDescription(msg.offer);
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        ch.send({
-          type: 'broadcast', event: 'signal',
-          payload: {
-            type: 'answer', from: myId.current, to: msg.from,
-            name: userRef.current?.fullName || 'Người dùng',
-            avatar: userRef.current?.avatar || '',
-            answer, room: roomId,
-            camOn: camOnRef.current, micOn: micOnRef.current,
-          }
-        });
-      }
+        const currentStream = localRef.current;
 
-      if (msg.type === 'answer') {
-        setRemoteFeeds(prev => ({
-          ...prev,
-          [msg.from]: {
-            stream: prev[msg.from]?.stream || null,
-            name: msg.name, avatar: msg.avatar,
-            camOff: !msg.camOn, micMuted: !msg.micOn, screenSharing: false,
-          }
-        }));
-        const pc = peersRef.current[msg.from];
-        if (pc) pc.setRemoteDescription(msg.answer);
-      }
-
-      if (msg.type === 'ice') {
-        const pc = peersRef.current[msg.from];
-        if (pc) pc.addIceCandidate(msg.candidate).catch(() => {});
-      }
-
-      if (msg.type === 'force-mute') {
-        if (msg.to === myId.current) {
-          if (msg.muteCam) {
-            // Tắt track video ngay lập tức
-            if (localRef.current) {
-              localRef.current.getVideoTracks().forEach(t => { t.enabled = false; });
-            }
-            camOnRef.current = false;
-            // Broadcast để peer khác cập nhật UI
-            channelRef.current?.send({
-              type: 'broadcast', event: 'signal',
-              payload: { type: 'state-change', from: myId.current, room: roomId, camOn: false, micOn: micOnRef.current }
-            });
-            if (onForceMuteRef.current) onForceMuteRef.current('cam');
-          }
-          if (msg.muteMic) {
-            // Tắt track audio ngay lập tức
-            if (localRef.current) {
-              localRef.current.getAudioTracks().forEach(t => { t.enabled = false; });
-            }
-            micOnRef.current = false;
-            // Broadcast để peer khác cập nhật UI
-            channelRef.current?.send({
-              type: 'broadcast', event: 'signal',
-              payload: { type: 'state-change', from: myId.current, room: roomId, camOn: camOnRef.current, micOn: false }
-            });
-            if (onForceMuteRef.current) onForceMuteRef.current('mic');
-          }
-        }
-      }
-
-      if (msg.type === 'state-change') {
-        setRemoteFeeds(prev => {
-          if (!prev[msg.from]) return prev;
-          return {
+        if (msg.type === 'join' && msg.from !== myId.current) {
+          setRemoteFeeds(prev => ({
             ...prev,
             [msg.from]: {
-              ...prev[msg.from],
-              camOff:    msg.camOn !== undefined ? !msg.camOn   : prev[msg.from].camOff,
-              micMuted:  msg.micOn !== undefined ? !msg.micOn   : prev[msg.from].micMuted,
+              stream: prev[msg.from]?.stream || null,
+              name: msg.name, avatar: msg.avatar,
+              camOff: !msg.camOn, micMuted: !msg.micOn, screenSharing: false,
             }
-          };
-        });
-      }
+          }));
+          createPeer(msg.from, msg.name, msg.avatar, true, currentStream);
+        }
 
-      if (msg.type === 'screen-share') {
-        setRemoteFeeds(prev => {
-          if (!prev[msg.from]) return prev;
-          // Kéo video track hiện tại từ peer connection để đảm bảo stream mới nhất
+        if (msg.type === 'offer') {
+          setRemoteFeeds(prev => ({
+            ...prev,
+            [msg.from]: {
+              stream: prev[msg.from]?.stream || null,
+              name: msg.name, avatar: msg.avatar,
+              camOff: !msg.camOn, micMuted: !msg.micOn, screenSharing: false,
+            }
+          }));
+          const pc = createPeer(msg.from, msg.name, msg.avatar, false, currentStream);
+          await pc.setRemoteDescription(msg.offer);
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          ch.send({
+            type: 'broadcast', event: 'signal',
+            payload: {
+              type: 'answer', from: myId.current, to: msg.from,
+              name: userRef.current?.fullName || 'Người dùng',
+              avatar: userRef.current?.avatar || '',
+              answer, room: roomId,
+              camOn: camOnRef.current, micOn: micOnRef.current,
+            }
+          });
+        }
+
+        if (msg.type === 'answer') {
+          setRemoteFeeds(prev => ({
+            ...prev,
+            [msg.from]: {
+              stream: prev[msg.from]?.stream || null,
+              name: msg.name, avatar: msg.avatar,
+              camOff: !msg.camOn, micMuted: !msg.micOn, screenSharing: false,
+            }
+          }));
           const pc = peersRef.current[msg.from];
-          const newState = {
-            ...prev[msg.from],
-            screenSharing: msg.sharing,
-            camOff: msg.sharing ? false : prev[msg.from].camOff,
-          };
-          if (pc) {
-            const receiver = pc.getReceivers().find(r => r.track && r.track.kind === 'video');
-            if (receiver && receiver.track) {
-              // Tạo stream mới chứa track hiện tại để force VideoTile remount
-              const freshStream = new MediaStream([receiver.track]);
-              // Nếu có audio track, thêm vào
-              const audioReceiver = pc.getReceivers().find(r => r.track && r.track.kind === 'audio');
-              if (audioReceiver?.track) freshStream.addTrack(audioReceiver.track);
-              newState.stream = freshStream;
+          if (pc) pc.setRemoteDescription(msg.answer);
+        }
+
+        if (msg.type === 'ice') {
+          const pc = peersRef.current[msg.from];
+          if (pc) pc.addIceCandidate(msg.candidate).catch(() => {});
+        }
+
+        if (msg.type === 'force-mute') {
+          if (msg.to === myId.current) {
+            if (msg.muteCam) {
+              if (localRef.current) {
+                localRef.current.getVideoTracks().forEach(t => { t.enabled = false; });
+              }
+              camOnRef.current = false;
+              channelRef.current?.send({
+                type: 'broadcast', event: 'signal',
+                payload: { type: 'state-change', from: myId.current, room: roomId, camOn: false, micOn: micOnRef.current }
+              });
+              if (onForceMuteRef.current) onForceMuteRef.current('cam');
+            }
+            if (msg.muteMic) {
+              if (localRef.current) {
+                localRef.current.getAudioTracks().forEach(t => { t.enabled = false; });
+              }
+              micOnRef.current = false;
+              channelRef.current?.send({
+                type: 'broadcast', event: 'signal',
+                payload: { type: 'state-change', from: myId.current, room: roomId, camOn: camOnRef.current, micOn: false }
+              });
+              if (onForceMuteRef.current) onForceMuteRef.current('mic');
             }
           }
-          return { ...prev, [msg.from]: newState };
-        });
-      }
+        }
 
-      if (msg.type === 'leave') {
-        const pc = peersRef.current[msg.from];
-        if (pc) { pc.close(); delete peersRef.current[msg.from]; }
-        setRemoteFeeds(prev => { const n = { ...prev }; delete n[msg.from]; return n; });
-      }
+        if (msg.type === 'state-change') {
+          setRemoteFeeds(prev => {
+            if (!prev[msg.from]) return prev;
+            return {
+              ...prev,
+              [msg.from]: {
+                ...prev[msg.from],
+                camOff:    msg.camOn !== undefined ? !msg.camOn   : prev[msg.from].camOff,
+                micMuted:  msg.micOn !== undefined ? !msg.micOn   : prev[msg.from].micMuted,
+              }
+            };
+          });
+        }
+
+        if (msg.type === 'screen-share') {
+          setRemoteFeeds(prev => {
+            if (!prev[msg.from]) return prev;
+            const pc = peersRef.current[msg.from];
+            const newState = {
+              ...prev[msg.from],
+              screenSharing: msg.sharing,
+              camOff: msg.sharing ? false : prev[msg.from].camOff,
+            };
+            if (pc) {
+              const receiver = pc.getReceivers().find(r => r.track && r.track.kind === 'video');
+              if (receiver && receiver.track) {
+                const freshStream = new MediaStream([receiver.track]);
+                const audioReceiver = pc.getReceivers().find(r => r.track && r.track.kind === 'audio');
+                if (audioReceiver?.track) freshStream.addTrack(audioReceiver.track);
+                newState.stream = freshStream;
+              }
+            }
+            return { ...prev, [msg.from]: newState };
+          });
+        }
+
+        if (msg.type === 'leave') {
+          const pc = peersRef.current[msg.from];
+          if (pc) { pc.close(); delete peersRef.current[msg.from]; }
+          setRemoteFeeds(prev => { const n = { ...prev }; delete n[msg.from]; return n; });
+        }
+      };
+
+      ch.on('broadcast', { event: 'signal' }, (payload) => handleMsg(payload.payload));
+
+      ch.subscribe((status) => {
+        if (status === 'SUBSCRIBED' && !cancelled) {
+          ch.send({
+            type: 'broadcast', event: 'signal',
+            payload: {
+              type: 'join', from: myId.current,
+              name: userRef.current?.fullName || 'Người dùng',
+              avatar: userRef.current?.avatar || '',
+              room: roomId,
+              camOn: camOnRef.current, micOn: micOnRef.current,
+            }
+          });
+        }
+      });
     };
 
-    ch.on('broadcast', { event: 'signal' }, (payload) => handleMsg(payload.payload));
-
-    let cancelled = false;
-    ch.subscribe((status) => {
-      if (status === 'SUBSCRIBED' && !cancelled) {
-        startMedia().then(stream => {
-          if (!cancelled && stream) {
-            ch.send({
-              type: 'broadcast', event: 'signal',
-              payload: {
-                type: 'join', from: myId.current,
-                name: userRef.current?.fullName || 'Người dùng',
-                avatar: userRef.current?.avatar || '',
-                room: roomId,
-                camOn: camOnRef.current, micOn: micOnRef.current,
-              }
-            });
-          }
-        });
-      }
-    });
+    startRoom();
 
     return () => {
       cancelled = true;
-      ch.send({
-        type: 'broadcast', event: 'signal',
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        payload: { type: 'leave', from: myId.current, room: roomId }
-      });
-      ch.unsubscribe();
+      if (ch) {
+        ch.send({
+          type: 'broadcast', event: 'signal',
+          payload: { type: 'leave', from: myId.current, room: roomId }
+        });
+        ch.unsubscribe();
+      }
       Object.values(peersRef.current).forEach(pc => pc.close());
       peersRef.current = {};
       localRef.current?.getTracks().forEach(t => t.stop());
@@ -779,8 +794,17 @@ export default function MeetRoom() {
     };
   }, []);
 
-  // Lọc remote feeds: loại bỏ peer có cùng userId với mình (tránh duplicate khi reload)
+  // Lọc remote feeds: loại bỏ peer có cùng userId với mình (tránh duplicate khi reload) và loại bỏ trùng lặp cùng một user
   const myUserId = String(user?.id || '');
+  const uniqueRemoteFeedsMap = {};
+  Object.entries(remoteFeeds).forEach(([id, f]) => {
+    const peerUserId = id.split('_')[0];
+    if (myUserId !== '' && peerUserId === myUserId) return;
+    if (!uniqueRemoteFeedsMap[peerUserId] || (f.stream && !uniqueRemoteFeedsMap[peerUserId].stream)) {
+      uniqueRemoteFeedsMap[peerUserId] = { id, ...f };
+    }
+  });
+
   const allFeeds = [
     {
       id: 'local',
@@ -791,17 +815,16 @@ export default function MeetRoom() {
       camOff: !camOn && !screenOn,
       screenSharing: screenOn,
     },
-    ...Object.entries(remoteFeeds)
-      .filter(([id]) => myUserId === '' || id.split('_')[0] !== myUserId)
-      .map(([id, f]) => ({
-        id,
-        name: f.name,
-        avatar: f.avatar,
-        stream: f.stream,
-        isLocal: false,
-        camOff: f.camOff ?? false,
-        screenSharing: f.screenSharing ?? false,
-      })),
+    ...Object.values(uniqueRemoteFeedsMap).map((f) => ({
+      id: f.id,
+      name: f.name,
+      avatar: f.avatar,
+      stream: f.stream,
+      isLocal: false,
+      camOff: f.camOff ?? false,
+      screenSharing: f.screenSharing ?? false,
+      micMuted: f.micMuted ?? false,
+    })),
   ];
 
   // Auto scroll chat
@@ -846,7 +869,7 @@ export default function MeetRoom() {
     };
 
     fetchMeetMessages();
-    const interval = setInterval(fetchMeetMessages, 2500);
+    const interval = setInterval(fetchMeetMessages, 5000);
     return () => clearInterval(interval);
   }, [roomId]);
 
@@ -1075,7 +1098,7 @@ export default function MeetRoom() {
         <div className="meet-body" style={{ flex: 1, display: 'flex', overflow: 'hidden', height: '100%', position: 'relative' }}>
 
           {/* ── Video Area ── */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: isFullscreen ? '0' : '20px', position: 'relative' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: isFullscreen ? '0' : '20px', position: 'relative', height: '100%' }}>
 
             {/* Error banner */}
             {error && (
@@ -1170,6 +1193,7 @@ export default function MeetRoom() {
                           muted={mainFeed.isLocal ? !micOn : mainFeed.micMuted}
                           mirrored={mainFeed.isLocal}
                           screenSharing={mainFeed.screenSharing}
+                          fullScreen={true}
                           style={{ width: '100%', height: '100%', borderRadius: isFullscreen ? '0' : '24px' }}
                         />
                       </div>
@@ -1234,7 +1258,7 @@ export default function MeetRoom() {
                 if (allFeeds.length === 1) {
                   const f = allFeeds[0];
                   return (
-                    <div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: isFullscreen ? '0' : '24px' }}>
+                    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: isFullscreen ? '0' : '24px' }}>
                       <VideoTile
                         key={`${f.id}-${f.screenSharing}`}
                         stream={f.stream}

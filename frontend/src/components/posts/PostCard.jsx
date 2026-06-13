@@ -12,7 +12,25 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
   const [replyTo, setReplyTo] = useState(null); // { id, name }
   const [commentReactions, setCommentReactions] = useState({}); // commentId -> emoji string or null
 
-  const isLong = post && post.content ? post.content.length > 200 : false;
+  // ── Clean up tagged names from text content for rendering ──
+  let renderContent = post?.content || '';
+  if (Array.isArray(post?.taggedUserNames)) {
+    post.taggedUserNames.forEach((name) => {
+      const escapedName = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`@${escapedName}\\s?`, 'gi');
+      renderContent = renderContent.replace(regex, '');
+    });
+  }
+  if (Array.isArray(post?.taggedGroupNames)) {
+    post.taggedGroupNames.forEach((name) => {
+      const escapedName = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`@${escapedName}\\s?`, 'gi');
+      renderContent = renderContent.replace(regex, '');
+    });
+  }
+  renderContent = renderContent.trim();
+
+  const isLong = renderContent.length > 200;
   const myLike = Array.isArray(post?.likes)
     ? post.likes.find((l) => (typeof l === 'object' ? String(l.userId) : String(l)) === String(currentUser?.id))
     : null;
@@ -72,83 +90,42 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
                 {post.userFullName}
               </span>
             </Link>
-            {post.isPinned && (
-              <span
-                style={{
-                  fontSize: '10.5px',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '20px',
-                  background: 'rgba(255, 122, 0, 0.12)',
-                  color: 'var(--secondary)',
-                  border: '1px solid rgba(255, 122, 0, 0.25)',
-                }}
-              >
-                📌 Đã ghim
-              </span>
-            )}
-            {post.tag && (
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '2px 9px',
-                  borderRadius: '20px',
-                  background: `${tagColor}22`,
-                  color: tagColor,
-                  border: `1px solid ${tagColor}44`,
-                }}
-              >
-                {post.tag}
-              </span>
-            )}
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '6px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#ef4444',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+              }}
+            >
+              Thông báo
+            </span>
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
-            {post.university && `🏫 ${post.university} · `}
             {timeAgo(post.createdAt)}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-          {isOwner && onPin && (
-            <button
-              onClick={() => onPin(post.id)}
-              title={post.isPinned ? "Bỏ ghim bài viết" : "Ghim bài viết"}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: post.isPinned ? 'var(--secondary)' : 'var(--text-muted)',
-                fontSize: '16px',
-                padding: '4px 8px',
-                borderRadius: '8px',
-                lineHeight: 1,
-                transition: 'color 0.15s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--secondary)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = post.isPinned ? 'var(--secondary)' : 'var(--text-muted)')}
-            >
-              📌
-            </button>
-          )}
           {isOwner && (
             <button
               onClick={() => onDelete(post.id)}
-              title="Xóa bài"
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
                 color: 'var(--text-muted)',
-                fontSize: '18px',
+                fontSize: '12px',
                 padding: '4px 8px',
-                borderRadius: '8px',
-                lineHeight: 1,
+                borderRadius: '6px',
                 transition: 'color 0.15s',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
             >
-              🗑
+              Xóa
             </button>
           )}
         </div>
@@ -157,7 +134,7 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
       {/* Content */}
       <div style={{ padding: '12px 18px 14px' }}>
         <p style={{ fontSize: '15px', lineHeight: 1.75, color: 'var(--text-primary)', margin: 0, whiteSpace: 'pre-wrap' }}>
-          {isLong && !expanded ? (post.content || '').slice(0, 200) + '…' : (post.content || '')}
+          {isLong && !expanded ? renderContent.slice(0, 200) + '…' : renderContent}
         </p>
         {isLong && (
           <button
@@ -184,22 +161,22 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginRight: '2px' }}>Cùng với:</span>
           {(post.taggedUserNames || []).map((name, i) => (
             <span key={`tu:${i}`} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              display: 'inline-flex', alignItems: 'center',
               padding: '3px 10px', borderRadius: '20px',
               background: 'rgba(108,99,255,0.12)', border: '1px solid rgba(108,99,255,0.25)',
               color: 'var(--primary-light)', fontSize: '12px', fontWeight: 700,
             }}>
-              👤 @{name}
+              @{name}
             </span>
           ))}
           {(post.taggedGroupNames || []).map((name, i) => (
             <span key={`tg:${i}`} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              display: 'inline-flex', alignItems: 'center',
               padding: '3px 10px', borderRadius: '20px',
               background: 'rgba(255,122,0,0.1)', border: '1px solid rgba(255,122,0,0.25)',
               color: 'var(--secondary)', fontSize: '12px', fontWeight: 700,
             }}>
-              👥 @{name}
+              @{name}
             </span>
           ))}
         </div>
@@ -209,7 +186,6 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
       <div
         style={{
           display: 'flex',
-
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 18px 10px',
@@ -218,19 +194,12 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
         }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {post.likes && post.likes.length > 0 && (() => {
-            const emojis = [
-              ...new Set(
-                post.likes.map((l) => (typeof l === 'object' ? l.emoji : '💜')).filter(Boolean)
-              ),
-            ].slice(0, 3);
-            return (
-              <>
-                <span>{emojis.join('')}</span>
-                <span>{post.likes.length} lượt thích</span>
-              </>
-            );
-          })()}
+          {post.likes && post.likes.length > 0 && (
+            <>
+              <span>❤️</span>
+              <span>{post.likes.length} lượt thích</span>
+            </>
+          )}
         </span>
         <span style={{ cursor: 'pointer' }} onClick={() => setShowComments((v) => !v)}>
           {post.comments && post.comments.length > 0 && `${post.comments.length} bình luận`}

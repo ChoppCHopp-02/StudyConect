@@ -21,7 +21,7 @@ export default class ErrorBoundary extends Component {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    window.location.reload();
   };
 
   render() {
@@ -41,10 +41,10 @@ export default class ErrorBoundary extends Component {
         >
           <div style={{ fontSize: '48px' }}>⚠️</div>
           <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Đã xảy ra lỗi
+            Đã xảy ra lỗi hệ thống
           </div>
           <div style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '400px' }}>
-            {this.state.error?.message || 'Có lỗi xảy ra khi tải component này.'}
+            Ứng dụng đã gặp sự cố ngoài ý muốn. Vui lòng tải lại trang để thử lại.
           </div>
           <button
             onClick={this.handleReset}
@@ -60,7 +60,7 @@ export default class ErrorBoundary extends Component {
               fontSize: '14px',
             }}
           >
-            Thử lại
+            Tải lại trang
           </button>
         </div>
       );

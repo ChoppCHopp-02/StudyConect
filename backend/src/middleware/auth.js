@@ -2,7 +2,10 @@
 const jwt = require('jsonwebtoken');
 const { apiError } = require('../utils/apiResponse');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'studyconnect_secret_key_change_in_prod';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error(
+  '[Auth] JWT_SECRET chưa được cấu hình trong .env'
+);
 
 /**
  * Verify user JWT from Authorization header.

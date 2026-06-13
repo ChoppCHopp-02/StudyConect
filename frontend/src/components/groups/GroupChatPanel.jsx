@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { formatBytes } from '../../utils';
 import MessageMenu from './MessageMenu';
 
 const EMOJI_LIST = [
@@ -7,15 +8,6 @@ const EMOJI_LIST = [
   '😏','😬','🫡','🥺','😭','🤧','😷','🤓','👀','💯','🎯','📚',
   '✅','⚡','🚀','💡',
 ];
-
-const formatBytes = (bytes, decimals = 2) => {
-  if (!+bytes) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-};
 
 const downloadBaseFile = async (dataUrl, fileName) => {
   try {
@@ -93,7 +85,7 @@ export default function GroupChatPanel({
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
-    const container = chatContainerRef.current; // Notice: previously used scrollContainerRef which was undefined, use chatContainerRef
+    const container = scrollContainerRef.current;
     const lastMsg = chatMessages[chatMessages.length - 1];
 
     if (!lastMsg) return;
@@ -624,7 +616,6 @@ export default function GroupChatPanel({
             String(contextMenu.msg.userId) === String(user.id)
           }
           onDelete={() => handleMsgDelete(contextMenu.msg.id)}
-          onReact={(em) => handleMsgReact(contextMenu.msg.id, em)}
           onPin={() => handleMsgPin(contextMenu.msg.id)}
           onReply={() =>
             setReplyTo({

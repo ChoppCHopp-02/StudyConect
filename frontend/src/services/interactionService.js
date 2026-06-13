@@ -6,6 +6,10 @@ import { supabase } from '@/config/supabaseClient';
 export const getPosts = async (currentUserId) => {
   if (!currentUserId) return [];
   const uid = parseInt(currentUserId, 10);
+  if (isNaN(uid)) {
+    console.error('[getPosts] userId không hợp lệ:', currentUserId);
+    return [];
+  }
 
   // 1. Fetch accepted friendships for the current user to filter posts
   const { data: friendships, error: friendError } = await supabase
@@ -19,85 +23,104 @@ export const getPosts = async (currentUserId) => {
   }
 
   const friendIds = friendships 
-    ? friendships.map(f => f.from_user_id === uid ? f.to_user_id : f.from_user_id)
+    ? friendships.map(f => {
+        const fid = f.from_user_id === uid ? f.to_user_id : f.from_user_id;
+        return parseInt(fid, 10);
+      })
     : [];
 
-  const allowedUserIds = [uid, ...friendIds];
+  // Luôn có ít nhất uid trong array
+  const allowedUserIds = [uid, ...friendIds.filter(id => !isNaN(id))];
+
+  // Kiểm tra trước khi query
+  if (allowedUserIds.length === 0) return [];
 
   // 2. Fetch posts
   const { data: postsData, error: postsError } = await supabase
     .from('posts')
     .select(`
-      *,
+      id, content, image, created_at, user_id,
+      group_id, is_pinned, tag, likes,
       users (
+        id,
         full_name,
         avatar,
         university
       )
     `)
     .in('user_id', allowedUserIds)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(10);
 
   if (postsError) throw new Error(`Lỗi tải bài viết: ${postsError.message}`);
 
+  if (import.meta.env.DEV) {
+    console.log('[Debug] postsData count:', postsData?.length);
+  }
+
   if (!postsData || postsData.length === 0) return [];
 
-  // 3. Fetch all comments for these posts
+  // 3. Fetch all comments and post_tags in parallel
   const postIds = postsData.map(p => p.id);
-  const { data: commentsData } = await supabase
-    .from('comments')
-    .select(`
-      *,
-      users (
-        full_name,
-        avatar
-      )
-    `)
-    .in('post_id', postIds)
-    .order('created_at', { ascending: true });
-
-  // 4. Fetch post_tags for these posts (silently ignore if table doesn't exist yet)
-  let tagsByPost = {};
-  try {
-    const { data: tagsData } = await supabase
+  
+  const [commentsRes, tagsRes] = await Promise.all([
+    supabase
+      .from('comments')
+      .select(`
+        *,
+        users (
+          full_name,
+          avatar
+        )
+      `)
+      .in('post_id', postIds)
+      .order('created_at', { ascending: true }),
+    supabase
       .from('post_tags')
       .select('post_id, target_type, target_id')
-      .in('post_id', postIds);
+      .in('post_id', postIds)
+  ]);
 
-    if (tagsData && tagsData.length > 0) {
-      // collect user ids and group ids
-      const taggedUserIds = [...new Set(tagsData.filter(t => t.target_type === 'user').map(t => t.target_id))];
-      const taggedGroupIds = [...new Set(tagsData.filter(t => t.target_type === 'group').map(t => t.target_id))];
+  const commentsData = commentsRes.data || [];
+  const tagsData = tagsRes?.error ? [] : (tagsRes?.data || []);
 
-      // resolve names
-      let userNames = {};
-      let groupNames = {};
-      if (taggedUserIds.length > 0) {
-        const { data: usersRes } = await supabase.from('users').select('id, full_name').in('id', taggedUserIds.map(Number));
-        (usersRes || []).forEach(u => { userNames[String(u.id)] = u.full_name; });
+  // 4. Fetch tag user/group names in parallel
+  let tagsByPost = {};
+  if (tagsData.length > 0) {
+    const taggedUserIds = [...new Set(tagsData.filter(t => t.target_type === 'user').map(t => t.target_id))];
+    const taggedGroupIds = [...new Set(tagsData.filter(t => t.target_type === 'group').map(t => t.target_id))];
+
+    let userNames = {};
+    let groupNames = {};
+
+    const [usersRes, groupsRes] = await Promise.all([
+      taggedUserIds.length > 0
+        ? supabase.from('users').select('id, full_name').in('id', taggedUserIds.map(Number))
+        : Promise.resolve({ data: [] }),
+      taggedGroupIds.length > 0
+        ? supabase.from('study_groups').select('id, name').in('id', taggedGroupIds.map(Number))
+        : Promise.resolve({ data: [] })
+    ]);
+
+    (usersRes.data || []).forEach(u => { userNames[String(u.id)] = u.full_name; });
+    (groupsRes.data || []).forEach(g => { groupNames[String(g.id)] = g.name; });
+
+    tagsData.forEach(t => {
+      if (!tagsByPost[t.post_id]) tagsByPost[t.post_id] = { users: [], groups: [], userNames: [], groupNames: [] };
+      if (t.target_type === 'user') {
+        tagsByPost[t.post_id].users.push(t.target_id);
+        if (userNames[t.target_id]) tagsByPost[t.post_id].userNames.push(userNames[t.target_id]);
       }
-      if (taggedGroupIds.length > 0) {
-        const { data: groupsRes } = await supabase.from('study_groups').select('id, name').in('id', taggedGroupIds.map(Number));
-        (groupsRes || []).forEach(g => { groupNames[String(g.id)] = g.name; });
+      if (t.target_type === 'group') {
+        tagsByPost[t.post_id].groups.push(t.target_id);
+        if (groupNames[t.target_id]) tagsByPost[t.post_id].groupNames.push(groupNames[t.target_id]);
       }
-
-      tagsData.forEach(t => {
-        if (!tagsByPost[t.post_id]) tagsByPost[t.post_id] = { users: [], groups: [], userNames: [], groupNames: [] };
-        if (t.target_type === 'user') {
-          tagsByPost[t.post_id].users.push(t.target_id);
-          if (userNames[t.target_id]) tagsByPost[t.post_id].userNames.push(userNames[t.target_id]);
-        }
-        if (t.target_type === 'group') {
-          tagsByPost[t.post_id].groups.push(t.target_id);
-          if (groupNames[t.target_id]) tagsByPost[t.post_id].groupNames.push(groupNames[t.target_id]);
-        }
-      });
-    }
-  } catch { /* post_tags table may not exist yet */ }
+    });
+  }
 
   // Map comments to their respective posts
   return postsData.map(p => {
-    const pCommentsRaw = (commentsData || []).filter(c => c.post_id === p.id);
+    const pCommentsRaw = commentsData.filter(c => c.post_id === p.id);
     const pComments = pCommentsRaw.map(c => {
       const parentComment = c.parent_id ? pCommentsRaw.find(pc => pc.id === c.parent_id) : null;
       return {
@@ -140,7 +163,35 @@ export const getPosts = async (currentUserId) => {
 };
 
 
-export const createPost = async (groupId, { content, userId, tag, taggedUsers = [], taggedGroups = [], taggerName = '' }) => {
+export const createPost = async (groupIdOrDetails, detailsObject) => {
+  // eslint-disable-next-line no-useless-assignment
+  let groupId = null;
+  let details = {};
+
+  if (detailsObject !== undefined) {
+    groupId = groupIdOrDetails;
+    details = detailsObject || {};
+  } else if (groupIdOrDetails && typeof groupIdOrDetails === 'object') {
+    details = groupIdOrDetails;
+    groupId = groupIdOrDetails.groupId || null;
+  } else {
+    groupId = groupIdOrDetails;
+  }
+
+  const {
+    content,
+    userId,
+    tag,
+    taggedUsers = [],
+    taggedGroups = [],
+    taggedUserNames = [],
+    taggedGroupNames = [],
+    image = null
+  } = details;
+
+  const parsedGroupId = groupId ? parseInt(groupId, 10) : null;
+  const safeGroupId = (parsedGroupId && !isNaN(parsedGroupId)) ? parsedGroupId : null;
+
   const { data: post, error } = await supabase
     .from('posts')
     .insert([
@@ -150,7 +201,9 @@ export const createPost = async (groupId, { content, userId, tag, taggedUsers = 
         tag: tag || null,
         likes_count: 0,
         comments_count: 0,
-        likes: []
+        likes: [],
+        group_id: safeGroupId,
+        image: image || null
       }
     ])
     .select(`
@@ -171,51 +224,23 @@ export const createPost = async (groupId, { content, userId, tag, taggedUsers = 
 
   // ── Lưu tags vào bảng post_tags ─────────────────────────────────
   const tagRows = [];
-  (taggedUsers || []).forEach(uid => {
+  const uniqueUsers = [...new Set(taggedUsers || [])];
+  const uniqueGroups = [...new Set(taggedGroups || [])];
+  uniqueUsers.forEach(uid => {
     tagRows.push({ post_id: postId, target_type: 'user', target_id: String(uid) });
   });
-  (taggedGroups || []).forEach(gid => {
+  uniqueGroups.forEach(gid => {
     tagRows.push({ post_id: postId, target_type: 'group', target_id: String(gid) });
   });
   if (tagRows.length > 0) {
     try { await supabase.from('post_tags').insert(tagRows); } catch { /* bảng chưa tồn tại thì bỏ qua */ }
   }
 
-  // ── Gửi thông báo via localStorage ───────────────────────────────
-  try {
-    const now = new Date().toISOString();
-    const stored = JSON.parse(localStorage.getItem('sc_post_tag_notifs') || '[]');
-
-    // 1) Tag bạn bè
-    (taggedUsers || []).forEach(uid => {
-      stored.push({
-        id: `posttag_u_${postId}_${uid}_${Date.now()}`,
-        type: 'posttag_user',
-        receiverId: String(uid),
-        taggerName,
-        postId: String(postId),
-        createdAt: now,
-      });
-    });
-
-    // 2) Tag nhóm → thông báo tới tất cả thành viên (xử lý ở useNotifications với group_id)
-    (taggedGroups || []).forEach(gid => {
-      stored.push({
-        id: `posttag_g_${postId}_${gid}_${Date.now()}`,
-        type: 'posttag_group',
-        groupId: String(gid),
-        taggerName,
-        postId: String(postId),
-        createdAt: now,
-      });
-    });
-
-    localStorage.setItem('sc_post_tag_notifs', JSON.stringify(stored.slice(-200)));
-  } catch { /* ignore */ }
+  // Notification via localStorage removed to comply with quota limits
 
   return {
     id: post.id.toString(),
-    groupId: groupId || null,
+    groupId: post.group_id ? post.group_id.toString() : null,
     userId: post.user_id,
     userFullName: post.users?.full_name || 'Người dùng',
     userAvatar: post.users?.avatar || '',
@@ -224,10 +249,13 @@ export const createPost = async (groupId, { content, userId, tag, taggedUsers = 
     content: post.content,
     image: post.image || null,
     tag: post.tag || null,
-    taggedUsers: taggedUsers || [],
-    taggedGroups: taggedGroups || [],
+    taggedUsers: uniqueUsers || [],
+    taggedGroups: uniqueGroups || [],
+    taggedUserNames: taggedUserNames || [],
+    taggedGroupNames: taggedGroupNames || [],
     likes: [],
     comments: [],
+    isPinned: post.is_pinned || false,
     createdAt: post.created_at
   };
 };
@@ -384,12 +412,12 @@ const getSearchSuggestionsBackground = async () => {
       .from('users')
       .select('id, full_name, avatar, university, major')
       .neq('role', 'admin')
-      .limit(100);
+      .limit(20);
       
     const { data: groups } = await supabase
-      .from('groups')
-      .select('id, name, description, category')
-      .limit(100);
+      .from('study_groups')
+      .select('id, name, description')
+      .limit(20);
       
     const result = {
       users: (users || []).map(u => ({
@@ -403,7 +431,7 @@ const getSearchSuggestionsBackground = async () => {
         id: g.id.toString(),
         name: g.name,
         description: g.description || '',
-        category: g.category || ''
+        category: ''
       }))
     };
     cachedSuggestions = result;
@@ -445,14 +473,16 @@ export const getFiles = async (groupId) => {
       )
     `)
     .eq('group_id', parseInt(groupId, 10))
+    .eq('approved', true)
     .order('created_at', { ascending: false });
 
   if (error) {
-    // Fallback if table files doesn't support specific relations
+    // Fallback if table files doesn't support approved filter or relations
     const { data: fallbackData, error: fallbackError } = await supabase
       .from('files')
       .select('*')
-      .eq('group_id', parseInt(groupId, 10));
+      .eq('group_id', parseInt(groupId, 10))
+      .eq('approved', true);
     
     if (fallbackError) return [];
     return fallbackData.map(f => ({
@@ -464,7 +494,8 @@ export const getFiles = async (groupId) => {
       fileSize: f.file_size || f.size,
       fileType: f.file_type || f.type,
       fileData: f.file_url || '',
-      createdAt: f.created_at
+      createdAt: f.created_at,
+      approved: f.approved
     }));
   }
 
@@ -477,8 +508,68 @@ export const getFiles = async (groupId) => {
     fileSize: f.file_size,
     fileType: f.file_type,
     fileData: f.file_url || '',
+    createdAt: f.created_at,
+    approved: f.approved
+  }));
+};
+
+export const getPendingFiles = async () => {
+  const { data, error } = await supabase
+    .from('files')
+    .select(`
+      *,
+      users (
+        full_name
+      ),
+      study_groups (
+        name
+      )
+    `)
+    .eq('approved', false)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    const { data: fallbackData } = await supabase
+      .from('files')
+      .select('*')
+      .eq('approved', false);
+    return (fallbackData || []).map(f => ({
+      id: f.id.toString(),
+      groupId: f.group_id.toString(),
+      userId: f.user_id,
+      userFullName: 'Thành viên',
+      groupName: 'Nhóm học',
+      fileName: f.file_name,
+      fileSize: f.file_size,
+      fileType: f.file_type,
+      fileData: f.file_url,
+      createdAt: f.created_at
+    }));
+  }
+
+  return (data || []).map(f => ({
+    id: f.id.toString(),
+    groupId: f.group_id.toString(),
+    userId: f.user_id,
+    userFullName: f.users?.full_name || 'Thành viên',
+    groupName: f.study_groups?.name || 'Nhóm học',
+    fileName: f.file_name,
+    fileSize: f.file_size,
+    fileType: f.file_type,
+    fileData: f.file_url,
     createdAt: f.created_at
   }));
+};
+
+export const approveFile = async (fileId) => {
+  const { error } = await supabase
+    .from('files')
+    .update({ approved: true })
+    .eq('id', parseInt(fileId, 10));
+
+  if (error) {
+    throw new Error(`Duyệt tài liệu thất bại: ${error.message}`);
+  }
 };
 
 export const uploadFile = async (groupId, { fileName, fileSize, fileType, fileData, userId }) => {
@@ -880,11 +971,13 @@ export const getChatMessages = async (groupId) => {
       )
     `)
     .eq('group_id', parseInt(groupId, 10))
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .limit(20);
 
   if (error) return [];
 
-  return (data || [])
+  const reversedData = (data || []).reverse();
+  return reversedData
     .filter(c => !c.content?.startsWith('[meetroom:'))
     .map(c => ({
       id: c.id.toString(),
@@ -1026,15 +1119,13 @@ export const getUserPosts = async (friendId) => {
   const { data: postsData, error: postsError } = await supabase
     .from('posts')
     .select(`
-      *,
-      users (
-        full_name,
-        avatar,
-        university
-      )
+      id, content, image, tag, is_pinned,
+      created_at, user_id, group_id, likes,
+      users (full_name, avatar, university)
     `)
     .eq('user_id', uid)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(10);
 
   if (postsError) throw new Error(`Lỗi tải bài viết: ${postsError.message}`);
 

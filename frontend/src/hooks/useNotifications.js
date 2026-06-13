@@ -8,13 +8,7 @@ import { approveJoinRequest, rejectJoinRequest } from '@/services/groupService';
 
 export default function useNotifications(userId) {
   const [notifs, setNotifs] = useState([]);
-  const [seen, setSeen] = useState(() => {
-    try {
-      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIF_SEEN)) || []);
-    } catch {
-      return new Set();
-    }
-  });
+  const [seen, setSeen] = useState(new Set());
   const [processing, setProcessing] = useState({});
 
   const refresh = useCallback(async () => {
@@ -382,27 +376,7 @@ export default function useNotifications(userId) {
         }
       }
 
-      // 4. Fetch custom deadline reminders from LocalStorage
-      try {
-        const storedReminders = JSON.parse(localStorage.getItem('studyconect_deadline_reminders') || '[]');
-        storedReminders
-          .filter(r => {
-            if ((now - new Date(r.createdAt)) >= ONE_DAY_MS) return false;
-            return r.userIds?.some(id => String(id) === String(uid));
-          })
-          .forEach(r => {
-            notifsList.push({
-              key: `reminder:${r.id}:${r.createdAt}`,
-              type: 'deadline-urgent',
-              title: `🔔 Nhắc nhở: "${r.title}"`,
-              body: `Yêu cầu hoàn thành công việc! Hạn chót: ${new Date(r.dueDate).toLocaleString('vi-VN')}`,
-              createdAt: r.createdAt,
-              groupId: r.groupId.toString(),
-            });
-          });
-      } catch (err) {
-        console.warn('Error reading reminders:', err);
-      }
+      // Custom deadline reminders from LocalStorage removed to comply with quota limits
 
       // 5. Fetch user's posts to get comments & reactions on them
       const { data: myPosts } = await supabase
@@ -821,13 +795,12 @@ export default function useNotifications(userId) {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 5000);
+    const interval = setInterval(refresh, 45000);
     return () => clearInterval(interval);
   }, [refresh]);
 
   const markAllRead = useCallback(() => {
     const newSeen = new Set([...seen, ...notifs.map(n => n.key)]);
-    localStorage.setItem(STORAGE_KEYS.NOTIF_SEEN, JSON.stringify([...newSeen]));
     setSeen(newSeen);
   }, [seen, notifs]);
 

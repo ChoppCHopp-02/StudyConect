@@ -2,7 +2,7 @@
 // Context toàn cục quản lý gọi video riêng tư — hoạt động trên mọi trang
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../config/supabaseClient';
 import { useAuth } from './AuthContext';
 
@@ -14,6 +14,7 @@ const genCallId = () => `call_${Date.now()}_${Math.random().toString(36).slice(2
 export const CallProvider = ({ children }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Trạng thái cuộc gọi
   const [incomingCall, setIncomingCall] = useState(null);  // { callId, callerId, callerName, callerAvatar }
@@ -24,9 +25,24 @@ export const CallProvider = ({ children }) => {
   const ringTimerRef = useRef(null);
   const statusTimerRef = useRef(null);
 
+  // Cập nhật refs để callback đọc được
+  const outgoingCallRef = useRef(outgoingCall);
+  useEffect(() => { outgoingCallRef.current = outgoingCall; }, [outgoingCall]);
+  const incomingCallRef = useRef(incomingCall);
+  useEffect(() => { incomingCallRef.current = incomingCall; }, [incomingCall]);
+
   // ── Khởi tạo channel lắng nghe toàn cục ─────────────────────────
   useEffect(() => {
     if (!user?.id) return;
+
+    const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname === '/admin-login';
+    if (isAdminRoute) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIncomingCall(null);
+      setOutgoingCall(null);
+      setCallStatus(null);
+      return;
+    }
 
     const ch = supabase.channel('private_calls_global', {
       config: { broadcast: { self: false } }
@@ -55,14 +71,15 @@ export const CallProvider = ({ children }) => {
       }
 
       // Đối phương chấp nhận (người gọi nhận)
-      if (payload.type === 'accept' && outgoingCall?.callId === payload.callId) {
+      if (payload.type === 'accept' && outgoingCallRef.current?.callId === payload.callId) {
+        const outCall = outgoingCallRef.current;
         setOutgoingCall(null);
         setCallStatus(null);
-        navigate(`/call/${payload.callId}?mode=caller`);
+        navigate(`/call/${payload.callId}?mode=caller&friendName=${encodeURIComponent(outCall?.receiverName || '')}&friendAvatar=${encodeURIComponent(outCall?.receiverAvatar || '')}&friendId=${outCall?.receiverId}`);
       }
 
       // Đối phương từ chối (người gọi nhận)
-      if (payload.type === 'reject' && outgoingCall?.callId === payload.callId) {
+      if (payload.type === 'reject' && outgoingCallRef.current?.callId === payload.callId) {
         setOutgoingCall(null);
         setCallStatus('rejected');
         clearTimeout(statusTimerRef.current);
@@ -70,7 +87,7 @@ export const CallProvider = ({ children }) => {
       }
 
       // Cuộc gọi bị hủy bởi người gọi (người nhận đang thấy popup)
-      if (payload.type === 'cancel' && incomingCall?.callId === payload.callId) {
+      if (payload.type === 'cancel' && incomingCallRef.current?.callId === payload.callId) {
         clearTimeout(ringTimerRef.current);
         setIncomingCall(null);
         setCallStatus('missed');
@@ -87,13 +104,7 @@ export const CallProvider = ({ children }) => {
       ch.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
-  // Cập nhật outgoingCall ref để callback đọc được
-  const outgoingCallRef = useRef(outgoingCall);
-  useEffect(() => { outgoingCallRef.current = outgoingCall; }, [outgoingCall]);
-  const incomingCallRef = useRef(incomingCall);
-  useEffect(() => { incomingCallRef.current = incomingCall; }, [incomingCall]);
+  }, [user?.id, location.pathname]);
 
   // ── Bắt đầu gọi ─────────────────────────────────────────────────
   const initiateCall = useCallback(async (friend) => {

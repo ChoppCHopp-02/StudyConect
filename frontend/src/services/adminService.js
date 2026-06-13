@@ -1,14 +1,15 @@
 // src/services/adminService.js
 import { supabase } from '@/config/supabaseClient';
+import { hashPassword } from './authService';
 
 const SESSION_KEY = 'sc_session';
 const ADMIN_SESSION_KEY = 'sc_admin_session';
 
+// CẦN NÂNG CẤP: dùng Supabase Auth để hash password đúng cách ở phía server
 const mapUser = (u) => ({
   id: u.id,
   fullName: u.full_name,
   email: u.email,
-  password: u.password,
   role: u.role,
   university: u.university || '',
   major: u.major || '',
@@ -39,7 +40,7 @@ const mapGroup = (g) => {
 export const adminGetUsers = async () => {
   const { data, error } = await supabase
     .from('users')
-    .select('*')
+    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Lỗi tải danh sách người dùng: ${error.message}`);
@@ -57,13 +58,15 @@ export const adminCreateUser = async ({ fullName, email, password, role, univers
   if (checkError) throw new Error('Lỗi kiểm tra email.');
   if (existingUser) throw new Error('Email này đã được sử dụng.');
 
+  const hashedPassword = await hashPassword(password, email);
+
   const { data: user, error: insertError } = await supabase
     .from('users')
     .insert([
       {
         full_name: fullName,
         email: email.toLowerCase(),
-        password,
+        password: hashedPassword,
         role: role || 'user',
         university: university || '',
         major: major || '',
@@ -71,7 +74,7 @@ export const adminCreateUser = async ({ fullName, email, password, role, univers
         avatar: ''
       }
     ])
-    .select()
+    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
     .single();
 
   if (insertError) throw new Error(`Thêm người dùng thất bại: ${insertError.message}`);
@@ -98,7 +101,12 @@ export const adminUpdateUser = async (userId, data) => {
   const updateData = {};
   if (data.fullName !== undefined) updateData.full_name = data.fullName;
   if (data.email !== undefined) updateData.email = data.email.toLowerCase();
-  if (data.password !== undefined) updateData.password = data.password;
+  
+  if (data.password !== undefined && data.password.trim() !== '') {
+    const emailToHash = data.email || (await supabase.from('users').select('email').eq('id', uid).single()).data?.email || '';
+    updateData.password = await hashPassword(data.password, emailToHash);
+  }
+  
   if (data.role !== undefined) updateData.role = data.role;
   if (data.university !== undefined) updateData.university = data.university;
   if (data.major !== undefined) updateData.major = data.major;
@@ -109,7 +117,7 @@ export const adminUpdateUser = async (userId, data) => {
     .from('users')
     .update(updateData)
     .eq('id', uid)
-    .select()
+    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
     .single();
 
   if (updateError) throw new Error(`Cập nhật người dùng thất bại: ${updateError.message}`);
@@ -121,11 +129,12 @@ export const adminUpdateUser = async (userId, data) => {
     const adminSession = JSON.parse(localStorage.getItem(ADMIN_SESSION_KEY));
     if (adminSession && adminSession.id === updatedUser.id) {
       const safe = { ...updatedUser };
-      delete safe.password;
       localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(safe));
     }
   } catch (e) {
-    console.warn('Error syncing admin session:', e);
+    if (import.meta.env.DEV) {
+      console.warn('Error syncing admin session:', e);
+    }
   }
 
   // Update sc_session if self-editing
@@ -133,11 +142,12 @@ export const adminUpdateUser = async (userId, data) => {
     const session = JSON.parse(localStorage.getItem(SESSION_KEY));
     if (session && session.id === updatedUser.id) {
       const safe = { ...updatedUser };
-      delete safe.password;
       localStorage.setItem(SESSION_KEY, JSON.stringify(safe));
     }
   } catch (e) {
-    console.warn('Error syncing user session:', e);
+    if (import.meta.env.DEV) {
+      console.warn('Error syncing user session:', e);
+    }
   }
 
   return updatedUser;
@@ -158,13 +168,7 @@ export const adminDeleteUser = async (userId) => {
 export const adminGetGroups = async () => {
   const { data, error } = await supabase
     .from('study_groups')
-    .select(`
-      *,
-      group_members (
-        user_id,
-        role
-      )
-    `);
+    .select('id, name, subject, description, creator_id, created_at, group_members(user_id, role)');
 
   if (error) throw new Error(`Lỗi tải danh sách nhóm: ${error.message}`);
   

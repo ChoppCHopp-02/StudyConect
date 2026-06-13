@@ -89,7 +89,7 @@ const EMOJI_LIST = [
   '😺','😸','🐶','🐱','🐸','🦄','🐼','🦊','🍎','🍕',
 ];
 
-const QUICK_REACTIONS = ['❤️','😂','😮','😢','😡','👍'];
+
 
 // ── Emoji Picker (có scroll, khung cố định) ───────────────────────
 function EmojiPicker({ onSelect, onClose }) {
@@ -140,23 +140,33 @@ function CameraModal({ onCapture, onClose }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Request HD resolutions for high quality pixels
-    navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: 'user',
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      }
-    })
-      .then(stream => {
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
-          setReady(true);
+    const startCamera = async () => {
+      const constraintOptions = [
+        { video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 } } },
+        { video: { width: { ideal: 1920 }, height: { ideal: 1080 } } },
+        { video: true }
+      ];
+
+      let stream = null;
+      for (const constraints of constraintOptions) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (stream) break;
+        } catch (err) {
+          console.warn('Failed with constraints:', constraints, err);
         }
-      })
-      .catch(() => setError('Không thể truy cập camera hoặc quyền bị từ chối.'));
+      }
+
+      if (stream && videoRef.current) {
+        streamRef.current = stream;
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setReady(true);
+      } else {
+        setError('Không thể truy cập camera hoặc quyền bị từ chối.');
+      }
+    };
+    startCamera();
 
     return () => {
       streamRef.current?.getTracks().forEach(t => t.stop());
@@ -167,9 +177,9 @@ function CameraModal({ onCapture, onClose }) {
     const canvas = canvasRef.current, video = videoRef.current;
     if (!canvas || !video) return;
 
-    // Use actual stream resolution for maximum sharpness
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+
     const ctx = canvas.getContext('2d');
 
     // Mirror the canvas draw to match the user preview exactly
@@ -177,9 +187,9 @@ function CameraModal({ onCapture, onClose }) {
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Save with 98% super crisp quality
-    onCapture(canvas.toDataURL('image/jpeg', 0.98));
+    // Stop stream then auto-send immediately
     streamRef.current?.getTracks().forEach(t => t.stop());
+    onCapture(canvas.toDataURL('image/jpeg', 0.95));
   };
 
   return (
@@ -223,7 +233,6 @@ function CameraModal({ onCapture, onClose }) {
                   padding: '2px 8px',
                   borderRadius: '12px',
                   fontWeight: 700,
-                  animation: 'pulse 1.5s infinite',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px'
@@ -256,7 +265,7 @@ function CameraModal({ onCapture, onClose }) {
           </button>
         </div>
 
-        {/* Video stream container */}
+        {/* Video stream container — landscape 16:9 */}
         <div
           style={{
             position: 'relative',
@@ -282,7 +291,7 @@ function CameraModal({ onCapture, onClose }) {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                transform: 'scaleX(-1)' // Mirror to display beautifully and naturally like a phone
+                transform: 'scaleX(-1)'
               }}
             />
           )}
@@ -290,7 +299,7 @@ function CameraModal({ onCapture, onClose }) {
 
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-        {/* Action buttons */}
+        {/* Shutter button */}
         <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
           <button
             onClick={onClose}
@@ -310,7 +319,7 @@ function CameraModal({ onCapture, onClose }) {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = '#a0aec0'; }}
           >
-            Hủy bỏ
+            Hủy
           </button>
           {ready && (
             <button
@@ -327,12 +336,20 @@ function CameraModal({ onCapture, onClose }) {
                 cursor: 'pointer',
                 fontSize: '14px',
                 boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
               }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
-              📷 Bắt đầu chụp ảnh
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Chụp & Gửi
             </button>
           )}
         </div>
@@ -396,10 +413,11 @@ function ShareModal({ message, friends, onSend, onClose }) {
   );
 }
 
-// ── Message Context Menu (Quick Reaction + Actions) ─────────────
-function MessageMenu({ clientX, clientY, msg, onReact, onSaveImage, onShare, onDelete, onClose, isMine }) {
+// ── Message Context Menu (Actions only — no reactions) ──────────
+function MessageMenu({ clientX, clientY, msg, onSaveImage, onShare, onDelete, onClose, isMine }) {
   const ref = useRef(null);
   const [pos, setPos] = useState({ top: clientY - 60, left: clientX });
+  const isImage = msg?.type === 'image' || msg?.content?.startsWith('data:image');
 
   useEffect(() => {
     const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
@@ -410,53 +428,35 @@ function MessageMenu({ clientX, clientY, msg, onReact, onSaveImage, onShare, onD
   // Adjust to keep menu inside viewport
   useEffect(() => {
     if (!ref.current) return;
-    const menuW = ref.current.offsetWidth || 220;
-    const menuH = ref.current.offsetHeight || 130;
+    const menuW = ref.current.offsetWidth || 200;
+    const menuH = ref.current.offsetHeight || 100;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const PADDING = 8;
     let left = clientX;
-    let top = clientY - menuH - 8; // above the button
+    let top = clientY - menuH - 8;
 
     if (left + menuW + PADDING > vw) left = vw - menuW - PADDING;
     if (left < PADDING) left = PADDING;
-    if (top < PADDING) top = clientY + 32; // below if not enough space above
+    if (top < PADDING) top = clientY + 32;
     if (top + menuH + PADDING > vh) top = vh - menuH - PADDING;
 
     setPos({ top, left });
   }, [clientX, clientY]);
 
-  const isImage = msg?.type === 'image' || msg?.content?.startsWith('data:image');
-
   return (
-    <div ref={ref} style={{
-      position: 'fixed', top: pos.top, left: pos.left,
-      background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: '14px', padding: '8px',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-      zIndex: 9999, minWidth: '200px',
-      animation: 'fadeIn 0.12s ease',
-    }}>
-      {/* Quick reactions */}
-      <div style={{
-        display: 'flex',
-        gap: '4px',
-        padding: '4px 6px 8px',
-        borderBottom: '1px solid var(--border)',
-        marginBottom: '4px'
+    <div
+      ref={ref}
+      style={{
+        position: 'fixed', top: pos.top, left: pos.left,
+        background: 'var(--bg-card)', border: '1px solid var(--border)',
+        borderRadius: '14px', padding: '8px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        zIndex: 9999, minWidth: '180px',
+        animation: 'fadeIn 0.12s ease',
       }}>
-        {QUICK_REACTIONS.map(em => (
-          <button key={em} className="reaction-btn-pop" onClick={(e) => { onReact(em, e); onClose(); }} style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: '22px', padding: '3px 4px', borderRadius: '6px', lineHeight: 1,
-          }}>{em}</button>
-        ))}
-      </div>
-
-      {/* Actions */}
       <MenuBtn icon="↗️" label="Chia sẻ" onClick={() => { onShare(); onClose(); }} />
       {isImage && <MenuBtn icon="⬇️" label="Lưu ảnh" onClick={() => { onSaveImage(); onClose(); }} />}
-
       {isMine && <MenuBtn icon="🗑️" label="Xóa tin nhắn" danger onClick={() => { onDelete(); onClose(); }} />}
     </div>
   );
@@ -491,9 +491,8 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
   const [imgPreview, setImgPreview] = useState(null);
   const [contextMenu, setContextMenu] = useState(null); // { x, y, msg }
   const [shareMsg, setShareMsg] = useState(null);
-  const [reactions, setReactions] = useState({}); // msgId -> emoji[]
+
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [particles, setParticles] = useState([]); // { id, x, y, char, delay, leftOffset }
   const bottomRef = useRef(null);
   const msgsContainerRef = useRef(null);
   const chatOuterRef = useRef(null);
@@ -502,28 +501,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
   const prevMsgCount = useRef(0);
 
   const { initiateCall, callStatus } = useCall();
-
-  const spawnParticles = (emoji, clientX, clientY) => {
-    if (!chatOuterRef.current) return;
-    const rect = chatOuterRef.current.getBoundingClientRect();
-    const relX = clientX - rect.left;
-    const relY = clientY - rect.top;
-
-    // Spawn 6 particles with random drift and staggered delays
-    const newParticles = Array.from({ length: 6 }).map((_, i) => ({
-      id: Date.now() + Math.random() + i,
-      x: relX,
-      y: relY - 10,
-      char: emoji,
-      delay: i * 0.05,
-      leftOffset: (Math.random() - 0.5) * 100
-    }));
-
-    setParticles(prev => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
-    }, 1500);
-  };
 
   const [nickname, setNickname] = useState('');
   const [showRenameModal, setShowRenameModal] = useState(false);
@@ -573,14 +550,22 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
       const uid = parseInt(user.id, 10);
       const fid = parseInt(friend.userId, 10);
       
-      const { error } = await supabase
+      const { error: err1 } = await supabase
         .from('messages')
         .delete()
-        .is('group_id', null)
-        .or(`and(sender_id.eq.${uid},receiver_id.eq.${fid}),and(sender_id.eq.${fid},receiver_id.eq.${uid})`);
+        .eq('sender_id', uid)
+        .eq('receiver_id', fid)
+        .is('group_id', null);
 
-      if (error) {
-        console.error('Error clearing chat:', error);
+      const { error: err2 } = await supabase
+        .from('messages')
+        .delete()
+        .eq('sender_id', fid)
+        .eq('receiver_id', uid)
+        .is('group_id', null);
+
+      if (err1 || err2) {
+        console.error('Error clearing chat:', err1 || err2);
         return;
       }
 
@@ -645,11 +630,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
     }
   };
 
-  const REACTIONS_KEY = `sc_reactions_${user.id}`;
-  const loadReactions = useCallback(() => {
-    try { return JSON.parse(localStorage.getItem(REACTIONS_KEY) || '{}'); } catch { return {}; }
-  }, [REACTIONS_KEY]);
-  const saveReactions = (r) => localStorage.setItem(REACTIONS_KEY, JSON.stringify(r));
+
 
   const load = useCallback(async () => {
     // Bước 1: Render ngay từ cache (0ms delay)
@@ -674,7 +655,11 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
       if (lastNickMsg) {
         const val = lastNickMsg.content.replace('[chat_nickname]:', '');
         if (val) {
-          localStorage.setItem(`sc_nickname_${user.id}_${friend.userId}`, val);
+          try {
+            localStorage.setItem(`sc_nickname_${user.id}_${friend.userId}`, val);
+          } catch (err) {
+            console.warn('Error saving nickname:', err);
+          }
           setNickname(val);
         } else {
           localStorage.removeItem(`sc_nickname_${user.id}_${friend.userId}`);
@@ -705,7 +690,11 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
     if (lastNickMsg) {
       const val = lastNickMsg.content.replace('[chat_nickname]:', '');
       if (val) {
-        localStorage.setItem(`sc_nickname_${user.id}_${friend.userId}`, val);
+        try {
+          localStorage.setItem(`sc_nickname_${user.id}_${friend.userId}`, val);
+        } catch (err) {
+          console.warn('Error saving nickname:', err);
+        }
         setNickname(val);
       } else {
         localStorage.removeItem(`sc_nickname_${user.id}_${friend.userId}`);
@@ -714,14 +703,13 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
       if (onNicknameChange) onNicknameChange();
     }
 
-    setReactions(loadReactions());
     await markAsRead(user.id, friend.userId);
-  }, [user.id, friend.userId, loadReactions, nickname, friend.fullName, onNicknameChange]);
+  }, [user.id, friend.userId, nickname, friend.fullName, onNicknameChange]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
-    const timer = setInterval(load, 2000);
+    const timer = setInterval(load, 5000);
     return () => clearInterval(timer);
   }, [load]);
 
@@ -776,13 +764,42 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
     try {
       const isImage = attachedFile?.type?.startsWith('image/') || dataUrl.startsWith('data:image');
       
+      let fileUrlValue = '';
+      if (attachedFile) {
+        try {
+          const fileName = `private/${user.id}/${Date.now()}_${attachedFile.name || 'clipboard.png'}`;
+          const { error: uploadError } = await supabase.storage
+            .from('attachments')
+            .upload(fileName, attachedFile, { cacheControl: '3600', upsert: true });
+
+          if (uploadError) {
+            if (import.meta.env.DEV) {
+              console.warn('Upload private file to Storage failed:', uploadError.message);
+            }
+            fileUrlValue = dataUrl;
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from('attachments')
+              .getPublicUrl(fileName);
+            fileUrlValue = publicUrl;
+          }
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.warn('Private file Storage upload error, falling back to base64:', err);
+          }
+          fileUrlValue = dataUrl;
+        }
+      } else {
+        fileUrlValue = dataUrl;
+      }
+
       if (isImage) {
-        await sendMessage(user.id, friend.userId, dataUrl, 'image');
+        await sendMessage(user.id, friend.userId, fileUrlValue, 'image');
       } else {
         const fileData = {
           fileName: attachedFile?.name || 'document.file',
           fileType: attachedFile?.type || 'application/octet-stream',
-          fileData: dataUrl,
+          fileData: fileUrlValue,
           fileSize: formatBytes(attachedFile?.size || 0)
         };
         await sendMessage(user.id, friend.userId, '', 'text', fileData);
@@ -884,25 +901,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
     }
   };
 
-  // React to message
-  const handleReact = (msgId, emoji, e) => {
-    const updated = { ...loadReactions() };
-    const existing = updated[msgId] || [];
-    if (existing.includes(emoji)) {
-      updated[msgId] = existing.filter(e => e !== emoji);
-    } else {
-      updated[msgId] = [...existing, emoji];
-    }
-    saveReactions(updated);
-    setReactions(updated);
-
-    if (e && e.clientX && e.clientY) {
-      spawnParticles(emoji, e.clientX, e.clientY);
-    } else if (contextMenu && contextMenu.x && contextMenu.y) {
-      spawnParticles(emoji, contextMenu.x, contextMenu.y);
-    }
-  };
-
   // Share message to other friends
   const handleShare = async (toUserId, msg) => {
     const content = msg.type === 'image' || msg.content?.startsWith('data:image')
@@ -920,13 +918,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  };
-
-  // Open quick reaction bar near a button element
-  const openReactionBar = (e, msg) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setContextMenu({ clientX: rect.left, clientY: rect.top, msg });
   };
 
   // Group messages by date
@@ -1041,22 +1032,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           background: rgba(255,77,77,0.08);
         }
       `}</style>
-
-      {particles.map(p => (
-        <span
-          key={p.id}
-          className="emoji-particle"
-          style={{
-            left: `${p.x}px`,
-            top: `${p.y}px`,
-            animationDelay: `${p.delay}s`,
-            '--dx': `${p.leftOffset}px`
-          }}
-        >
-          {p.char}
-        </span>
-      ))}
-
       {/* Toast: bạn bè đổi hình nền */}
       {bgToast && (
         <div style={{
@@ -1354,7 +1329,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           }
 
           const isImage = m.type === 'image' || m.content?.startsWith('data:image');
-          const msgReactions = reactions[m.id] || [];
 
           return (
             <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: '4px' }}>
@@ -1372,17 +1346,12 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
               }}>
                 {/* Hover action buttons on side of message */}
                 <div className="msg-actions">
-                  <button className="msg-action-btn" title="Thả cảm xúc" onClick={(e) => openReactionBar(e, m)}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-                  </button>
                   <button className="msg-action-btn" title="Chia sẻ" onClick={() => setShareMsg(m)}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                   </button>
-                  {isMine && (
-                    <button className="msg-action-btn danger" title="Xóa" onClick={() => handleDelete(m.id)}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                    </button>
-                  )}
+                  <button className="msg-action-btn danger" title="Xóa" onClick={() => handleDelete(m.id)}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', gap: '2px' }}>
@@ -1418,19 +1387,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                       </div>
                     ) : m.content}
                   </div>
-
-                  {/* Reactions */}
-                  {msgReactions.length > 0 && (
-                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginTop: '2px' }}>
-                      {msgReactions.map((em, i) => (
-                        <span key={i} className="reaction-bubble-pop" onClick={(e) => handleReact(m.id, em, e)} style={{
-                          background: 'var(--bg-card)', border: '1px solid var(--border)',
-                          borderRadius: '10px', padding: '1px 6px', fontSize: '14px', cursor: 'pointer',
-                          display: 'inline-block',
-                        }}>{em}</span>
-                      ))}
-                    </div>
-                  )}
 
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)', padding: '0 2px' }}>
                     {fmtFull(m.createdAt)}
@@ -1632,7 +1588,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
           background: 'var(--bg-card)', flexShrink: 0, position: 'relative',
         }}>
           {showEmoji && <EmojiPicker onSelect={addEmoji} onClose={() => setShowEmoji(false)} />}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button onClick={() => setShowEmoji(v => !v)} title="Biểu cảm" style={{
               background: showEmoji ? 'rgba(108,99,255,0.15)' : 'var(--bg-input)',
               border: '1px solid var(--border)', borderRadius: '12px',
@@ -1715,13 +1671,12 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
         </div>
       )}
 
-      {/* Reaction picker (opened via hover button) */}
+      {/* Message context menu (share / save / delete) */}
       {contextMenu && (
         <MessageMenu
           clientX={contextMenu.clientX}
           clientY={contextMenu.clientY}
           msg={contextMenu.msg}
-          onReact={(em, e) => handleReact(contextMenu.msg.id, em, e)}
           onSaveImage={() => handleSaveImage(contextMenu.msg)}
           onShare={() => setShareMsg(contextMenu.msg)}
           onDelete={() => handleDelete(contextMenu.msg.id)}
@@ -1793,8 +1748,8 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
 
       {showCamera && <CameraModal onCapture={(d) => {
         setShowCamera(false);
-        setImgPreview(d);
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+        // Auto-send the photo immediately — no caption step needed
+        handleSendAttachment(d, null);
       }} onClose={() => setShowCamera(false)} />}
 
       {/* ── IMAGE VIEW MODAL ── */}
@@ -2447,15 +2402,20 @@ export default function Chat() {
         await refreshCache(user.id);
         const list = await getFriends(String(user.id), true);
         setFriends(list);
+
         const lm = getLastMessages(user.id);
         setLastMessages(lm);
+
         const total = list.reduce((acc, f) => acc + getUnreadCount(user.id, f.userId), 0);
         setTotalUnread(total);
-      } catch { /* ignore */ }
-      finally { setLoading(false); }
+      } catch (err) {
+        console.warn('[Chat] Refresh failed:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     refresh();
-    const timer = setInterval(refresh, 3000);
+    const timer = setInterval(refresh, 15000);
     return () => clearInterval(timer);
   }, [user]);
 

@@ -25,8 +25,6 @@ export default function GroupDocuments({
   setSelectedFile,
   customFileName,
   setCustomFileName,
-  uploadSubject,
-  setUploadSubject,
   isUploadingFile,
   handleFileUpload,
   handleFileDelete,
@@ -34,14 +32,18 @@ export default function GroupDocuments({
 }) {
   const [selectedFilterSubject, setSelectedFilterSubject] = useState('All');
 
+  // Trích xuất danh sách tất cả các môn học đã có trong tài liệu
+  const allSubjects = Array.from(
+    new Set(
+      files.map((file) => parseFileSubject(file.fileName).subject)
+    )
+  ).filter(Boolean);
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
       setCustomFileName(file.name);
-      if (!uploadSubject) {
-        setUploadSubject(group?.subject || 'Chung');
-      }
     }
   };
 
@@ -58,13 +60,6 @@ export default function GroupDocuments({
       if (addToast) addToast('Không thể tải xuống tài liệu này', 'error');
     }
   };
-
-  // Trích xuất danh sách tất cả các môn học hiện có
-  const allSubjects = Array.from(
-    new Set(
-      files.map((file) => parseFileSubject(file.fileName).subject)
-    )
-  ).filter(Boolean);
 
   // Lọc file theo môn học được chọn
   const filteredFiles = selectedFilterSubject === 'All'
@@ -145,31 +140,16 @@ export default function GroupDocuments({
           </div>
 
           {selectedFile && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tên tài liệu hiển thị</label>
-                <div className="form-input-wrap">
-                  <input
-                    type="text"
-                    className="form-input no-icon"
-                    placeholder="Đặt tên cho tài liệu dễ nhận biết..."
-                    value={customFileName}
-                    onChange={(e) => setCustomFileName(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Môn học / Phân loại *</label>
-                <div className="form-input-wrap">
-                  <input
-                    type="text"
-                    className="form-input no-icon"
-                    placeholder="Nhập môn học (ví dụ: Toán, Lý, Hóa...)"
-                    value={uploadSubject}
-                    onChange={(e) => setUploadSubject(e.target.value)}
-                    required
-                  />
-                </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Tên tài liệu hiển thị</label>
+              <div className="form-input-wrap">
+                <input
+                  type="text"
+                  className="form-input no-icon"
+                  placeholder="Đặt tên cho tài liệu dễ nhận biết..."
+                  value={customFileName}
+                  onChange={(e) => setCustomFileName(e.target.value)}
+                />
               </div>
             </div>
           )}

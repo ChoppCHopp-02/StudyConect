@@ -4,9 +4,13 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn(
-    '[Supabase] Cảnh báo: Thiếu VITE_SUPABASE_URL hoặc VITE_SUPABASE_PUBLISHABLE_KEY trong file .env!'
+  console.error(
+    '[Supabase] VITE_SUPABASE_URL hoặc ' +
+    'VITE_SUPABASE_PUBLISHABLE_KEY chưa được cấu hình!'
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(
+  supabaseUrl || '',
+  supabaseKey || ''
+);

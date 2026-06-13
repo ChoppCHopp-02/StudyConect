@@ -1,9 +1,13 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { CallProvider } from './context/CallContext';
 import CallNotification from './components/CallNotification';
+import { ToastProvider } from './context/ToastContext';
+import { NotificationProvider } from './context/NotificationContext';
+import GlobalMessageListener from './components/GlobalMessageListener';
+import { supabase } from './config/supabaseClient';
 
 // ── Statically imported pages (Fixes ChunkLoadErrors and black screens on navigation) ──
 import Login from './pages/Login';
@@ -21,8 +25,6 @@ import Chat from './pages/Chat';
 import MeetRoom from './pages/Meetroom';
 import PrivateCall from './pages/PrivateCall';
 import FriendDetail from './pages/FriendDetail';
-
-
 
 // Global error listener to auto-reload on any remaining chunk load failures
 if (typeof window !== 'undefined') {
@@ -75,8 +77,67 @@ const PublicRoute = ({ children }) => {
 };
 
 const AdminRoute = ({ children }) => {
-  const { isAdminAuth } = useAuth();
-  return isAdminAuth ? children : <Navigate to="/admin-login" replace />;
+  const { admin, isAdminAuth, adminLogout } = useAuth();
+  const [verifying, setVerifying] = useState(true);
+  const [isValidAdmin, setIsValidAdmin] = useState(false);
+
+  useEffect(() => {
+    const verifyAdmin = async () => {
+      if (!admin?.id) {
+        setIsValidAdmin(false);
+        setVerifying(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', Number(admin.id))
+          .single();
+        if (error) {
+          if (error.code === 'PGRST116') {
+            setIsValidAdmin(false);
+            adminLogout();
+          } else {
+            console.error('Transient error verifying admin:', error);
+            setIsValidAdmin(true);
+          }
+        } else if (data && data.role === 'admin') {
+          setIsValidAdmin(true);
+        } else {
+          setIsValidAdmin(false);
+          adminLogout();
+        }
+      } catch (err) {
+        console.error('Error verifying admin (transient):', err);
+        setIsValidAdmin(true);
+      } finally {
+        setVerifying(false);
+      }
+    };
+    verifyAdmin();
+  }, [admin, adminLogout]);
+
+  if (!isAdminAuth) {
+    return <Navigate to="/admin-login" replace />;
+  }
+
+  if (verifying) {
+    return <PageLoader />;
+  }
+
+  return isValidAdmin ? children : <Navigate to="/admin-login" replace />;
+};
+
+// ── Student routes call context wrapper ──
+const StudentCallWrapper = () => {
+  return (
+    <CallProvider>
+      <CallNotification />
+      <GlobalMessageListener />
+      <Outlet />
+    </CallProvider>
+  );
 };
 
 // ── Routes ────────────────────────────────────────────────────────
@@ -89,20 +150,21 @@ function AppRoutes() {
         <Route path="/register"        element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
 
-        {/* Private */}
-        <Route path="/"             element={<PrivateRoute><Home /></PrivateRoute>} />
-        <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/groups"       element={<PrivateRoute><Groups /></PrivateRoute>} />
-        <Route path="/groups/:id"   element={<PrivateRoute><GroupDetail /></PrivateRoute>} />
-        <Route path="/schedule"     element={<PrivateRoute><Schedule /></PrivateRoute>} />
-        <Route path="/friends"      element={<PrivateRoute><Friend /></PrivateRoute>} />
-        <Route path="/friends/:id"  element={<PrivateRoute><FriendDetail /></PrivateRoute>} />
+        {/* Private Student Routes (enclosed in CallProvider/CallNotification/GlobalMessageListener) */}
+        <Route element={<StudentCallWrapper />}>
+          <Route path="/"             element={<PrivateRoute><Home /></PrivateRoute>} />
+          <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/groups"       element={<PrivateRoute><Groups /></PrivateRoute>} />
+          <Route path="/groups/:id"   element={<PrivateRoute><GroupDetail /></PrivateRoute>} />
+          <Route path="/schedule"     element={<PrivateRoute><Schedule /></PrivateRoute>} />
+          <Route path="/friends"      element={<PrivateRoute><Friend /></PrivateRoute>} />
+          <Route path="/friends/:id"  element={<PrivateRoute><FriendDetail /></PrivateRoute>} />
 
-        <Route path="/my-documents" element={<PrivateRoute><MyDocument /></PrivateRoute>} />
-        <Route path="/chat"         element={<PrivateRoute><Chat /></PrivateRoute>} />
-        <Route path="/room/:roomId" element={<PrivateRoute><MeetRoom /></PrivateRoute>} />
-        <Route path="/call/:callId" element={<PrivateRoute><PrivateCall /></PrivateRoute>} />
-
+          <Route path="/my-documents" element={<PrivateRoute><MyDocument /></PrivateRoute>} />
+          <Route path="/chat"         element={<PrivateRoute><Chat /></PrivateRoute>} />
+          <Route path="/room/:roomId" element={<PrivateRoute><MeetRoom /></PrivateRoute>} />
+          <Route path="/call/:callId" element={<PrivateRoute><PrivateCall /></PrivateRoute>} />
+        </Route>
 
         {/* Admin */}
         <Route path="/admin-login" element={<Admin />} />
@@ -115,21 +177,24 @@ function AppRoutes() {
   );
 }
 
-import { ToastProvider } from './context/ToastContext';
-import { NotificationProvider } from './context/NotificationContext';
-import GlobalMessageListener from './components/GlobalMessageListener';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import { runDbCleanup } from './utils/dbCleanup';
+import { runStorageCleanup } from './utils/storageCleanup';
 
 export default function App() {
+  useEffect(() => {
+    runStorageCleanup();
+    runDbCleanup();
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
           <NotificationProvider>
-            <CallProvider>
-              <CallNotification />
-              <GlobalMessageListener />
+            <ErrorBoundary>
               <AppRoutes />
-            </CallProvider>
+            </ErrorBoundary>
           </NotificationProvider>
         </ToastProvider>
       </AuthProvider>

@@ -1,5 +1,6 @@
 // src/services/groupService.js
 import { supabase } from '@/config/supabaseClient';
+import { SUBJECTS_BY_MAJOR } from '@/constants/educationData';
 
 // Map database group schema to frontend model
 const mapGroup = (g) => {
@@ -10,6 +11,7 @@ const mapGroup = (g) => {
     id: g.id.toString(),
     name: g.name,
     subject: g.subject,
+    major: g.major || null,
     description: g.description,
     meetingMode: g.meeting_mode || 'online',
     isPrivate: g.is_private || false,
@@ -26,13 +28,13 @@ export const getAllGroups = async () => {
   const { data, error } = await supabase
     .from('study_groups')
     .select(`
-      *,
-      group_members (
-        user_id,
-        role
-      )
+      id, name, subject, major, description,
+      meeting_mode, is_private, max_members,
+      location, creator_id, created_at,
+      group_members (user_id, role)
     `)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   if (error) {
     throw new Error(`Lỗi tải danh sách nhóm: ${error.message}`);
@@ -41,7 +43,7 @@ export const getAllGroups = async () => {
   return (data || []).map(mapGroup);
 };
 
-export const createGroup = async (userId, { name, subject, description, meetingMode, isPrivate, maxMembers, location }) => {
+export const createGroup = async (userId, { name, subject, description, meetingMode, isPrivate, maxMembers, location, major }) => {
   // Count how many active (non-expired) groups this user is currently the creator of
   const { data: existingGroups, error: fetchErr } = await supabase
     .from('study_groups')
@@ -87,6 +89,7 @@ export const createGroup = async (userId, { name, subject, description, meetingM
         id: uniqueId,
         name,
         subject,
+        major: major || null,
         description: description || '',
         creator_id: userId,
         max_members: maxMembers ? parseInt(maxMembers, 10) : 10,
@@ -427,11 +430,10 @@ export const getGroupById = async (groupId) => {
   const { data, error } = await supabase
     .from('study_groups')
     .select(`
-      *,
-      group_members (
-        user_id,
-        role
-      )
+      id, name, subject, major, description,
+      meeting_mode, is_private, max_members,
+      location, creator_id, created_at,
+      group_members (user_id, role)
     `)
     .eq('id', parseInt(groupId, 10))
     .maybeSingle();
@@ -442,7 +444,13 @@ export const getGroupById = async (groupId) => {
   const ageInMs = Date.now() - new Date(data.created_at).getTime();
   if (ageInMs >= oneWeekMs) {
     // Background deletion of the expired group
-    supabase.from('study_groups').delete().eq('id', data.id).catch(err => console.warn('Expired group cleanup error:', err));
+    (async () => {
+      try {
+        await supabase.from('study_groups').delete().eq('id', data.id);
+      } catch (err) {
+        console.warn('Expired group cleanup error:', err);
+      }
+    })();
     return null;
   }
 
@@ -499,4 +507,53 @@ export const kickMember = async (groupId, requesterId, targetUserId) => {
   }
 
   return getGroupById(groupId);
+};
+
+// Lấy danh sách môn học theo ngành học
+// Gộp: môn mặc định từ constants + môn user đã thêm từ DB
+export const getSubjectsByMajor = async (major) => {
+  if (!major) return [];
+
+  const defaults = SUBJECTS_BY_MAJOR[major] || [];
+
+  const { data, error } = await supabase
+    .from('subjects_by_major')
+    .select('subject_name')
+    .eq('major', major)
+    .order('subject_name', { ascending: true })
+    .limit(20);
+
+  if (error) {
+    if (import.meta.env.DEV) {
+      console.warn('getSubjectsByMajor DB error:', error.message);
+    }
+    // Trả về fallback từ constants nếu DB lỗi hoặc bảng chưa tồn tại
+    return [...defaults];
+  }
+
+  const fromDb = (data || []).map(r => r.subject_name);
+
+  // Gộp constants + DB, loại bỏ trùng lặp, sắp xếp
+  return Array.from(new Set([...defaults, ...fromDb])).sort((a, b) =>
+    a.localeCompare(b, 'vi')
+  );
+};
+
+// Lưu môn học mới vào bảng subjects_by_major (bỏ qua nếu đã tồn tại)
+export const saveSubjectForMajor = async (major, subjectName) => {
+  if (!major || !subjectName) return;
+
+  const normalized = subjectName.trim().replace(/\s+/g, ' ');
+  if (!normalized) return;
+
+  const { error } = await supabase
+    .from('subjects_by_major')
+    .insert([{ major, subject_name: normalized }]);
+
+  // Bỏ qua lỗi trùng lặp (unique constraint)
+  if (error && !error.message?.includes('duplicate') && !error.code?.includes('23505')) {
+    if (import.meta.env.DEV) {
+      console.warn('saveSubjectForMajor error:', error.message);
+    }
+  }
 };

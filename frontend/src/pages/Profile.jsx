@@ -9,6 +9,7 @@ import AppLayout from '../layouts/AppLayout';
 
 function CustomSelect({ value, onChange, options, placeholder = "Chọn...", disabled = false }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -20,6 +21,15 @@ function CustomSelect({ value, onChange, options, placeholder = "Chọn...", dis
     document.addEventListener('mousedown', clickOutside);
     return () => document.removeEventListener('mousedown', clickOutside);
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!isOpen) setSearch('');
+  }, [isOpen]);
+
+  const filteredOptions = options.filter(opt =>
+    opt.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', zIndex: isOpen ? 1000 : 1 }}>
@@ -65,32 +75,60 @@ function CustomSelect({ value, onChange, options, placeholder = "Chọn...", dis
             scrollbarColor: 'var(--primary) transparent'
           }}
         >
-          {options.map((opt) => (
-            <div
-              key={opt}
-              onClick={() => {
-                onChange(opt);
-                setIsOpen(false);
-              }}
+          {/* Ô tìm kiếm nhanh */}
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: '#1a1a2e', zIndex: 10 }}>
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
               style={{
-                padding: '10px 16px',
-                fontSize: '14px',
-                color: opt === value ? 'var(--primary-light)' : 'var(--text-primary)',
-                background: opt === value ? 'rgba(108,99,255,0.12)' : 'transparent',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                textAlign: 'left'
+                width: '100%',
+                padding: '8px 12px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '13.5px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                fontFamily: 'inherit'
               }}
-              onMouseEnter={e => {
-                if (opt !== value) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-              }}
-              onMouseLeave={e => {
-                if (opt !== value) e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              {opt}
+            />
+          </div>
+          {filteredOptions.length === 0 ? (
+            <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '13.5px', textAlign: 'center' }}>
+              Không tìm thấy kết quả
             </div>
-          ))}
+          ) : (
+            filteredOptions.map((opt) => (
+              <div
+                key={opt}
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+                style={{
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  color: opt === value ? 'var(--primary-light)' : 'var(--text-primary)',
+                  background: opt === value ? 'rgba(108,99,255,0.12)' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  textAlign: 'left'
+                }}
+                onMouseEnter={e => {
+                  if (opt !== value) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                }}
+                onMouseLeave={e => {
+                  if (opt !== value) e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                {opt}
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -104,18 +142,37 @@ export default function Profile() {
 
   const [tab, setTab] = useState('info'); // 'info' | 'password'
 
-  // Helper to parse location tag from bio string
+  // Helper to parse location tag and privacy options from bio string
   const parseBioLocation = (bioString) => {
-    if (bioString && bioString.startsWith('[📍 ')) {
-      const endIdx = bioString.indexOf(']');
+    let province = '';
+    let district = '';
+    let hideLocation = false;
+    let hideJoinDate = false;
+    let bioText = bioString || '';
+
+    // 1. Extract location [📍 ...]
+    if (bioText.startsWith('[📍 ')) {
+      const endIdx = bioText.indexOf(']');
       if (endIdx > 0) {
-        const locPart = bioString.substring(4, endIdx);
-        const bioText = bioString.substring(endIdx + 1).trim();
+        const locPart = bioText.substring(4, endIdx);
+        bioText = bioText.substring(endIdx + 1).trim();
         const parts = locPart.split(', ');
-        return { province: parts[0] || '', district: parts[1] || '', bioText };
+        province = parts[0] || '';
+        district = parts[1] || '';
       }
     }
-    return { province: '', district: '', bioText: bioString || '' };
+
+    // 2. Extract visibility tags: [hide_loc:1] and [hide_join:1]
+    if (bioText.includes('[hide_loc:1]')) {
+      hideLocation = true;
+      bioText = bioText.replace('[hide_loc:1]', '').trim();
+    }
+    if (bioText.includes('[hide_join:1]')) {
+      hideJoinDate = true;
+      bioText = bioText.replace('[hide_join:1]', '').trim();
+    }
+
+    return { province, district, hideLocation, hideJoinDate, bioText };
   };
 
   const parsed = parseBioLocation(user?.bio);
@@ -135,10 +192,20 @@ export default function Profile() {
 
   const [province, setProvince] = useState(parsed.province);
   const [district, setDistrict] = useState(parsed.district);
+  const [hideLocation, setHideLocation] = useState(parsed.hideLocation);
+  const [hideJoinDate, setHideJoinDate] = useState(parsed.hideJoinDate);
 
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
   const [avatarFile, setAvatarFile] = useState(null);
   const [savingInfo, setSavingInfo] = useState(false);
+
+  // Đồng bộ cài đặt ẩn khi profile tải lại
+  useEffect(() => {
+    const freshParsed = parseBioLocation(user?.bio);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHideLocation(freshParsed.hideLocation);
+    setHideJoinDate(freshParsed.hideJoinDate);
+  }, [user?.bio]);
 
   const handleInfoChange = (e) => setInfo(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -157,9 +224,18 @@ export default function Profile() {
     }
     setSavingInfo(true);
     try {
-      const formattedBio = (province && district)
-        ? `[📍 ${province}, ${district}] ${info.bio.trim()}`
-        : info.bio.trim();
+      let formattedBio = '';
+      if (province && district) {
+        formattedBio += `[📍 ${province}, ${district}]`;
+      }
+      if (hideLocation) {
+        formattedBio += `[hide_loc:1]`;
+      }
+      if (hideJoinDate) {
+        formattedBio += `[hide_join:1]`;
+      }
+      formattedBio += ` ${info.bio.trim()}`;
+      formattedBio = formattedBio.trim();
 
       const payload = {
         id: user.id,
@@ -245,25 +321,37 @@ export default function Profile() {
           <div className="profile-meta">
             {user?.university && (
               <div className="profile-meta-item">
-                <span className="icon">️</span>
+                <span className="icon">🏫</span>
                 <span>{user.university}</span>
               </div>
             )}
             {user?.major && (
               <div className="profile-meta-item">
-                <span className="icon"></span>
+                <span className="icon">📚</span>
                 <span>{user.major}</span>
               </div>
             )}
-            {user?.bio && (
+            {parsed.province && parsed.district && (
+              <div className="profile-meta-item">
+                <span className="icon">📍</span>
+                <span>
+                  {parsed.province}, {parsed.district}
+                  {parsed.hideLocation && <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', marginLeft: '6px' }}>(Đã ẩn)</span>}
+                </span>
+              </div>
+            )}
+            {parsed.bioText && (
               <div className="profile-meta-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                 <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Giới thiệu</span>
-                <span style={{ fontSize: '13px' }}>{user.bio}</span>
+                <span style={{ fontSize: '13px' }}>{parsed.bioText}</span>
               </div>
             )}
             <div className="profile-meta-item">
-              <span className="icon"></span>
-              <span>Tham gia: {new Date(user?.createdAt).toLocaleDateString('vi-VN')}</span>
+              <span className="icon">📅</span>
+              <span>
+                Tham gia: {new Date(user?.createdAt).toLocaleDateString('vi-VN')}
+                {parsed.hideJoinDate && <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', marginLeft: '6px' }}>(Đã ẩn)</span>}
+              </span>
             </div>
           </div>
         </aside>
@@ -304,15 +392,13 @@ export default function Profile() {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="p-uni">Trường đại học</label>
-                    <div className="form-input-wrap">
-                      <select id="p-uni" name="university" className="form-input" style={{ appearance: 'auto', background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 16px', fontSize: '14.5px' }} value={info.university} onChange={handleInfoChange}>
-                        <option value="">-- Chọn trường đại học --</option>
-                        {HCM_UNIVERSITIES.map(uni => (
-                          <option key={uni} value={uni}>{uni}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <label className="form-label">Trường đại học</label>
+                    <CustomSelect
+                      value={info.university}
+                      onChange={(val) => setInfo(prev => ({ ...prev, university: val }))}
+                      options={HCM_UNIVERSITIES}
+                      placeholder="-- Chọn trường đại học --"
+                    />
                   </div>
 
                   {info.university === 'Trường khác...' && (
@@ -327,15 +413,13 @@ export default function Profile() {
                   )}
 
                   <div className="form-group" style={{ marginTop: '16px' }}>
-                    <label className="form-label" htmlFor="p-major">Ngành học</label>
-                    <div className="form-input-wrap">
-                      <select id="p-major" name="major" className="form-input" style={{ appearance: 'auto', background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 16px', fontSize: '14.5px' }} value={info.major} onChange={handleInfoChange}>
-                        <option value="">-- Chọn ngành học --</option>
-                        {MAJORS.map(m => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <label className="form-label">Ngành học</label>
+                    <CustomSelect
+                      value={info.major}
+                      onChange={(val) => setInfo(prev => ({ ...prev, major: val }))}
+                      options={MAJORS}
+                      placeholder="-- Chọn ngành học --"
+                    />
                   </div>
 
                   {info.major === 'Ngành khác...' && (
@@ -386,6 +470,31 @@ export default function Profile() {
                       placeholder="Viết vài dòng giới thiệu về bạn..."
                       value={info.bio} onChange={handleInfoChange} maxLength={300} />
                     <div className="char-count">{info.bio.length}/300</div>
+                  </div>
+
+                  {/* Thiết lập quyền riêng tư */}
+                  <div className="form-group" style={{ marginTop: '20px', marginBottom: '20px' }}>
+                    <label className="form-label" style={{ fontWeight: 700, display: 'block', marginBottom: '10px' }}>🛡️ Thiết lập quyền riêng tư</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: 'var(--text-primary)', margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          checked={hideLocation}
+                          onChange={(e) => setHideLocation(e.target.checked)}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                        />
+                        <span>Ẩn khu vực sinh sống</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: 'var(--text-primary)', margin: 0 }}>
+                        <input
+                          type="checkbox"
+                          checked={hideJoinDate}
+                          onChange={(e) => setHideJoinDate(e.target.checked)}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                        />
+                        <span>Ẩn ngày tham gia</span>
+                      </label>
+                    </div>
                   </div>
 
                   {avatarFile && (

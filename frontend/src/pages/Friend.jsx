@@ -178,12 +178,7 @@ function EmptyState({ icon, text }) {
 export default function Friends() {
   const { isAuth, user } = useAuth();
   const [tab, setTab] = useState('friends');
-  const [friends, setFriends] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_friends');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
+  const [friends, setFriends] = useState([]);
   const [onlineUserIds, setOnlineUserIds] = useState([]);
 
   // Subscribe to real-time presence channel
@@ -216,31 +211,11 @@ export default function Friends() {
       channel.unsubscribe();
     };
   }, [user?.id]);
-  const [pending, setPending] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_pending');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
+  const [pending, setPending] = useState([]);
   const [newPendingAlert, setNewPendingAlert] = useState(false);
-  const [sent, setSent] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_sent');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [suggestions, setSuggestions] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_suggestions');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [loading, setLoading] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_friends');
-      return !cached;
-    } catch { return true; }
-  });
+  const [sent, setSent] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [search, setSearch] = useState('');
   const [confirmUnfriend, setConfirmUnfriend] = useState(null); // { person }
@@ -324,10 +299,7 @@ export default function Friends() {
 
   const loadAll = useCallback(async () => {
     if (!user?.id) return;
-    const hasCached = localStorage.getItem('studyconect_friends');
-    if (!hasCached) {
-      setLoading(true);
-    }
+    setLoading(true);
     try {
       const uid = String(user.id);
       const [f, p, s, sg] = await Promise.all([
@@ -340,12 +312,6 @@ export default function Friends() {
       setPending(p);
       setSent(s);
       setSuggestions(sg);
-      
-      // Save cache
-      localStorage.setItem('studyconect_friends', JSON.stringify(f));
-      localStorage.setItem('studyconect_pending', JSON.stringify(p));
-      localStorage.setItem('studyconect_sent', JSON.stringify(s));
-      localStorage.setItem('studyconect_suggestions', JSON.stringify(sg));
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, [user]);
@@ -377,7 +343,7 @@ export default function Friends() {
           }
         }
       } catch { /* ignore */ }
-    }, 3000);
+    }, 30000);
     return () => clearInterval(t);
   }, [user, pending.length]);
 

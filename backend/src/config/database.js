@@ -1,5 +1,6 @@
 // backend/config/database.js
 const { Sequelize } = require('sequelize');
+const logger = require('../utils/logger');
 require('dotenv').config();
 
 const sequelize = new Sequelize(
@@ -17,25 +18,22 @@ const sequelize = new Sequelize(
       }
     },
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    pool: {
-      max: 10,
-      min: 0,
-      acquire: 30000,
-      idle:    10000,
-    },
+    pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
   }
 );
 
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connected successfully');
-    if (process.env.DB_SYNC === 'true') {
-      await sequelize.sync({ alter: true });
-      console.log('✅ Database models synchronized');
+    logger.info('Database connected successfully');
+    if (process.env.DB_SYNC === 'true' && process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ force: false });
+      logger.info('Database models synchronized');
     }
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    logger.error('Database connection failed:', {
+      message: error.message
+    });
     process.exit(1);
   }
 };

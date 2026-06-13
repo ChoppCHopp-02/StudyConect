@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
-import { getAllGroups, createGroup, joinGroup, leaveGroup, deleteGroup, transferAdminAndLeave, getMyJoinRequestStatus } from '../services/groupService';
+import { getAllGroups, createGroup, joinGroup, leaveGroup, deleteGroup, transferAdminAndLeave, getMyJoinRequestStatus, getSubjectsByMajor, saveSubjectForMajor } from '../services/groupService';
 import { getFriends } from '../services/friendService';
 import { sendGroupInvite, getGroupInvitesSent } from '../services/groupInviteService';
 import AppLayout from '../layouts/AppLayout';
@@ -17,10 +17,23 @@ const SIDEBAR_ITEMS = [
 ];
 
 // ── CREATE GROUP MODAL (2-Step) ────────────────────────────────────────────
-function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, isPrivate, setIsPrivate, isSubmitting, onClose, onSubmit, selectedLocation, setSelectedLocation }) {
+function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, isPrivate, setIsPrivate, isSubmitting, onClose, onSubmit, selectedLocation, setSelectedLocation, userMajor }) {
   const [step, setStep] = useState(1); // 1 = pick mode, 2 = fill form
   const [geoLoading, setGeoLoading] = useState(false);
   const [customName, setCustomName] = useState('');
+  const [dbSubjects, setDbSubjects] = useState([]);
+  const [subjectMode, setSubjectMode] = useState('select'); // 'select' | 'custom'
+  const [customSubject, setCustomSubject] = useState('');
+
+  // Load môn học theo ngành khi step 2 mở ra
+  useEffect(() => {
+    if (step !== 2 || !userMajor) return;
+    let cancelled = false;
+    getSubjectsByMajor(userMajor).then(subjects => {
+      if (!cancelled) setDbSubjects(subjects);
+    });
+    return () => { cancelled = true; };
+  }, [step, userMajor]);
 
   const handleCustomLocationChange = (name) => {
     setCustomName(name);
@@ -154,11 +167,47 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               {/* Môn học */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Môn học *</label>
-                <div className="form-input-wrap">
-                  <input className="form-input" style={{ padding: '8px 12px', fontSize: 13 }} placeholder="Nhập tên môn học " value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} required />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <select
+                    className="form-input"
+                    style={{ padding: '8px 12px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', appearance: 'auto' }}
+                    value={subjectMode === 'custom' ? 'custom' : (formData.subject || '')}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === 'custom') {
+                        setSubjectMode('custom');
+                        setFormData({ ...formData, subject: customSubject });
+                      } else {
+                        setSubjectMode('select');
+                        setFormData({ ...formData, subject: val });
+                      }
+                    }}
+                    required={subjectMode !== 'custom'}
+                  >
+                    <option value="">-- Chọn môn học --</option>
+                    {dbSubjects.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                    {!userMajor && (
+                      <option value="Chung">Chung</option>
+                    )}
+                    <option value="custom">✍️ Môn học khác...</option>
+                  </select>
+                  {subjectMode === 'custom' && (
+                    <input
+                      className="form-input"
+                      style={{ padding: '8px 12px', fontSize: 13, borderColor: 'var(--primary-light)', boxShadow: '0 0 0 2px rgba(108,99,255,0.15)' }}
+                      placeholder="Nhập tên môn học mới..."
+                      value={customSubject}
+                      onChange={e => {
+                        setCustomSubject(e.target.value);
+                        setFormData({ ...formData, subject: e.target.value });
+                      }}
+                      required
+                    />
+                  )}
                 </div>
               </div>
-
 
               {/* Mô tả */}
               <div className="form-group" style={{ marginBottom: 0 }}>
@@ -464,6 +513,8 @@ function NearbyGroupsModal({ groups, user, onClose, addToast, joinRequestStatus,
       return true;
     });
 
+    const userMajor = user?.major || null;
+
     const results = eligible.map(g => {
       let distance = null;
       if (g.meetingMode === 'offline' && g.location) {
@@ -471,7 +522,8 @@ function NearbyGroupsModal({ groups, user, onClose, addToast, joinRequestStatus,
           distance = getDistance(userCoords.lat, userCoords.lng, g.location.lat, g.location.lng);
         }
       }
-      return { ...g, distance };
+      const sameMajor = !!(userMajor && g.major && g.major === userMajor);
+      return { ...g, distance, sameMajor };
     });
 
     return results.filter(g => {
@@ -479,12 +531,16 @@ function NearbyGroupsModal({ groups, user, onClose, addToast, joinRequestStatus,
       if (userCoords && g.distance !== null) return g.distance <= RADIUS;
       return false;
     }).sort((a, b) => {
+      // Ưu tiên 1: cùng ngành học
+      if (a.sameMajor && !b.sameMajor) return -1;
+      if (!a.sameMajor && b.sameMajor) return 1;
+      // Ưu tiên 2: khoảng cách
       if (a.distance !== null && b.distance !== null) return a.distance - b.distance;
       if (a.distance !== null) return -1;
       if (b.distance !== null) return 1;
       return 0;
     });
-  }, [groups, userCoords]);
+  }, [groups, userCoords, user?.major]);
 
   const gpsColor = gpsStatus === 'success' ? '#10b981' : gpsStatus === 'locating' ? '#f59e0b' : '#ef4444';
   const gpsLabel = gpsStatus === 'locating' ? 'Đang định vị...' : gpsStatus === 'success' ? 'Đã xác định vị trí' : 'Chưa có vị trí';
@@ -554,6 +610,11 @@ function NearbyGroupsModal({ groups, user, onClose, addToast, joinRequestStatus,
                       <span style={{ fontSize: 11, fontWeight: 700, color: modeColor, background: modeBg, border: `1px solid ${modeBorder}`, borderRadius: 20, padding: '2px 9px' }}>
                         {isOnline ? 'Online' : 'Offline'}
                       </span>
+                      {group.sameMajor && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '2px 9px' }}>
+                          ✨ Cùng ngành
+                        </span>
+                      )}
                       {distanceText && (
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{distanceText}</span>
                       )}
@@ -622,18 +683,8 @@ export default function Groups() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const [groups, setGroups] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_groups');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [loading, setLoading] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_groups');
-      return !cached;
-    } catch { return true; }
-  });
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showNearbyModal, setShowNearbyModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -651,13 +702,9 @@ export default function Groups() {
 
   const fetchGroups = useCallback(async () => {
     try {
-      const hasCached = localStorage.getItem('studyconect_groups');
-      if (!hasCached) {
-        setLoading(true);
-      }
+      setLoading(true);
       const data = await getAllGroups();
       setGroups(data);
-      localStorage.setItem('studyconect_groups', JSON.stringify(data));
     } catch (err) {
       addToast(err.message || 'Lỗi tải danh sách nhóm', 'error');
     } finally {
@@ -695,7 +742,18 @@ export default function Groups() {
     }
     try {
       setIsSubmitting(true);
-      await createGroup(user.id, { ...formData, meetingMode, isPrivate, location: selectedLocation });
+      const userMajor = user?.major || null;
+      await createGroup(user.id, {
+        ...formData,
+        meetingMode,
+        isPrivate,
+        location: selectedLocation,
+        major: userMajor,
+      });
+      // Lưu môn học mới vào DB nếu user có ngành và môn chưa có sẵn
+      if (userMajor && formData.subject) {
+        await saveSubjectForMajor(userMajor, formData.subject);
+      }
       addToast('Tạo nhóm thành công!', 'success');
       setShowModal(false);
       setFormData({ name: '', subject: '', description: '', maxMembers: 10 });
@@ -1133,6 +1191,7 @@ export default function Groups() {
         onSubmit={handleCreate}
         selectedLocation={selectedLocation}
         setSelectedLocation={setSelectedLocation}
+        userMajor={user?.major || null}
       />
     )}
 

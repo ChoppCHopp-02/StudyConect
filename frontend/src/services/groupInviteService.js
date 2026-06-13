@@ -51,7 +51,7 @@ export const getGroupInvitesSent = async (groupId, fromUserId) => {
 
   const { data, error } = await supabase
     .from('group_invites')
-    .select('*')
+    .select('id, group_id, inviter_id, invitee_id, status, created_at')
     .eq('group_id', gId)
     .eq('inviter_id', fromId);
 
@@ -72,7 +72,7 @@ export const getMyPendingInvites = async (userId) => {
 
   const { data: invites, error } = await supabase
     .from('group_invites')
-    .select('*')
+    .select('id, group_id, inviter_id, invitee_id, status, created_at')
     .eq('invitee_id', uid)
     .eq('status', 'pending');
 
@@ -108,7 +108,7 @@ export const acceptGroupInvite = async (inviteId) => {
   // 1. Fetch invite details
   const { data: invite, error: fetchError } = await supabase
     .from('group_invites')
-    .select('*')
+    .select('id, group_id, inviter_id, invitee_id, status')
     .eq('id', invId)
     .single();
 

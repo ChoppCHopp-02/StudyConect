@@ -13,7 +13,11 @@ const getSession = () => {
 };
 
 const saveSession = (user) => {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  } catch (err) {
+    console.warn('Error saving session:', err);
+  }
 };
 
 const clearSession = () => {
@@ -37,7 +41,7 @@ export const register = async ({ fullName, email, password, university, major, b
   // Check if email already exists
   const { data: existingUser, error: checkError } = await supabase
     .from('users')
-    .select('id')
+    .select('id, is_banned')
     .eq('email', normalizedEmail)
     .maybeSingle();
 
@@ -45,6 +49,9 @@ export const register = async ({ fullName, email, password, university, major, b
     throw new Error('Có lỗi xảy ra khi kiểm tra email.');
   }
   if (existingUser) {
+    if (existingUser.is_banned) {
+      throw new Error('Email này đã bị khóa vĩnh viễn khỏi hệ thống do vi phạm chính sách nội dung khiêu dâm.');
+    }
     throw new Error('Email này đã được sử dụng.');
   }
 
@@ -65,7 +72,7 @@ export const register = async ({ fullName, email, password, university, major, b
         bio: bio || '',
       },
     ])
-    .select()
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at')
     .single();
 
   if (insertError) {
@@ -96,7 +103,7 @@ export const login = async ({ email, password }) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('*')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned, password')
     .eq('email', normalizedEmail)
     .maybeSingle();
 
@@ -105,6 +112,9 @@ export const login = async ({ email, password }) => {
   }
   if (!user) {
     throw new Error('Email hoặc mật khẩu không đúng.');
+  }
+  if (user.is_banned) {
+    throw new Error('Tài khoản này đã bị khóa vĩnh viễn khỏi hệ thống do vi phạm chính sách nội dung khiêu dâm.');
   }
 
   // Hỗ trợ tự động nâng cấp mật khẩu cũ (plaintext) lên bảo mật hash
@@ -121,9 +131,13 @@ export const login = async ({ email, password }) => {
         .from('users')
         .update({ password: hashedPassword })
         .eq('id', user.id);
-      console.log(`[Auth] Tự động nâng cấp mật khẩu lên Salted SHA-256 cho: ${normalizedEmail}`);
+      if (import.meta.env.DEV) {
+        console.log(`[Auth] Tự động nâng cấp mật khẩu lên Salted SHA-256 cho: ${normalizedEmail}`);
+      }
     } catch (upgradeErr) {
-      console.warn('[Auth] Không thể nâng cấp mật khẩu cũ:', upgradeErr);
+      if (import.meta.env.DEV) {
+        console.warn('[Auth] Không thể nâng cấp mật khẩu cũ:', upgradeErr);
+      }
     }
   }
 
@@ -154,7 +168,7 @@ export const adminLogin = async ({ email, password }) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('*')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned, password')
     .eq('email', normalizedEmail)
     .maybeSingle();
 
@@ -182,9 +196,13 @@ export const adminLogin = async ({ email, password }) => {
         .from('users')
         .update({ password: hashedPassword })
         .eq('id', user.id);
-      console.log(`[Auth] Tự động nâng cấp mật khẩu Admin lên Salted SHA-256`);
+      if (import.meta.env.DEV) {
+        console.log(`[Auth] Tự động nâng cấp mật khẩu Admin lên Salted SHA-256`);
+      }
     } catch (upgradeErr) {
-      console.warn('[Auth] Không thể nâng cấp mật khẩu Admin:', upgradeErr);
+      if (import.meta.env.DEV) {
+        console.warn('[Auth] Không thể nâng cấp mật khẩu Admin:', upgradeErr);
+      }
     }
   }
 
@@ -200,7 +218,11 @@ export const adminLogin = async ({ email, password }) => {
     createdAt: user.created_at,
   };
 
-  localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(safeAdmin));
+  try {
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(safeAdmin));
+  } catch (err) {
+    console.warn('Error saving admin session:', err);
+  }
   return { admin: safeAdmin };
 };
 
@@ -291,7 +313,42 @@ export const updateProfile = async ({ id, fullName, university, major, bio, avat
   // Step 2: Determine avatar value (keep existing if no new file)
   let avatar = currentUser.avatar || '';
   if (avatarFile) {
-    avatar = await fileToBase64(avatarFile);
+    if (typeof avatarFile === 'string') {
+      avatar = avatarFile;
+    } else if (avatarFile instanceof File || avatarFile instanceof Blob) {
+      try {
+        const fileExt = (avatarFile.name || 'avatar.png').split('.').pop() || 'png';
+        const fileName = `${id}_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, { cacheControl: '3600', upsert: true });
+
+        if (uploadError) {
+          if (import.meta.env.DEV) {
+            console.warn('Upload avatar to Storage failed:', uploadError.message);
+          }
+          avatar = await fileToBase64(avatarFile);
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+          avatar = publicUrl;
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('Storage upload exception, falling back to base64:', err);
+        }
+        avatar = await fileToBase64(avatarFile);
+      }
+    } else {
+      try {
+        avatar = await fileToBase64(avatarFile);
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('fileToBase64 failed on unknown avatarFile type:', err);
+        }
+      }
+    }
   }
 
   // Step 3: Perform the update

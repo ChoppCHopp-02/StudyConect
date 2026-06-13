@@ -15,6 +15,13 @@ const client = new Client({
 });
 
 const run = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('KHÔNG chạy migration script trên production!');
+    process.exit(1);
+  }
+  console.log('Bạn có chắc muốn DROP và tạo lại bảng? (ctrl+C để hủy)');
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
   try {
     await client.connect();
     console.log('✅ Connected to Supabase PostgreSQL database.');

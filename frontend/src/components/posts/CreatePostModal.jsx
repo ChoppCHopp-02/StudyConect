@@ -124,6 +124,8 @@ export default function CreatePostModal({ user, friends = [], myLeaderGroups = [
         tag: null,
         taggedUsers: tags.filter(t => t.type === 'friend').map(t => t.id),
         taggedGroups: tags.filter(t => t.type === 'group').map(t => t.id),
+        taggedUserNames: tags.filter(t => t.type === 'friend').map(t => t.name),
+        taggedGroupNames: tags.filter(t => t.type === 'group').map(t => t.name),
         taggerName: user.fullName,
       });
       setLoading(false);

@@ -77,10 +77,23 @@ function usePrivateWebRTC({ callId, user, mode, micOn, camOn, onHangup }) {
       stream.getVideoTracks().forEach(t => { t.enabled = camOnRef.current; });
       return stream;
     } catch (err) {
-      setError(err.name === 'NotAllowedError'
-        ? 'Vui lòng cấp quyền camera và microphone để gọi video.'
-        : 'Không thể truy cập camera/microphone.');
-      return null;
+      console.warn('Full media request failed in PrivateCall, trying audio only...', err);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: false,
+          audio: true,
+        });
+        localRef.current = stream;
+        setLocalStream(stream);
+        stream.getAudioTracks().forEach(t => { t.enabled = micOnRef.current; });
+        return stream;
+      } catch (err2) {
+        console.error('Audio-only media request failed too in PrivateCall', err2);
+        setError(err.name === 'NotAllowedError' || err2.name === 'NotAllowedError'
+          ? 'Vui lòng cấp quyền camera và microphone để gọi video.'
+          : 'Không thể truy cập camera/microphone.');
+        return null;
+      }
     }
   }, []);
 
@@ -107,132 +120,143 @@ function usePrivateWebRTC({ callId, user, mode, micOn, camOn, onHangup }) {
   useEffect(() => {
     if (!callId || !user?.id) return;
 
-    const ch = supabase.channel(`private_call_${callId}`, {
-      config: { broadcast: { self: false } }
-    });
-    channelRef.current = ch;
+    let cancelled = false;
+    let ch = null;
 
-    const createPC = (stream) => {
-      const pc = new RTCPeerConnection(ICE);
-      pcRef.current = pc;
+    const startCall = async () => {
+      // 1. Khởi động camera và mic trước
+      const stream = await startMedia();
+      if (!stream || cancelled) return;
 
-      if (stream) stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      // 2. Sau khi đã có local stream, mới kết nối kênh Supabase
+      ch = supabase.channel(`private_call_${callId}`, {
+        config: { broadcast: { self: false } }
+      });
+      channelRef.current = ch;
 
-      const rs = new MediaStream();
-      pc.ontrack = (e) => {
-        rs.getTracks().forEach(t => { if (t.kind === e.track.kind) rs.removeTrack(t); });
-        rs.addTrack(e.track);
-        setRemoteStream(new MediaStream(rs.getTracks()));
-        setConnected(true);
-        if (readyIntervalRef.current) {
-          clearInterval(readyIntervalRef.current);
-          readyIntervalRef.current = null;
+      const createPC = (localStreamObj) => {
+        const pc = new RTCPeerConnection(ICE);
+        pcRef.current = pc;
+
+        if (localStreamObj) {
+          localStreamObj.getTracks().forEach(t => pc.addTrack(t, localStreamObj));
         }
-      };
 
-      pc.onicecandidate = (e) => {
-        if (e.candidate) {
-          ch.send({
-            type: 'broadcast', event: 'pc_signal',
-            payload: { type: 'ice', from: myId, candidate: e.candidate }
-          });
-        }
-      };
-
-      pc.onconnectionstatechange = () => {
-        if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
-          setConnected(false);
-          setRemoteStream(null);
-        }
-        if (pc.connectionState === 'connected') {
+        const rs = new MediaStream();
+        pc.ontrack = (e) => {
+          rs.getTracks().forEach(t => { if (t.kind === e.track.kind) rs.removeTrack(t); });
+          rs.addTrack(e.track);
+          setRemoteStream(new MediaStream(rs.getTracks()));
+          setConnected(true);
           if (readyIntervalRef.current) {
             clearInterval(readyIntervalRef.current);
             readyIntervalRef.current = null;
           }
-        }
+        };
+
+        pc.onicecandidate = (e) => {
+          if (e.candidate) {
+            ch.send({
+              type: 'broadcast', event: 'pc_signal',
+              payload: { type: 'ice', from: myId, candidate: e.candidate }
+            });
+          }
+        };
+
+        pc.onconnectionstatechange = () => {
+          if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+            setConnected(false);
+            setRemoteStream(null);
+          }
+          if (pc.connectionState === 'connected') {
+            if (readyIntervalRef.current) {
+              clearInterval(readyIntervalRef.current);
+              readyIntervalRef.current = null;
+            }
+          }
+        };
+
+        return pc;
       };
 
-      return pc;
-    };
+      ch.on('broadcast', { event: 'pc_signal' }, async ({ payload: msg }) => {
+        if (!msg || msg.from === myId || cancelled) return;
 
-    ch.on('broadcast', { event: 'pc_signal' }, async ({ payload: msg }) => {
-      if (!msg || msg.from === myId) return;
+        if (msg.type === 'ready') {
+          if (mode === 'caller' && !pcRef.current) {
+            const currentStream = localRef.current;
+            const pc = createPC(currentStream);
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            ch.send({
+              type: 'broadcast', event: 'pc_signal',
+              payload: { type: 'offer', from: myId, offer }
+            });
+          }
+        }
 
-      if (msg.type === 'ready') {
-        if (mode === 'caller' && !pcRef.current) {
-          const stream = localRef.current;
-          const pc = createPC(stream);
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
+        if (msg.type === 'offer') {
+          const currentStream = localRef.current;
+          const pc = createPC(currentStream);
+          await pc.setRemoteDescription(msg.offer);
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
           ch.send({
             type: 'broadcast', event: 'pc_signal',
-            payload: { type: 'offer', from: myId, offer }
+            payload: { type: 'answer', from: myId, answer }
           });
-        }
-      }
-
-      if (msg.type === 'offer') {
-        const stream = localRef.current;
-        const pc = createPC(stream);
-        await pc.setRemoteDescription(msg.offer);
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        ch.send({
-          type: 'broadcast', event: 'pc_signal',
-          payload: { type: 'answer', from: myId, answer }
-        });
-        setConnected(true);
-        if (readyIntervalRef.current) {
-          clearInterval(readyIntervalRef.current);
-          readyIntervalRef.current = null;
-        }
-      }
-
-      if (msg.type === 'answer') {
-        if (pcRef.current) {
-          await pcRef.current.setRemoteDescription(msg.answer);
           setConnected(true);
           if (readyIntervalRef.current) {
             clearInterval(readyIntervalRef.current);
             readyIntervalRef.current = null;
           }
         }
-      }
 
-      if (msg.type === 'ice') {
-        pcRef.current?.addIceCandidate(msg.candidate).catch(() => {});
-      }
-
-      if (msg.type === 'hangup') {
-        setConnected(false);
-        setRemoteStream(null);
-        if (onHangup) onHangup();
-      }
-    });
-
-    let cancelled = false;
-    ch.subscribe(async (status) => {
-      if (status !== 'SUBSCRIBED' || cancelled) return;
-      const stream = await startMedia();
-      if (!stream || cancelled) return;
-
-      readyIntervalRef.current = setInterval(() => {
-        if (pcRef.current?.connectionState === 'connected' || pcRef.current?.iceConnectionState === 'connected') {
-          clearInterval(readyIntervalRef.current);
-          readyIntervalRef.current = null;
-          return;
+        if (msg.type === 'answer') {
+          if (pcRef.current) {
+            await pcRef.current.setRemoteDescription(msg.answer);
+            setConnected(true);
+            if (readyIntervalRef.current) {
+              clearInterval(readyIntervalRef.current);
+              readyIntervalRef.current = null;
+            }
+          }
         }
+
+        if (msg.type === 'ice') {
+          pcRef.current?.addIceCandidate(msg.candidate).catch(() => {});
+        }
+
+        if (msg.type === 'hangup') {
+          setConnected(false);
+          setRemoteStream(null);
+          if (onHangup) onHangup();
+        }
+      });
+
+      ch.subscribe(async (status) => {
+        if (status !== 'SUBSCRIBED' || cancelled) return;
+
+        readyIntervalRef.current = setInterval(() => {
+          if (pcRef.current?.connectionState === 'connected' || pcRef.current?.iceConnectionState === 'connected') {
+            clearInterval(readyIntervalRef.current);
+            readyIntervalRef.current = null;
+            return;
+          }
+          ch.send({
+            type: 'broadcast', event: 'pc_signal',
+            payload: { type: 'ready', from: myId }
+          });
+        }, 1500);
+
         ch.send({
           type: 'broadcast', event: 'pc_signal',
           payload: { type: 'ready', from: myId }
         });
-      }, 1500);
-
-      ch.send({
-        type: 'broadcast', event: 'pc_signal',
-        payload: { type: 'ready', from: myId }
       });
-    });
+    };
+
+    startCall();
 
     return () => {
       cancelled = true;
@@ -240,11 +264,13 @@ function usePrivateWebRTC({ callId, user, mode, micOn, camOn, onHangup }) {
         clearInterval(readyIntervalRef.current);
         readyIntervalRef.current = null;
       }
-      ch.send({
-        type: 'broadcast', event: 'pc_signal',
-        payload: { type: 'hangup', from: myId }
-      });
-      ch.unsubscribe();
+      if (ch) {
+        ch.send({
+          type: 'broadcast', event: 'pc_signal',
+          payload: { type: 'hangup', from: myId }
+        });
+        ch.unsubscribe();
+      }
       pcRef.current?.close();
       pcRef.current = null;
       localRef.current?.getTracks().forEach(t => t.stop());

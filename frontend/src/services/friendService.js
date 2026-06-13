@@ -83,7 +83,7 @@ export const removeFriend = async (requestId) => {
 export const getFriends = async (userId, includePending = false) => {
   const uid = Number(userId);
 
-  let query = supabase.from('friendships').select('*');
+  let query = supabase.from('friendships').select('id, from_user_id, to_user_id, status, created_at, accepted_at');
   if (includePending) {
     query = query.in('status', ['accepted', 'pending']);
   } else {
@@ -91,16 +91,17 @@ export const getFriends = async (userId, includePending = false) => {
   }
 
   const { data: friendships, error: fetchError } = await query
-    .or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`);
+    .or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`)
+    .limit(50);
 
   if (fetchError || !friendships || friendships.length === 0) return [];
 
   const friendIds = friendships.map(f => Number(f.from_user_id) === uid ? Number(f.to_user_id) : Number(f.from_user_id));
 
-  // Fetch users details
+  // Fetch users details (safety: no password)
   const { data: users, error: usersError } = await supabase
     .from('users')
-    .select('*')
+    .select('id, full_name, university, major, avatar, bio, created_at')
     .in('id', friendIds);
 
   if (usersError || !users) return [];
@@ -132,9 +133,10 @@ export const getPendingRequests = async (userId) => {
 
   const { data: friendships, error: fetchError } = await supabase
     .from('friendships')
-    .select('*')
+    .select('id, from_user_id, to_user_id, status, created_at')
     .eq('status', 'pending')
-    .eq('to_user_id', uid);
+    .eq('to_user_id', uid)
+    .limit(20);
 
   if (fetchError || !friendships || friendships.length === 0) return [];
 
@@ -142,7 +144,7 @@ export const getPendingRequests = async (userId) => {
 
   const { data: users, error: usersError } = await supabase
     .from('users')
-    .select('*')
+    .select('id, full_name, university, major, avatar, bio, created_at')
     .in('id', senderIds);
 
   if (usersError || !users) return [];
@@ -170,9 +172,10 @@ export const getSentRequests = async (userId) => {
 
   const { data: friendships, error: fetchError } = await supabase
     .from('friendships')
-    .select('*')
+    .select('id, from_user_id, to_user_id, status, created_at')
     .eq('status', 'pending')
-    .eq('from_user_id', uid);
+    .eq('from_user_id', uid)
+    .limit(20);
 
   if (fetchError || !friendships || friendships.length === 0) return [];
 
@@ -180,7 +183,7 @@ export const getSentRequests = async (userId) => {
 
   const { data: users, error: usersError } = await supabase
     .from('users')
-    .select('*')
+    .select('id, full_name, university, major, avatar, bio, created_at')
     .in('id', receiverIds);
 
   if (usersError || !users) return [];
@@ -218,7 +221,7 @@ export const getSuggestions = async (userId) => {
 
   const { data: users, error: usersError } = await supabase
     .from('users')
-    .select('*')
+    .select('id, full_name, university, major, avatar')
     .neq('role', 'admin')
     .limit(30);
 
@@ -244,7 +247,7 @@ export const getFriendshipStatus = async (userId, targetId) => {
 
   const { data: rel, error } = await supabase
     .from('friendships')
-    .select('*')
+    .select('id, from_user_id, to_user_id, status, created_at, accepted_at')
     .or(`and(from_user_id.eq.${uid},to_user_id.eq.${tid}),and(from_user_id.eq.${tid},to_user_id.eq.${uid})`)
     .maybeSingle();
 

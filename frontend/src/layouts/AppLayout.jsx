@@ -83,9 +83,11 @@ const NAV_ITEMS = [
 ];
 
 export default function AppLayout({ children, hideNavbar = false, hideSidebar = false }) {
-  const { user, logout } = useAuth();
+  const { user, logout, admin, adminLogout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
+  const displayUser = isAdminPath ? admin : user;
 
   const shouldHideSidebar = hideSidebar;
 
@@ -129,7 +131,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
       }
     };
     updateUnread();
-    const interval = setInterval(updateUnread, 3000);
+    const interval = setInterval(updateUnread, 20000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -137,9 +139,6 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
     if (!user?.id) return;
     const fetchPendingCount = async () => {
       try {
-        const cached = localStorage.getItem('studyconect_pending_friends');
-        if (cached) setPendingFriendsCount(parseInt(cached, 10));
-
         const { count } = await supabase
           .from('friendships')
           .select('*', { count: 'exact', head: true })
@@ -148,14 +147,13 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
           
         if (count !== null) {
           setPendingFriendsCount(count);
-          localStorage.setItem('studyconect_pending_friends', count.toString());
         }
       } catch {
         // ignore
       }
     };
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 6000);
+    const interval = setInterval(fetchPendingCount, 30000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -168,11 +166,16 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
   }, [location.pathname]);
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    if (isAdminPath) {
+      adminLogout();
+      navigate('/admin');
+    } else {
+      logout();
+      navigate('/login');
+    }
   };
 
-  const initials = user?.fullName
+  const initials = displayUser?.fullName
     ?.split(' ')
     .map((w) => w[0])
     .slice(-2)
@@ -206,11 +209,8 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
           boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)'
         }}>
           <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <div className="nav-brand-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--secondary)' }}>
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
+            <div className="nav-brand-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+              📚
             </div>
             <span className="nav-brand-text" style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -310,7 +310,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
               </div>
             )}
 
-            {user?.id && (
+            {displayUser?.id && !isAdminPath && (
               <div className="mobile-only">
                 <NotificationBell 
                   style={{ 
@@ -325,12 +325,12 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                 />
               </div>
             )}
-            {user?.avatar ? (
-              <Link to="/profile" style={{ display: 'flex', alignItems: 'center' }}>
-                <img src={user.avatar} className="nav-avatar" alt="avatar" style={{ border: '2px solid var(--primary)', width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} />
+            {displayUser?.avatar ? (
+              <Link to={isAdminPath ? "/admin" : "/profile"} style={{ display: 'flex', alignItems: 'center' }}>
+                <img src={displayUser.avatar} className="nav-avatar" alt="avatar" style={{ border: '2px solid var(--primary)', width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} />
               </Link>
-            ) : (
-              <Link to="/profile" style={{ textDecoration: 'none' }}>
+            ) : displayUser ? (
+              <Link to={isAdminPath ? "/admin" : "/profile"} style={{ textDecoration: 'none' }}>
                 <div className="nav-avatar-placeholder" style={{
                   width: '34px',
                   height: '34px',
@@ -345,22 +345,24 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                   border: '2px solid var(--primary)'
                 }}>{initials}</div>
               </Link>
+            ) : null}
+            {displayUser && (
+              <button className="btn-logout desktop-only" onClick={handleLogout} style={{
+                background: 'none',
+                border: '1.5px solid var(--border)',
+                borderRadius: '8px',
+                color: 'var(--text-secondary)',
+                padding: '6px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'var(--transition)'
+              }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--error)'; e.currentTarget.style.color = 'var(--error)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
+                Đăng xuất
+              </button>
             )}
-            <button className="btn-logout desktop-only" onClick={handleLogout} style={{
-              background: 'none',
-              border: '1.5px solid var(--border)',
-              borderRadius: '8px',
-              color: 'var(--text-secondary)',
-              padding: '6px 14px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'var(--transition)'
-            }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--error)'; e.currentTarget.style.color = 'var(--error)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
-              Đăng xuất
-            </button>
           </div>
         </nav>
       )}
@@ -370,10 +372,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
         <div className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--secondary)' }}>
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
+              <span style={{ fontSize: '18px' }}>📚</span>
               <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Studyconect</span>
             </div>
             <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px' }}>✕</button>
@@ -437,7 +436,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
         </div>
       </div>
 
-      <main style={{ position: 'relative', zIndex: 1, height: 'calc(100% - 64px)', overflow: shouldHideSidebar ? 'auto' : 'hidden' }}>
+      <main style={{ position: 'relative', zIndex: 1, height: hideNavbar ? '100%' : 'calc(100% - 64px)', overflow: shouldHideSidebar ? 'auto' : 'hidden' }}>
         {shouldHideSidebar ? (
           children
         ) : (
@@ -694,43 +693,45 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
       </main>
 
       {/* Mobile Bottom Navigation Bar (Thanh điều hướng dưới di động) */}
-      <div className="mobile-bottom-nav">
-        <Link to="/" className={`mobile-bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}>
-          <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
-            {NAV_ICONS.home(location.pathname === '/')}
-          </span>
-          <span>Trang chủ</span>
-        </Link>
-        <Link to="/groups" className={`mobile-bottom-nav-item ${location.pathname.startsWith('/groups') ? 'active' : ''}`}>
-          <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
-            {NAV_ICONS.groups(location.pathname.startsWith('/groups'))}
-          </span>
-          <span>Nhóm học</span>
-        </Link>
-        <Link to="/schedule" className={`mobile-bottom-nav-item ${location.pathname === '/schedule' ? 'active' : ''}`}>
-          <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
-            {NAV_ICONS.schedule(location.pathname === '/schedule')}
-          </span>
-          <span>Lịch học</span>
-        </Link>
-        <Link to="/chat" className={`mobile-bottom-nav-item ${location.pathname === '/chat' ? 'active' : ''}`}>
-          <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', position: 'relative' }}>
-            {NAV_ICONS.chat(location.pathname === '/chat')}
-          </span>
-          <span>Nhắn tin</span>
-          {unreadCount > 0 && (
-            <span className="mobile-bottom-nav-badge">
-              {unreadCount > 99 ? '99+' : unreadCount}
+      {!hideNavbar && (
+        <div className="mobile-bottom-nav">
+          <Link to="/" className={`mobile-bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}>
+            <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
+              {NAV_ICONS.home(location.pathname === '/')}
             </span>
-          )}
-        </Link>
-        <button className="mobile-bottom-nav-item" onClick={() => setMobileMenuOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
-            {NAV_ICONS.more(mobileMenuOpen)}
-          </span>
-          <span>Thêm</span>
-        </button>
-      </div>
+            <span>Trang chủ</span>
+          </Link>
+          <Link to="/groups" className={`mobile-bottom-nav-item ${location.pathname.startsWith('/groups') ? 'active' : ''}`}>
+            <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
+              {NAV_ICONS.groups(location.pathname.startsWith('/groups'))}
+            </span>
+            <span>Nhóm học</span>
+          </Link>
+          <Link to="/schedule" className={`mobile-bottom-nav-item ${location.pathname === '/schedule' ? 'active' : ''}`}>
+            <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
+              {NAV_ICONS.schedule(location.pathname === '/schedule')}
+            </span>
+            <span>Lịch học</span>
+          </Link>
+          <Link to="/chat" className={`mobile-bottom-nav-item ${location.pathname === '/chat' ? 'active' : ''}`}>
+            <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', position: 'relative' }}>
+              {NAV_ICONS.chat(location.pathname === '/chat')}
+            </span>
+            <span>Nhắn tin</span>
+            {unreadCount > 0 && (
+              <span className="mobile-bottom-nav-badge">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </Link>
+          <button className="mobile-bottom-nav-item" onClick={() => setMobileMenuOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            <span className="mobile-bottom-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
+              {NAV_ICONS.more(mobileMenuOpen)}
+            </span>
+            <span>Thêm</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,7 +26,11 @@ export const NotificationProvider = ({ children }) => {
   const toggleToast = () => {
     setToastEnabled(prev => {
       const next = !prev;
-      localStorage.setItem('studyconect_toast_enabled', next ? 'true' : 'false');
+      try {
+        localStorage.setItem('studyconect_toast_enabled', next ? 'true' : 'false');
+      } catch (err) {
+        console.warn('Error setting toast enabled state:', err);
+      }
       return next;
     });
   };

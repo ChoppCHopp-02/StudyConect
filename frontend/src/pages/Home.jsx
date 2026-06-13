@@ -19,22 +19,8 @@ export default function Home() {
   const [posts, setPosts] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const [schedules, setSchedules] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_schedules');
-      return cached ? JSON.parse(cached) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [deadlines, setDeadlines] = useState(() => {
-    try {
-      const cached = localStorage.getItem('studyconect_deadlines');
-      return cached ? JSON.parse(cached) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [schedules, setSchedules] = useState([]);
+  const [deadlines, setDeadlines] = useState([]);
   const [confirmConfig, setConfirmConfig] = useState(null);
   const [friends, setFriends] = useState([]);
   const [myLeaderGroups, setMyLeaderGroups] = useState([]);
@@ -65,6 +51,7 @@ export default function Home() {
       try {
         const list = await getFriends(user.id);
         setFriends(list);
+        // Cache removed to comply with quota limits
       } catch (err) {
         console.warn('Error fetching friends:', err);
       }
@@ -116,12 +103,18 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const fetchPosts = useCallback(async () => {
     if (!user?.id) return;
+    if (import.meta.env.DEV) {
+      console.log('user.id:', user?.id);
+    }
     try {
       const data = await getPosts(user.id);
+      if (import.meta.env.DEV) {
+        console.log('posts fetched:', data?.length);
+      }
       setPosts(data);
+      // Cache removed to comply with quota limits
     } catch (err) {
       console.warn('Error fetching posts:', err);
-      setPosts([]);
     }
   }, [user?.id]);
 
@@ -144,7 +137,6 @@ export default function Home() {
           .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
           .slice(0, 3);
         setSchedules(upcomingSched);
-        localStorage.setItem('studyconect_schedules', JSON.stringify(upcomingSched));
 
         // Filter incomplete deadlines due soon
         const oneDayMs = 24 * 60 * 60 * 1000;
@@ -161,7 +153,6 @@ export default function Home() {
           .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
           .slice(0, 4);
         setDeadlines(incompleteDead);
-        localStorage.setItem('studyconect_deadlines', JSON.stringify(incompleteDead));
       }
     } catch (err) {
       console.warn('Error fetching side panel data:', err);
@@ -184,7 +175,7 @@ export default function Home() {
       )
       .subscribe();
 
-    const interval = setInterval(fetchSideData, 6000);
+    const interval = setInterval(fetchSideData, 30000);
     
     return () => {
       clearInterval(interval);
@@ -417,12 +408,17 @@ export default function Home() {
 
               {/* ─ Deadline cần nộp ─ */}
               <div style={{ padding: '10px 16px 14px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                  Deadline cần nộp
-                </div>
+                <Link to="/schedule#deadlines" style={{ textDecoration: 'none', display: 'block' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--accent)'}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Deadline cần nộp
+                  </div>
+                </Link>
                 {deadlines.length === 0 ? (
                   <div style={{ padding: '10px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
                     Không còn deadline nào 🎉

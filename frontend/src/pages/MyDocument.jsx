@@ -87,7 +87,10 @@ function FileCard({ file, onDelete, onPreview }) {
     const a = document.createElement('a');
     a.href = file.fileData;
     a.download = file.fileName;
+    a.target = '_blank';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   return (
@@ -164,10 +167,17 @@ function FileCard({ file, onDelete, onPreview }) {
 // ── Main ────────────────────────────────────────────────────
 export default function MyDocuments() {
   const { isAuth, user } = useAuth();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterType, setFilterType] = useState('all');
   const [previewFile, setPreviewFile] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { addToast } = useToast();
@@ -185,7 +195,6 @@ export default function MyDocuments() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadFiles(); }, [loadFiles]);
 
-
   const handleDelete = async (file) => {
     try {
       await deleteUserFile(file.id);
@@ -195,30 +204,22 @@ export default function MyDocuments() {
     setDeleteConfirm(null);
   };
 
-  // Type filter options
-  const typeOptions = [
-    { value: 'all', label: ' Tất cả' },
-    { value: 'image', label: '️ Hình ảnh' },
-    { value: 'pdf', label: ' PDF' },
-    { value: 'doc', label: ' Văn bản' },
-    ];
-
-  const typeMatch = (file) => {
-    if (filterType === 'all') return true;
-    if (filterType === 'image') return file.fileType?.startsWith('image/');
-    if (filterType === 'pdf') return file.fileType === 'application/pdf';
-    if (filterType === 'doc') return file.fileType?.includes('word') || file.fileType?.startsWith('text/');
-    if (filterType === 'sheet') return file.fileType?.includes('sheet') || file.fileType?.includes('excel') || file.fileType?.includes('csv');
-    if (filterType === 'video') return file.fileType?.startsWith('video/');
-    return true;
+  const handleDownload = (file) => {
+    if (!file.fileData) return;
+    const a = document.createElement('a');
+    a.href = file.fileData;
+    a.download = file.fileName;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const filtered = files.filter(f =>
-    typeMatch(f) &&
-    (!search.trim() || f.fileName.toLowerCase().includes(search.toLowerCase()) ||
-      f.groupName.toLowerCase().includes(search.toLowerCase()))
+    !search.trim() ||
+    f.fileName.toLowerCase().includes(search.toLowerCase()) ||
+    f.groupName.toLowerCase().includes(search.toLowerCase())
   );
-
 
   if (!isAuth) {
     return (
@@ -235,56 +236,26 @@ export default function MyDocuments() {
   return (
     <>
       <AppLayout>
+        <main className="document-page-container">
+          {/* Header Panel with search */}
+          <div className="premium-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <div>
+              <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tài liệu của tôi</h1>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>Danh sách tài liệu bạn đã chia sẻ trong các nhóm học.</p>
+            </div>
+            
+            <div className="search-container" style={{ width: '100%', maxWidth: '320px', margin: 0 }}>
+              <span style={{ fontSize: '14px' }}>🔍</span>
+              <input
+                className="search-input"
+                placeholder="Tìm tên tài liệu hoặc tên nhóm..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
 
-
-      {/* Main content */}
-      <main className="document-page-container">
-          {/* Header, Stats, Search, Filters - Only show if user has files */}
-          {files.length > 0 && (
-            <>
-              <div className="premium-panel">
-                <h1 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '4px', color: '#fff' }}>Tài liệu của tôi</h1>
-                <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '12px' }}>
-                  Tất cả tài liệu bạn đã tải lên trong các nhóm học.
-                </p>
-
-                {/* Stats row */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  {[
-                    { label: 'Tổng tài liệu', value: files.length },
-                    { label: 'Nhóm đã chia sẻ', value: new Set(files.map(f => f.groupId)).size },
-                  ].map(s => (
-                    <div key={s.label} className="stat-box">
-                      <div style={{ fontSize: '18px', fontWeight: 800, color: '#818cf8' }}>{s.value}</div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Search */}
-                <div className="search-container">
-                  <span style={{ fontSize: '14px' }}>🔍</span>
-                  <input
-                    className="search-input"
-                    placeholder="Tìm tên tài liệu hoặc tên nhóm..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Type filter */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px', width: '100%' }}>
-                {typeOptions.map(opt => (
-                  <button key={opt.value} onClick={() => setFilterType(opt.value)} className={`filter-btn ${filterType === opt.value ? 'active' : ''}`}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* File list */}
+          {/* Main content table */}
           {loading ? (
             <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', width: '100%' }}>
               Đang tải tài liệu...
@@ -312,12 +283,12 @@ export default function MyDocuments() {
                 Không tìm thấy tài liệu
               </div>
               <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Thử thay đổi từ khóa hoặc bộ lọc khác.
+                Thử thay đổi từ khóa tìm kiếm.
               </div>
             </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0', width: '100%' }}>
-              {filtered.map(file => (
+          ) : isMobile ? (
+            <div className="file-cards-grid">
+              {filtered.map((file) => (
                 <FileCard
                   key={file.id}
                   file={file}
@@ -326,182 +297,242 @@ export default function MyDocuments() {
                 />
               ))}
             </div>
+          ) : (
+            <div className="premium-panel" style={{ padding: '24px', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-muted)', fontSize: '12.5px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ padding: '12px 16px' }}>Tên tài liệu</th>
+                    <th style={{ padding: '12px 16px' }}>Đã chia sẻ vào nhóm</th>
+                    <th style={{ padding: '12px 16px' }}>Thời gian chia sẻ</th>
+                    <th style={{ padding: '12px 16px' }}>Dung lượng</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', width: '1%', whiteSpace: 'nowrap' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((file) => (
+                    <tr key={file.id} style={{ borderBottom: '1px solid var(--border)', fontSize: '14px', transition: 'var(--transition)' }} className="table-row-hover">
+                      <td style={{ padding: '16px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
+                          <div className="file-icon-box" style={{ width: '32px', height: '32px', margin: 0 }}>
+                            {fileIconSvg(file.fileType)}
+                          </div>
+                          {file.fileData && file.fileType?.startsWith('image/') ? (
+                            <span onClick={() => setPreviewFile(file)} style={{ color: '#fff', cursor: 'pointer' }} className="hover-link">
+                              {file.fileName}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#fff' }}>{file.fileName}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 16px' }}>
+                        <Link to={`/groups/${file.groupId}`} style={{ color: 'var(--primary-light)', textDecoration: 'none', fontWeight: 600 }}>
+                          {file.groupName}
+                        </Link>
+                      </td>
+                      <td style={{ padding: '16px 16px', color: 'var(--text-muted)' }}>
+                        {new Date(file.createdAt).toLocaleString('vi-VN')}
+                      </td>
+                      <td style={{ padding: '16px 16px', color: 'var(--text-secondary)' }}>
+                        {formatFileSize(file.fileSize)}
+                      </td>
+                      <td style={{ padding: '16px 16px', textAlign: 'right', width: '1%', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => handleDownload(file)}
+                            className="file-action-btn"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px' }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                              <polyline points="7 10 12 15 17 10"/>
+                              <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Tải về
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(file)}
+                            className="file-action-btn"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '6px 12px',
+                              background: 'rgba(239,68,68,0.1)',
+                              border: '1px solid rgba(239,68,68,0.2)',
+                              color: '#f87171'
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </main>
 
-      <style>{`
-        .document-page-container {
-          padding: 16px;
-          max-width: 1000px;
-          margin: 0 auto;
-          font-family: 'Inter', sans-serif;
-        }
-        .premium-panel {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          padding: 16px 20px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
-          margin-bottom: 16px;
-        }
-        .stat-box {
-          background: rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 10px;
-          padding: 8px;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          transition: all 0.3s;
-        }
-        .stat-box:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(99, 102, 241, 0.3);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-        .search-container {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(0,0,0,0.2);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 12px;
-          padding: 8px 12px;
-          transition: all 0.3s;
-        }
-        .search-container:focus-within {
-          border-color: #6366f1;
-          background: rgba(0,0,0,0.3);
-          box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
-        }
-        .search-input {
-          background: none; border: none; outline: none; flex: 1;
-          color: #fff; font-size: 13px; font-family: inherit;
-        }
-        .filter-btn {
-          padding: 6px 16px;
-          border-radius: 16px;
-          cursor: pointer;
-          font-family: inherit;
-          font-size: 12px;
-          font-weight: 600;
-          transition: all 0.2s;
-          background: rgba(255,255,255,0.05);
-          color: #94a3b8;
-          border: 1px solid rgba(255,255,255,0.1);
-          white-space: nowrap;
-        }
-        .filter-btn:hover {
-          background: rgba(255,255,255,0.1);
-          color: #fff;
-        }
-        .filter-btn.active {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          border: none;
-          box-shadow: 0 4px 15px rgba(99,102,241,0.3);
-        }
-        .file-card-item {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 12px;
-          padding: 10px 12px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          transition: all 0.3s;
-          margin-bottom: 8px;
-        }
-        .file-card-item:hover {
-          background: rgba(255,255,255,0.06);
-          border-color: rgba(108,99,255,0.3);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(108,99,255,0.15);
-        }
-        .file-icon-box {
-          width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
-          background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.25);
-          display: flex; align-items: center; justify-content: center;
-        }
-        .file-action-btn {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
-          color: #e2e8f0;
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .file-action-btn:hover {
-          background: rgba(108,99,255,0.15);
-          color: #818cf8;
-          border-color: rgba(108,99,255,0.3);
-        }
-      `}</style>
-    </AppLayout>
+        <style>{`
+          .document-page-container {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            font-family: 'Inter', sans-serif;
+          }
+          .file-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 16px;
+            margin-bottom: 24px;
+          }
+          @media (min-width: 640px) {
+            .file-cards-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+          .file-card-item {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.2s;
+          }
+          .file-card-item:hover {
+            border-color: rgba(108,99,255,0.3);
+            transform: translateY(-2px);
+            background: rgba(30, 41, 59, 0.6);
+          }
+          .premium-panel {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+            margin-bottom: 24px;
+          }
+          .search-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            transition: all 0.3s;
+          }
+          .search-container:focus-within {
+            border-color: #6366f1;
+            background: rgba(0,0,0,0.35);
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+          }
+          .search-input {
+            background: none; border: none; outline: none; flex: 1;
+            color: #fff; font-size: 13px; font-family: inherit;
+          }
+          .file-icon-box {
+            width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+            background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.25);
+            display: flex; align-items: center; justify-content: center;
+          }
+          .file-action-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          .file-action-btn:hover {
+            background: rgba(108,99,255,0.15);
+            color: #818cf8;
+            border-color: rgba(108,99,255,0.3);
+          }
+          .table-row-hover:hover {
+            background: rgba(255, 255, 255, 0.04) !important;
+          }
+          .hover-link:hover {
+            color: var(--primary-light) !important;
+            text-decoration: underline !important;
+          }
+        `}</style>
+      </AppLayout>
 
-    {/* Image Preview Modal */}
-    {previewFile && (
-      <div onClick={() => setPreviewFile(null)} style={{
-        position: 'fixed', inset: 0, zIndex: 5000,
-        background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '24px',
-      }}>
-        <div onClick={e => e.stopPropagation()} style={{
-          background: 'var(--bg-card)', borderRadius: 'var(--radius)', padding: '20px',
-          maxWidth: '800px', width: '100%', maxHeight: '90vh', overflow: 'auto', overscrollBehavior: 'contain',
-          border: '1px solid var(--border)',
+      {/* Image Preview Modal */}
+      {previewFile && (
+        <div onClick={() => setPreviewFile(null)} style={{
+          position: 'fixed', inset: 0, zIndex: 5000,
+          background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{previewFile.fileName}</span>
-            <button onClick={() => setPreviewFile(null)} style={{
-              background: 'none', border: 'none', cursor: 'pointer', fontSize: '22px',
-              color: 'var(--text-muted)', padding: '4px',
-            }}>✕</button>
-          </div>
-          <img src={previewFile.fileData} alt={previewFile.fileName} style={{ width: '100%', borderRadius: 'var(--radius-sm)' }} />
-        </div>
-      </div>
-    )}
-
-    {/* Delete Confirm Modal */}
-    {deleteConfirm && (
-      <div onClick={() => setDeleteConfirm(null)} style={{
-        position: 'fixed', inset: 0, zIndex: 5000,
-        background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '24px',
-      }}>
-        <div onClick={e => e.stopPropagation()} style={{
-          background: 'var(--bg-card)', borderRadius: 'var(--radius)', padding: '28px 32px',
-          maxWidth: '420px', width: '100%', border: '1px solid var(--border)', textAlign: 'center',
-        }}>
-          <div style={{ fontSize: '40px', marginBottom: '12px' }}>⚠️</div>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Xóa tài liệu?</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>
-            Bạn có chắc muốn xóa <strong style={{ color: 'var(--text-primary)' }}>{deleteConfirm.fileName}</strong>?
-            Hành động này không thể hoàn tác.
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-            <button onClick={() => setDeleteConfirm(null)} style={{
-              padding: '10px 24px', borderRadius: '20px', cursor: 'pointer',
-              background: 'var(--bg-input)', border: '1px solid var(--border)',
-              color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600, fontFamily: 'inherit',
-            }}>Hủy</button>
-            <button onClick={() => handleDelete(deleteConfirm)} style={{
-              padding: '10px 24px', borderRadius: '20px', cursor: 'pointer',
-              background: 'var(--error)', border: 'none',
-              color: 'white', fontSize: '14px', fontWeight: 600, fontFamily: 'inherit',
-            }}>Xóa</button>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'var(--bg-card)', borderRadius: 'var(--radius)', padding: '20px',
+            maxWidth: '800px', width: '100%', maxHeight: '90vh', overflow: 'auto', overscrollBehavior: 'contain',
+            border: '1px solid var(--border)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{previewFile.fileName}</span>
+              <button onClick={() => setPreviewFile(null)} style={{
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: '22px',
+                color: 'var(--text-muted)', padding: '4px',
+              }}>✕</button>
+            </div>
+            <img src={previewFile.fileData} alt={previewFile.fileName} style={{ width: '100%', borderRadius: 'var(--radius-sm)' }} />
           </div>
         </div>
-      </div>
-    )}
-  </>
-);
+      )}
+
+      {/* Delete Confirm Modal */}
+      {deleteConfirm && (
+        <div onClick={() => setDeleteConfirm(null)} style={{
+          position: 'fixed', inset: 0, zIndex: 5000,
+          background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '24px',
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'var(--bg-card)', borderRadius: 'var(--radius)', padding: '28px 32px',
+            maxWidth: '420px', width: '100%', border: '1px solid var(--border)', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '40px', marginBottom: '12px' }}>⚠️</div>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Xóa tài liệu?</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>
+              Bạn có chắc muốn xóa <strong style={{ color: 'var(--text-primary)' }}>{deleteConfirm.fileName}</strong>?
+              Hành động này không thể hoàn tác.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button onClick={() => setDeleteConfirm(null)} style={{
+                padding: '10px 24px', borderRadius: '20px', cursor: 'pointer',
+                background: 'var(--bg-input)', border: '1px solid var(--border)',
+                color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600, fontFamily: 'inherit',
+              }}>Hủy</button>
+              <button onClick={() => handleDelete(deleteConfirm)} style={{
+                padding: '10px 24px', borderRadius: '20px', cursor: 'pointer',
+                background: 'var(--error)', border: 'none',
+                color: 'white', fontSize: '14px', fontWeight: 600, fontFamily: 'inherit',
+              }}>Xóa</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

@@ -58,7 +58,6 @@ export default function useGroupDetail(groupId, user, addToast) {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [customFileName, setCustomFileName] = useState('');
-  const [uploadSubject, setUploadSubject] = useState('');
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   // Schedule state
@@ -115,17 +114,24 @@ export default function useGroupDetail(groupId, user, addToast) {
   const [isSendingChatMessage, setIsSendingChatMessage] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const [replyTo, setReplyTo] = useState(null);
-  const [msgReactions, setMsgReactions] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.reactions(groupId)) || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [msgReactions, setMsgReactions] = useState({});
   const [chatLastSeenTime, setChatLastSeenTime] = useState(() => {
-    return localStorage.getItem(`studyconect_group_chat_last_seen_${groupId}`) || new Date(0).toISOString();
+    return new Date(0).toISOString();
   });
   const [confirmConfig, setConfirmConfig] = useState(null);
+
+  // Reset/sync states from localStorage cache when groupId changes
+  useEffect(() => {
+    if (!groupId) return;
+    setGroup(null);
+    setLoading(true);
+    setMembersDetails([]);
+    setFriendships([]);
+    setFiles([]);
+    setSchedules([]);
+    setDeadlines([]);
+    setChatMessages([]);
+  }, [groupId]);
 
   const fetchGroupSchedules = useCallback(async () => {
     if (!groupId) return;
@@ -148,19 +154,13 @@ export default function useGroupDetail(groupId, user, addToast) {
     }
   }, [groupId, addToast]);
 
-  const SUBMISSIONS_KEY = STORAGE_KEYS.submissions(groupId);
-
   const loadSubmissions = useCallback(() => {
-    try {
-      return JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || '{}');
-    } catch {
-      return {};
-    }
-  }, [SUBMISSIONS_KEY]);
+    return {};
+  }, []);
 
   const saveSubmissions = useCallback((data) => {
-    localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(data));
-  }, [SUBMISSIONS_KEY]);
+    // do nothing in memory
+  }, []);
 
   const fetchChatMessages = useCallback(async () => {
     if (!groupId) return;
@@ -191,12 +191,13 @@ export default function useGroupDetail(groupId, user, addToast) {
         .in('id', membersList.map(id => parseInt(id, 10)));
       
       if (!error && data) {
-        setMembersDetails(data.map(u => ({
+        const mapped = data.map(u => ({
           id: u.id.toString(),
           fullName: u.full_name,
           email: u.email,
           avatar: u.avatar
-        })));
+        }));
+        setMembersDetails(mapped);
       }
     } catch (err) {
       console.warn('Lỗi tải thông tin thành viên:', err);
@@ -234,13 +235,19 @@ export default function useGroupDetail(groupId, user, addToast) {
         return;
       }
       setGroup(groupData);
-      await fetchGroupMembersDetails(groupData.members);
-      await fetchGroupFriendships();
-      await fetchGroupDeadlines();
+      setLoading(false); // Render the group layout/tab structure immediately!
+
+      // Concurrently execute secondary fetches in the background
+      Promise.all([
+        fetchGroupMembersDetails(groupData.members),
+        fetchGroupFriendships(),
+        fetchGroupDeadlines()
+      ]).catch(err => {
+        console.warn('[useGroupDetail] Background fetches encountered errors:', err);
+      });
     } catch (err) {
       addToast(err.message || 'Lỗi tải thông tin nhóm', 'error');
       navigate('/groups');
-    } finally {
       setLoading(false);
     }
   }, [groupId, user?.id, navigate, addToast, fetchGroupDeadlines, fetchGroupMembersDetails, fetchGroupFriendships]);
@@ -329,7 +336,6 @@ export default function useGroupDetail(groupId, user, addToast) {
     if (activeTab === 'chat' && groupId) {
       const nowStr = new Date().toISOString();
       setChatLastSeenTime(nowStr);
-      localStorage.setItem(`studyconect_group_chat_last_seen_${groupId}`, nowStr);
     }
   }, [activeTab, groupId, chatMessages]);
 
@@ -538,21 +544,171 @@ export default function useGroupDetail(groupId, user, addToast) {
     }
   };
 
+  const hasNsfwKeyword = (fileName) => {
+    const nsfwKeywords = /nsfw|18\+|adult|porn|sex|nude|khieu-dam|dam-my|loan-luan|trom-cu/i;
+    return nsfwKeywords.test(fileName);
+  };
+
+  const checkImageNsfw = (file) => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        return resolve(false);
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const maxDim = 120;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          try {
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            let skinPixels = 0;
+            const totalPixels = width * height;
+
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+
+              // Thuật toán màu da sinh học
+              const isSkin = r > 95 && g > 40 && b > 20 &&
+                             (r - g) > 15 && r > b &&
+                             (Math.max(r, g, b) - Math.min(r, g, b)) > 15;
+              if (isSkin) {
+                skinPixels++;
+              }
+            }
+
+            const skinRatio = skinPixels / totalPixels;
+            resolve(skinRatio > 0.45);
+          // eslint-disable-next-line no-unused-vars
+          } catch (e) {
+            resolve(false);
+          }
+        };
+        img.onerror = () => resolve(false);
+        img.src = event.target.result;
+      };
+      reader.onerror = () => resolve(false);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleNsfwViolation = async (userId) => {
+    try {
+      const { data: userData, error: fetchErr } = await supabase
+        .from('users')
+        .select('warn_count')
+        .eq('id', userId)
+        .single();
+      
+      if (fetchErr) throw fetchErr;
+
+      const newWarnCount = (userData.warn_count || 0) + 1;
+
+      if (newWarnCount >= 3) {
+        await supabase
+          .from('users')
+          .update({ warn_count: newWarnCount, is_banned: true })
+          .eq('id', userId);
+        
+        addToast('Tài khoản của bạn đã bị khóa vĩnh viễn do cố ý đăng tải nội dung khiêu dâm 3 lần!', 'error');
+        
+        setTimeout(() => {
+          localStorage.removeItem('sc_session');
+          localStorage.removeItem('sc_admin_session');
+          window.location.href = '/login';
+        }, 3000);
+      } else {
+        await supabase
+          .from('users')
+          .update({ warn_count: newWarnCount })
+          .eq('id', userId);
+        
+        addToast(`Cảnh báo: Bạn đã cố gắng tải lên tài liệu chứa nội dung người lớn/khiêu dâm (${newWarnCount}/3 lần vi phạm). Vi phạm 3 lần tài khoản sẽ bị khóa vĩnh viễn khỏi hệ thống!`, 'error');
+      }
+    } catch (err) {
+      console.error('Lỗi cập nhật vi phạm NSFW:', err);
+    }
+  };
+
   const handleFileUpload = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!selectedFile) {
       return addToast('Vui lòng chọn một tài liệu để upload!', 'error');
     }
+
     try {
       setIsUploadingFile(true);
-      const base64Data = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.readAsDataURL(selectedFile);
-        r.onload = () => res(r.result);
-        r.onerror = rej;
-      });
 
-      const finalSubject = uploadSubject.trim() || group?.subject || 'Chung';
+      // Kiểm duyệt NSFW
+      const isNsfwKey = hasNsfwKeyword(customFileName || selectedFile.name);
+      const isNsfwImage = await checkImageNsfw(selectedFile);
+      
+      if (isNsfwKey || isNsfwImage) {
+        addToast('Tài liệu chứa hình ảnh không lành mạnh hoặc nội dung khiêu dâm. Bạn không thể tải lên tài liệu này!', 'error');
+        await handleNsfwViolation(user.id);
+        setIsUploadingFile(false);
+        return;
+      }
+      let fileUrlValue = '';
+      try {
+        const fileName = `${groupId}/${Date.now()}_${selectedFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(fileName, selectedFile, { cacheControl: '3600', upsert: true });
+
+        if (uploadError) {
+          if (import.meta.env.DEV) {
+            console.warn('Upload group file to Storage failed:', uploadError.message);
+          }
+          const base64Data = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.readAsDataURL(selectedFile);
+            r.onload = () => res(r.result);
+            r.onerror = rej;
+          });
+          fileUrlValue = base64Data;
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('attachments')
+            .getPublicUrl(fileName);
+          fileUrlValue = publicUrl;
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('Group file Storage upload error, falling back to base64:', err);
+        }
+        const base64Data = await new Promise((res, rej) => {
+          const r = new FileReader();
+          r.readAsDataURL(selectedFile);
+          r.onload = () => res(r.result);
+          r.onerror = rej;
+        });
+        fileUrlValue = base64Data;
+      }
+
+      const finalSubject = group?.subject || 'Chung';
       const cleanFileName = customFileName.trim() || selectedFile.name;
       const prefixedName = `[${finalSubject}] ${cleanFileName}`;
 
@@ -560,14 +716,13 @@ export default function useGroupDetail(groupId, user, addToast) {
         fileName: prefixedName,
         fileSize: selectedFile.size,
         fileType: selectedFile.type,
-        fileData: base64Data,
+        fileData: fileUrlValue,
         userId: user.id,
         userFullName: user.fullName
       });
-      addToast('Upload tài liệu thành công!', 'success');
+      addToast('Tải tài liệu lên thành công! Tài liệu của bạn đã được chuyển đến hệ thống kiểm duyệt và đang chờ Admin phê duyệt để hiển thị trong nhóm học.', 'success');
       setSelectedFile(null);
       setCustomFileName('');
-      setUploadSubject('');
       const fileInput = document.getElementById('file-upload-input');
       if (fileInput) fileInput.value = '';
       fetchGroupFiles();
@@ -731,22 +886,7 @@ export default function useGroupDetail(groupId, user, addToast) {
         userAvatar: user.avatar
       });
 
-      // Save reminder to LocalStorage so it shows in the notification bell for all members
-      try {
-        const stored = JSON.parse(localStorage.getItem('studyconect_deadline_reminders') || '[]');
-        stored.push({
-          id: deadline.id,
-          groupId: groupId,
-          title: deadline.title,
-          dueDate: deadline.dueDate,
-          description: deadline.description || '',
-          createdAt: new Date().toISOString(),
-          userIds: group?.members || [user.id]
-        });
-        localStorage.setItem('studyconect_deadline_reminders', JSON.stringify(stored));
-      } catch (e) {
-        console.warn('Lỗi lưu nhắc nhở LocalStorage:', e);
-      }
+      // Save reminder to LocalStorage removed to comply with quota limits
 
       addToast('Đã gửi nhắc nhở đến chat nhóm!', 'success');
     } catch (err) {
@@ -763,12 +903,43 @@ export default function useGroupDetail(groupId, user, addToast) {
       let fileData = null, fileName = null;
       if (submitFile) {
         fileName = submitFile.name;
-        fileData = await new Promise((res, rej) => {
-          const reader = new FileReader();
-          reader.onload = e => res(e.target.result);
-          reader.onerror = rej;
-          reader.readAsDataURL(submitFile);
-        });
+        let fileUrlValue = '';
+        try {
+          const storageFileName = `submissions/${groupId}/${user.id}_${Date.now()}_${submitFile.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('attachments')
+            .upload(storageFileName, submitFile, { cacheControl: '3600', upsert: true });
+
+          if (uploadError) {
+            if (import.meta.env.DEV) {
+              console.warn('Upload submission file to Storage failed:', uploadError.message);
+            }
+            const base64Data = await new Promise((res, rej) => {
+              const reader = new FileReader();
+              reader.onload = e => res(e.target.result);
+              reader.onerror = rej;
+              reader.readAsDataURL(submitFile);
+            });
+            fileUrlValue = base64Data;
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from('attachments')
+              .getPublicUrl(storageFileName);
+            fileUrlValue = publicUrl;
+          }
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.warn('Submission file Storage upload error, falling back to base64:', err);
+          }
+          const base64Data = await new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = e => res(e.target.result);
+            reader.onerror = rej;
+            reader.readAsDataURL(submitFile);
+          });
+          fileUrlValue = base64Data;
+        }
+        fileData = fileUrlValue;
       }
       const all = loadSubmissions();
       const list = all[showSubmitModal] || [];
@@ -812,7 +983,6 @@ export default function useGroupDetail(groupId, user, addToast) {
       if (myIdx >= 0) list.splice(myIdx, 1);
       else list.push({ userId: user.id, emoji });
       updated[msgId] = list;
-      localStorage.setItem(STORAGE_KEYS.reactions(groupId), JSON.stringify(updated));
       return updated;
     });
   };
@@ -850,20 +1020,52 @@ export default function useGroupDetail(groupId, user, addToast) {
           setIsSendingChatMessage(false);
           return;
         }
-        const base64Data = await new Promise((res, rej) => {
-          const reader = new FileReader();
-          reader.onload = () => res(reader.result);
-          reader.onerror = rej;
-          reader.readAsDataURL(chatAttachedFile);
-        });
+
+        let fileUrlValue = '';
+        try {
+          const fileName = `chat/${groupId}/${Date.now()}_${chatAttachedFile.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('attachments')
+            .upload(fileName, chatAttachedFile, { cacheControl: '3600', upsert: true });
+
+          if (uploadError) {
+            if (import.meta.env.DEV) {
+              console.warn('Upload chat file to Storage failed:', uploadError.message);
+            }
+            const base64Data = await new Promise((res, rej) => {
+              const reader = new FileReader();
+              reader.onload = () => res(reader.result);
+              reader.onerror = rej;
+              reader.readAsDataURL(chatAttachedFile);
+            });
+            fileUrlValue = base64Data;
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from('attachments')
+              .getPublicUrl(fileName);
+            fileUrlValue = publicUrl;
+          }
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.warn('Chat file Storage upload error, falling back to base64:', err);
+          }
+          const base64Data = await new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result);
+            reader.onerror = rej;
+            reader.readAsDataURL(chatAttachedFile);
+          });
+          fileUrlValue = base64Data;
+        }
+
         fileAttachment = {
           fileName: chatAttachedFile.name,
           fileType: chatAttachedFile.type,
-          fileData: base64Data,
+          fileData: fileUrlValue,
           fileSize: formatBytes(chatAttachedFile.size),
           name: chatAttachedFile.name, // legacy fallback
           type: chatAttachedFile.type, // legacy fallback
-          data: base64Data,            // legacy fallback
+          data: fileUrlValue,            // legacy fallback
         };
       }
       await sendChatMessage(groupId, {
@@ -910,8 +1112,6 @@ export default function useGroupDetail(groupId, user, addToast) {
     setSelectedFile,
     customFileName,
     setCustomFileName,
-    uploadSubject,
-    setUploadSubject,
     isUploadingFile,
     schedules,
     newScheduleTopic,

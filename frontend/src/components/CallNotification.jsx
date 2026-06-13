@@ -1,28 +1,9 @@
 // src/components/CallNotification.jsx
 // Popup thông báo cuộc gọi đến — hiển thị overlay trên MỌI trang
 import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useCall } from '../context/CallContext';
-
-const AVATAR_COLORS = ['#6c63ff','#ff6b9d','#3ecfcf','#f59e0b','#22c55e','#ef4444','#8b5cf6'];
-const colorOf = (str) => AVATAR_COLORS[(str||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0) % AVATAR_COLORS.length];
-
-function Avatar({ src, name = '', size = 80 }) {
-  const initial = (name || '?')[0].toUpperCase();
-  const color = colorOf(name);
-  if (src) return (
-    <img src={src} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.2)' }} />
-  );
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: '50%',
-      background: `linear-gradient(135deg, ${color}, ${color}99)`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.4, fontWeight: 800, color: '#fff',
-      border: '3px solid rgba(255,255,255,0.2)',
-      flexShrink: 0,
-    }}>{initial}</div>
-  );
-}
+import Avatar from './common/Avatar';
 
 // Nhạc chuông bằng Web Audio API
 function useRingTone(active) {
@@ -82,9 +63,13 @@ function useRingTone(active) {
 
 export default function CallNotification() {
   const { incomingCall, acceptCall, rejectCall } = useCall();
-  useRingTone(!!incomingCall);
+  const location = useLocation();
 
-  if (!incomingCall) return null;
+  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname === '/admin-login';
+
+  useRingTone(!!incomingCall && !isAdminRoute);
+
+  if (!incomingCall || isAdminRoute) return null;
 
   return (
     <>
@@ -173,8 +158,11 @@ export default function CallNotification() {
               <div style={{
                 borderRadius: '50%',
                 animation: 'cn-avatar-glow 2s ease-in-out infinite',
+                border: '3px solid rgba(255,255,255,0.2)',
+                display: 'inline-flex',
+                overflow: 'hidden'
               }}>
-                <Avatar src={incomingCall.callerAvatar} name={incomingCall.callerName} size={88} />
+                <Avatar src={incomingCall.callerAvatar} initial={incomingCall.callerName} size={88} />
               </div>
             </div>
 

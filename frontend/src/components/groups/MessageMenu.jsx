@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-const QUICK_REACTIONS = ['❤️', '😂', '😮', '😢', '😡', '👍'];
-
-export default function MessageMenu({ x, y, isMine, isPinned, canPin, onDelete, onReact, onReply, onPin, onClose }) {
+export default function MessageMenu({ x, y, isMine, isPinned, canPin, onDelete, onReply, onPin, onClose }) {
   const ref = useRef(null);
   const [pos, setPos] = useState({ top: y, left: x });
 
@@ -51,40 +49,6 @@ export default function MessageMenu({ x, y, isMine, isPinned, canPin, onDelete, 
         animation: 'fadeIn 0.12s ease',
       }}
     >
-      {/* Quick reactions */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '4px',
-          padding: '4px 6px 8px',
-          borderBottom: '1px solid var(--border)',
-          marginBottom: '4px',
-        }}
-      >
-        {QUICK_REACTIONS.map((em) => (
-          <button
-            key={em}
-            onClick={() => {
-              onReact(em);
-              onClose();
-            }}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '20px',
-              padding: '3px 4px',
-              borderRadius: '6px',
-              lineHeight: 1,
-              transition: 'background 0.1s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(108,99,255,0.15)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-          >
-            {em}
-          </button>
-        ))}
-      </div>
       {/* Actions */}
       <button
         onClick={() => {

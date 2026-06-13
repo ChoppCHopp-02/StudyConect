@@ -1,5 +1,5 @@
 // src/pages/Register.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,7 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
 
   // Reset search khi mở modal
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isOpen) setSearch('');
   }, [isOpen]);
 
@@ -177,6 +178,8 @@ export default function Register() {
   // States mở/đóng Modal chọn vị trí
   const [openProvinceModal, setOpenProvinceModal] = useState(false);
   const [openDistrictModal, setOpenDistrictModal] = useState(false);
+  const [openUniversityModal, setOpenUniversityModal] = useState(false);
+  const [openMajorModal, setOpenMajorModal] = useState(false);
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -348,15 +351,26 @@ export default function Register() {
         {/* STEP 2 */}
         {step === 2 && (
           <form onSubmit={handleSubmit} noValidate>
+            {/* Trường đại học */}
             <div className="form-group">
-              <label className="form-label" htmlFor="reg-uni">Trường đại học</label>
-              <div className="form-input-wrap">
-                <select id="reg-uni" name="university" className="form-input" style={{ appearance: 'auto', background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '13px 16px', fontSize: '15px' }} value={form.university} onChange={handleChange}>
-                  <option value="">-- Chọn trường đại học --</option>
-                  {HCM_UNIVERSITIES.map(uni => (
-                    <option key={uni} value={uni}>{uni}</option>
-                  ))}
-                </select>
+              <label className="form-label">Trường đại học</label>
+              <div
+                onClick={() => setOpenUniversityModal(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '13px 16px',
+                  background: 'var(--bg-input)', border: '1.5px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: form.university ? 'var(--text-primary)' : 'var(--text-muted)',
+                  fontSize: '15px', cursor: 'pointer',
+                  userSelect: 'none', transition: 'all 0.2s',
+                  height: '48px', boxSizing: 'border-box',
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                <span>{form.university || 'Chọn trường đại học...'}</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>▼</span>
               </div>
             </div>
 
@@ -371,15 +385,26 @@ export default function Register() {
               </div>
             )}
 
+            {/* Ngành học */}
             <div className="form-group" style={{ marginTop: '16px' }}>
-              <label className="form-label" htmlFor="reg-major">Ngành học</label>
-              <div className="form-input-wrap">
-                <select id="reg-major" name="major" className="form-input" style={{ appearance: 'auto', background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '13px 16px', fontSize: '15px' }} value={form.major} onChange={handleChange}>
-                  <option value="">-- Chọn ngành học --</option>
-                  {MAJORS.map(m => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
+              <label className="form-label">Ngành học</label>
+              <div
+                onClick={() => setOpenMajorModal(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '13px 16px',
+                  background: 'var(--bg-input)', border: '1.5px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: form.major ? 'var(--text-primary)' : 'var(--text-muted)',
+                  fontSize: '15px', cursor: 'pointer',
+                  userSelect: 'none', transition: 'all 0.2s',
+                  height: '48px', boxSizing: 'border-box',
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                <span>{form.major || 'Chọn ngành học...'}</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>▼</span>
               </div>
             </div>
 
@@ -487,6 +512,30 @@ export default function Register() {
         options={province ? VIETNAM_LOCATIONS[province] : []}
         value={district}
         onSelect={(val) => setDistrict(val)}
+      />
+
+      {/* ─── MODAL CHỌN TRƯỜNG ĐẠI HỌC ─── */}
+      <LocationModal
+        isOpen={openUniversityModal}
+        onClose={() => setOpenUniversityModal(false)}
+        title="Chọn Trường đại học"
+        options={HCM_UNIVERSITIES}
+        value={form.university}
+        onSelect={(val) => {
+          setForm(prev => ({ ...prev, university: val }));
+        }}
+      />
+
+      {/* ─── MODAL CHỌN NGÀNH HỌC ─── */}
+      <LocationModal
+        isOpen={openMajorModal}
+        onClose={() => setOpenMajorModal(false)}
+        title="Chọn Ngành học"
+        options={MAJORS}
+        value={form.major}
+        onSelect={(val) => {
+          setForm(prev => ({ ...prev, major: val }));
+        }}
       />
 
       <style>{`

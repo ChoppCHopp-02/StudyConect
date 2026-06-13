@@ -88,7 +88,10 @@ export default function FriendDetail() {
 
   // Parse location bio [📍 Province, District]
   const parseLocation = (bio) => {
-    if (bio && bio.startsWith('[📍 ')) {
+    if (!bio) return null;
+    if (bio.includes('[hide_loc:1]')) return null; // Ẩn khu vực sinh sống
+
+    if (bio.startsWith('[📍 ')) {
       const endIdx = bio.indexOf(']');
       if (endIdx > 0) {
         return bio.substring(4, endIdx);
@@ -97,16 +100,18 @@ export default function FriendDetail() {
     return null;
   };
 
-  // Clean location tags from bio display
+  // Clean location tags and visibility tags from bio display
   const displayBioText = (bio) => {
     if (!bio) return 'Chưa có tiểu sử.';
-    if (bio.startsWith('[📍 ')) {
-      const endIdx = bio.indexOf(']');
+    let clean = bio;
+    if (clean.startsWith('[📍 ')) {
+      const endIdx = clean.indexOf(']');
       if (endIdx > 0) {
-        return bio.substring(endIdx + 1).trim() || 'Chưa có tiểu sử.';
+        clean = clean.substring(endIdx + 1).trim();
       }
     }
-    return bio;
+    clean = clean.replace('[hide_loc:1]', '').replace('[hide_join:1]', '').trim();
+    return clean || 'Chưa có tiểu sử.';
   };
 
   // Check friendship status
@@ -435,6 +440,15 @@ export default function FriendDetail() {
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Khu vực</div>
                   <div style={{ fontWeight: 600 }}>{locationInfo}</div>
+                </div>
+              </div>
+            )}
+            {friendData.created_at && !friendData.bio?.includes('[hide_join:1]') && (
+              <div className="profile-meta-item">
+                <span className="icon">📅</span>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ngày tham gia</div>
+                  <div style={{ fontWeight: 600 }}>{new Date(friendData.created_at).toLocaleDateString('vi-VN')}</div>
                 </div>
               </div>
             )}

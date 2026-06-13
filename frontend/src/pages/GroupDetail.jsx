@@ -81,24 +81,34 @@ export default function GroupDetail() {
     if (h.loading || !h.group) return;
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab && h.activeTab === tab) {
+    if ((tab === 'schedule' || tab === 'deadlines') && h.activeTab === tab) {
       const timer = setTimeout(() => {
         const targetId = tab === 'schedule' ? 'group-schedule-list' : 'group-deadline-list';
         const element = document.getElementById(targetId);
         if (element) {
-          const yOffset = -90; // account for sticky navbar height
-          const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
-          window.scrollTo({ top: y, behavior: 'smooth' });
-        } else {
-          // Fallback to tabs
-          const tabsEl = document.getElementById('group-detail-tabs');
-          if (tabsEl) {
-            const yOffset = -90;
-            const y = tabsEl.getBoundingClientRect().top + window.scrollY + yOffset;
-            window.scrollTo({ top: y, behavior: 'smooth' });
+          // Find the scrollable container parent with overflowY: auto or scroll
+          let scrollParent = element.parentElement;
+          while (scrollParent && scrollParent !== document.body) {
+            const overflowY = window.getComputedStyle(scrollParent).overflowY;
+            if (overflowY === 'auto' || overflowY === 'scroll') {
+              break;
+            }
+            scrollParent = scrollParent.parentElement;
+          }
+          if (scrollParent) {
+            const parentRect = scrollParent.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            const relativeTop = elementRect.top - parentRect.top + scrollParent.scrollTop;
+            const yOffset = -20; // 20px padding from the top of the container
+            scrollParent.scrollTo({
+              top: relativeTop + yOffset,
+              behavior: 'smooth'
+            });
+          } else {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         }
-      }, 150); // Small delay to let React render the newly switched tab
+      }, 250); // 250ms delay to let React render the newly switched tab
       return () => clearTimeout(timer);
     }
   }, [h.activeTab, h.loading, h.group, location.search]);
@@ -234,7 +244,6 @@ export default function GroupDetail() {
             files={h.files}
             selectedFile={h.selectedFile} setSelectedFile={h.setSelectedFile}
             customFileName={h.customFileName} setCustomFileName={h.setCustomFileName}
-            uploadSubject={h.uploadSubject} setUploadSubject={h.setUploadSubject}
             isUploadingFile={h.isUploadingFile}
             handleFileUpload={h.handleFileUpload}
             handleFileDelete={h.handleFileDelete}
