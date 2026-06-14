@@ -141,8 +141,20 @@ export default function CallNotification() {
               fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em',
               color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase',
               marginBottom: '20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
             }}>
-              📹 Gọi Video Đến
+              <span style={{
+                width: '22px', height: '22px', borderRadius: '6px', flexShrink: 0,
+                background: 'rgba(108,99,255,0.2)',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                filter: 'drop-shadow(0 0 4px rgba(108,99,255,0.5))',
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m22 8-6 4 6 4V8Z" />
+                  <rect width="14" height="12" x="2" y="6" rx="2" ry="2" />
+                </svg>
+              </span>
+              Gọi Video Đến
             </div>
 
             {/* Avatar với sóng động */}

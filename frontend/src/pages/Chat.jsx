@@ -1358,20 +1358,44 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
 
           // ── Tin nhắn hệ thống: cuộc gọi nhỡ hoặc tóm tắt cuộc gọi
           if (m.content?.startsWith('📵') || m.content?.startsWith('📹')) {
+            const isMissed = m.content.startsWith('📵');
+            const labelText = m.content.replace(/^[📵📹]\s*/, '');
             return (
-              <div key={m.id} style={{ textAlign: 'center', margin: '16px 0' }}>
+              <div key={m.id} style={{ textAlign: 'center', margin: '20px 0' }}>
                 <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 16px', borderRadius: '16px',
-                  background: m.content.startsWith('📵') ? 'rgba(239,68,68,0.12)' : 'rgba(108,99,255,0.12)',
-                  color: m.content.startsWith('📵') ? '#fca5a5' : 'rgba(255,255,255,0.7)',
-                  border: `1px solid ${m.content.startsWith('📵') ? 'rgba(239,68,68,0.25)' : 'rgba(108,99,255,0.25)'}`,
-                  backdropFilter: 'blur(4px)',
-                  fontSize: '12px', fontWeight: 500,
+                  display: 'inline-flex', alignItems: 'center', gap: '10px',
+                  padding: '8px 18px', borderRadius: '20px',
+                  background: isMissed ? 'rgba(239,68,68,0.10)' : 'rgba(108,99,255,0.10)',
+                  border: `1px solid ${isMissed ? 'rgba(239,68,68,0.22)' : 'rgba(108,99,255,0.22)'}`,
+                  backdropFilter: 'blur(8px)',
+                  fontSize: '12px', fontWeight: 600,
+                  color: isMissed ? '#fca5a5' : 'rgba(200,200,255,0.85)',
+                  boxShadow: isMissed ? '0 2px 12px rgba(239,68,68,0.10)' : '0 2px 12px rgba(108,99,255,0.10)',
                 }}>
-                  {m.content}
+                  {/* Icon container kiểu Home page */}
+                  <span style={{
+                    width: '24px', height: '24px', borderRadius: '6px', flexShrink: 0,
+                    background: isMissed ? 'rgba(239,68,68,0.18)' : 'rgba(108,99,255,0.18)',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    filter: isMissed
+                      ? 'drop-shadow(0 0 4px rgba(239,68,68,0.45))'
+                      : 'drop-shadow(0 0 4px rgba(108,99,255,0.45))',
+                  }}>
+                    {isMissed ? (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isMissed ? '#fca5a5' : '#a5b4fc'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.18 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+                        <line x1="23" y1="1" x2="1" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m22 8-6 4 6 4V8Z" />
+                        <rect width="14" height="12" x="2" y="6" rx="2" ry="2" />
+                      </svg>
+                    )}
+                  </span>
+                  {labelText}
                 </span>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '5px' }}>
                   {fmtFull(m.createdAt)}
                 </div>
               </div>
