@@ -5,6 +5,16 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback } f
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../config/supabaseClient';
 import { useAuth } from './AuthContext';
+import { sendMessage } from '../services/chatServiceTEMP.js';
+
+// Lưu thông báo cuộc gọi nhỡ vào localStorage để hiện trong chuông
+function saveMissedCallNotif(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ ...data, savedAt: Date.now() }));
+  } catch (err) {
+    if (import.meta.env.DEV) console.warn('saveMissedCallNotif error:', err);
+  }
+}
 
 const CallContext = createContext(null);
 
@@ -41,6 +51,7 @@ export const CallProvider = ({ children }) => {
     if (isAdmin) {
       clearTimeout(ringTimerRef.current);
       clearTimeout(statusTimerRef.current);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIncomingCall(null);
       setOutgoingCall(null);
       setCallStatus(null);
@@ -95,12 +106,22 @@ export const CallProvider = ({ children }) => {
       // Đối phương từ chối (người gọi nhận)
       if (payload.type === 'reject' && outgoingCallRef.current?.callId === payload.callId) {
         clearTimeout(ringTimerRef.current);
+        const outCall = outgoingCallRef.current;
         setOutgoingCall(null);
         setCallStatus('rejected');
         clearTimeout(statusTimerRef.current);
         statusTimerRef.current = setTimeout(() => setCallStatus(null), 4000);
         if (locationRef.current.startsWith('/call/')) {
           navigate('/chat');
+        }
+        // Gửi tin nhắn vào chat + lưu thông báo chuông (bên gọi)
+        if (outCall?.receiverId && user?.id) {
+          sendMessage(user.id, outCall.receiverId, '📵 Cuộc gọi bị từ chối').catch(() => {});
+          saveMissedCallNotif('sc_missed_call_out', {
+            type: 'rejected',
+            friendId: String(outCall.receiverId),
+            friendName: outCall.receiverName || 'Người dùng',
+          });
         }
       }
 
@@ -109,9 +130,18 @@ export const CallProvider = ({ children }) => {
         (payload.type === 'cancel' || payload.type === 'no_answer') &&
         incomingCallRef.current?.callId === payload.callId
       ) {
+        const incCall = incomingCallRef.current;
         clearTimeout(ringTimerRef.current);
         setIncomingCall(null);
         setCallStatus('missed');
+        // Lưu thông báo chuông bên nhận
+        if (incCall?.callerId && user?.id) {
+          saveMissedCallNotif('sc_missed_call_in', {
+            type: 'missed',
+            friendId: String(incCall.callerId),
+            friendName: incCall.callerName || 'Người dùng',
+          });
+        }
         clearTimeout(statusTimerRef.current);
         statusTimerRef.current = setTimeout(() => setCallStatus(null), 3000);
         if (locationRef.current.startsWith('/call/')) {
@@ -160,8 +190,8 @@ export const CallProvider = ({ children }) => {
     // Timeout 10s không ai bắt máy → no_answer
     clearTimeout(ringTimerRef.current);
     const receiverId = friend.userId;
+    const receiverName = friend.fullName || 'Người dùng';
     ringTimerRef.current = setTimeout(() => {
-      // Gửi no_answer để xóa popup bên nhận VÀ báo cho trang /call bên nhận biết
       channelRef.current?.send({
         type: 'broadcast',
         event: 'call_signal',
@@ -171,7 +201,15 @@ export const CallProvider = ({ children }) => {
       setCallStatus('no_answer');
       clearTimeout(statusTimerRef.current);
       statusTimerRef.current = setTimeout(() => setCallStatus(null), 4000);
-      // Trang /call/:callId sẽ tự navigate qua useEffect watch callStatus
+      // Gửi tin nhắn vào chat + lưu thông báo chuông (bên gọi)
+      if (user?.id && receiverId) {
+        sendMessage(user.id, receiverId, '📵 Cuộc gọi nhỡ').catch(() => {});
+        saveMissedCallNotif('sc_missed_call_out', {
+          type: 'no_answer',
+          friendId: String(receiverId),
+          friendName: receiverName,
+        });
+      }
     }, 10000);
 
     // Navigate người gọi đến trang chờ

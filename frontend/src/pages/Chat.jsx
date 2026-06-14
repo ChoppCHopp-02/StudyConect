@@ -1356,6 +1356,28 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
             );
           }
 
+          // ── Tin nhắn hệ thống: cuộc gọi nhỡ hoặc tóm tắt cuộc gọi
+          if (m.content?.startsWith('📵') || m.content?.startsWith('📹')) {
+            return (
+              <div key={m.id} style={{ textAlign: 'center', margin: '16px 0' }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 16px', borderRadius: '16px',
+                  background: m.content.startsWith('📵') ? 'rgba(239,68,68,0.12)' : 'rgba(108,99,255,0.12)',
+                  color: m.content.startsWith('📵') ? '#fca5a5' : 'rgba(255,255,255,0.7)',
+                  border: `1px solid ${m.content.startsWith('📵') ? 'rgba(239,68,68,0.25)' : 'rgba(108,99,255,0.25)'}`,
+                  backdropFilter: 'blur(4px)',
+                  fontSize: '12px', fontWeight: 500,
+                }}>
+                  {m.content}
+                </span>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  {fmtFull(m.createdAt)}
+                </div>
+              </div>
+            );
+          }
+
           const isImage = m.type === 'image' || m.content?.startsWith('data:image');
 
           return (
