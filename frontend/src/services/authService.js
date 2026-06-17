@@ -103,7 +103,7 @@ export const login = async ({ email, password }) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned, password')
+    .select('id, full_name, email, password, role, university, major, avatar, bio, created_at, is_banned, reset_token, reset_expires')
     .eq('email', normalizedEmail)
     .maybeSingle();
 
@@ -131,9 +131,7 @@ export const login = async ({ email, password }) => {
         .from('users')
         .update({ password: hashedPassword })
         .eq('id', user.id);
-      if (import.meta.env.DEV) {
-        console.log(`[Auth] Tự động nâng cấp mật khẩu lên Salted SHA-256 cho: ${normalizedEmail}`);
-      }
+      if (import.meta.env.DEV) console.log(`[Auth] Tự động nâng cấp mật khẩu lên Salted SHA-256 cho: ${normalizedEmail}`);
     } catch (upgradeErr) {
       if (import.meta.env.DEV) {
         console.warn('[Auth] Không thể nâng cấp mật khẩu cũ:', upgradeErr);
@@ -168,7 +166,7 @@ export const adminLogin = async ({ email, password }) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned, password')
+    .select('id, full_name, email, password, role, created_at, is_banned')
     .eq('email', normalizedEmail)
     .maybeSingle();
 
@@ -196,9 +194,7 @@ export const adminLogin = async ({ email, password }) => {
         .from('users')
         .update({ password: hashedPassword })
         .eq('id', user.id);
-      if (import.meta.env.DEV) {
-        console.log(`[Auth] Tự động nâng cấp mật khẩu Admin lên Salted SHA-256`);
-      }
+      if (import.meta.env.DEV) console.log(`[Auth] Tự động nâng cấp mật khẩu Admin lên Salted SHA-256`);
     } catch (upgradeErr) {
       if (import.meta.env.DEV) {
         console.warn('[Auth] Không thể nâng cấp mật khẩu Admin:', upgradeErr);

@@ -82,8 +82,8 @@ export const getMyPendingInvites = async (userId) => {
   const inviterIds = invites.map(i => i.inviter_id);
 
   // Fetch groups and inviters details
-  const { data: groups } = await supabase.from('study_groups').select('id, name').in('id', groupIds);
-  const { data: users } = await supabase.from('users').select('id, full_name').in('id', inviterIds);
+  const { data: groups } = await supabase.from('study_groups').select('id, name').in('id', groupIds).limit(50);
+  const { data: users } = await supabase.from('users').select('id, full_name').in('id', inviterIds).limit(50);
 
   return invites.map(inv => {
     const group = groups?.find(g => g.id === inv.group_id);

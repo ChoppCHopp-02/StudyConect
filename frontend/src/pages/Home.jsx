@@ -545,7 +545,7 @@ export default function Home() {
           friends={friends}
           myLeaderGroups={myLeaderGroups}
           onClose={() => setShowCreateModal(false)}
-          onSubmit={(newPost) => setPosts([newPost, ...posts])}
+          onSubmit={() => {}}
         />
       )}
 

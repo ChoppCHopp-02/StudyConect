@@ -83,7 +83,7 @@ export const removeFriend = async (requestId) => {
 export const getFriends = async (userId, includePending = false) => {
   const uid = Number(userId);
 
-  let query = supabase.from('friendships').select('id, from_user_id, to_user_id, status, created_at, accepted_at');
+  let query = supabase.from('friendships').select('id, from_user_id, to_user_id, status, created_at, accepted_at').limit(100);
   if (includePending) {
     query = query.in('status', ['accepted', 'pending']);
   } else {
@@ -91,8 +91,7 @@ export const getFriends = async (userId, includePending = false) => {
   }
 
   const { data: friendships, error: fetchError } = await query
-    .or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`)
-    .limit(50);
+    .or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`);
 
   if (fetchError || !friendships || friendships.length === 0) return [];
 

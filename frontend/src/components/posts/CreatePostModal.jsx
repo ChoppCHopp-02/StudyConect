@@ -128,6 +128,7 @@ export default function CreatePostModal({ user, friends = [], myLeaderGroups = [
         taggedGroupNames: tags.filter(t => t.type === 'group').map(t => t.name),
         taggerName: user.fullName,
       });
+      alert('Bài viết đã được gửi và đang chờ admin phê duyệt.');
       setLoading(false);
       onSubmit(newPost);
       onClose();

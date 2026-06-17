@@ -1,4 +1,4 @@
-﻿===== D:\StudyConect\backend\src\app.js =====
+﻿===== C:\Users\Mervy\Desktop\StudyConect\backend\src\app.js =====
 // backend/app.js
 const express  = require('express');
 const cors     = require('cors');
@@ -55,7 +55,7 @@ app.use((err, _req, res, _next) => {
 
 module.exports = app;
 
-===== D:\StudyConect\backend\src\config\database.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\config\database.js =====
 // backend/config/database.js
 const { Sequelize } = require('sequelize');
 const logger = require('../utils/logger');
@@ -98,7 +98,7 @@ const connectDB = async () => {
 
 module.exports = { sequelize, connectDB };
 
-===== D:\StudyConect\backend\src\controllers\authController.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\controllers\authController.js =====
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -381,7 +381,7 @@ router.post('/reset-password', async (req, res) => {
 
 module.exports = router;
 
-===== D:\StudyConect\backend\src\controllers\userController.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\controllers\userController.js =====
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
@@ -513,7 +513,7 @@ router.get('/search', protect, async (req, res) => {
 
 module.exports = router;
 
-===== D:\StudyConect\backend\src\middleware\auth.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\middleware\auth.js =====
 // backend/middleware/auth.js
 const jwt = require('jsonwebtoken');
 const { apiError } = require('../utils/apiResponse');
@@ -565,7 +565,7 @@ const signToken = (user) =>
 
 module.exports = { protect, adminOnly, signToken };
 
-===== D:\StudyConect\backend\src\middleware\upload.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\middleware\upload.js =====
 const multer = require('multer');
 const { apiError } = require('../utils/apiResponse');
 
@@ -640,7 +640,7 @@ module.exports = {
   uploadImages
 };
 
-===== D:\StudyConect\backend\src\models\User.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\models\User.js =====
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -710,7 +710,7 @@ const User = sequelize.define('users', {
 
 module.exports = User;
 
-===== D:\StudyConect\backend\src\server.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\server.js =====
 // backend/server.js
 require('dotenv').config();
 const app              = require('./app');
@@ -752,7 +752,7 @@ const start = async () => {
 
 start();
 
-===== D:\StudyConect\backend\src\utils\apiResponse.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\utils\apiResponse.js =====
 // backend/utils/apiResponse.js
 // Standardized API response helpers
 
@@ -803,7 +803,7 @@ const apiPaginated = (data, total, page, limit) => ({
 
 module.exports = { apiSuccess, apiError, apiPaginated };
 
-===== D:\StudyConect\backend\src\utils\email.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\utils\email.js =====
 const nodemailer = require('nodemailer');
 const logger = require('./logger');
 
@@ -869,7 +869,7 @@ module.exports = {
   resetPasswordEmail
 };
 
-===== D:\StudyConect\backend\src\utils\logger.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\utils\logger.js =====
 // backend/utils/logger.js
 // Lightweight structured logger (no external dependencies)
 

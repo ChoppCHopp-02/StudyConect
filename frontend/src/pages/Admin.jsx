@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import AppLayout from '../layouts/AppLayout';
 import { adminLogin } from '../services/authService';
 import { adminGetUsers, adminCreateUser, adminUpdateUser, adminDeleteUser, adminGetGroups, adminCreateGroup, adminUpdateGroup, adminDeleteGroup } from '../services/adminService';
-import { getPendingFiles, approveFile, deleteFile as adminDeleteFile } from '../services/interactionService';
+import { getPendingFiles, getPendingPosts, approveFile, approvePost, deleteFile as adminDeleteFile, deletePost as adminDeletePost } from '../services/interactionService';
 import { supabase } from '../config/supabaseClient';
 import UserTable     from '@/components/admin/UserTable';
 import GroupTable    from '@/components/admin/GroupTable';
@@ -82,6 +82,36 @@ function MembersModal({ group, users, onClose }) {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
           <button className="btn btn-secondary" style={{ padding: '10px 24px' }} onClick={onClose}>Đóng</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Post Preview Modal ──────────────────────────────────────────────
+function PostPreviewModal({ post, onClose }) {
+  if (!post) return null;
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: 'var(--bg-card)', borderRadius: '16px', width: '100%', maxWidth: '560px', maxHeight: '80vh', overflow: 'auto', border: '1px solid var(--border)', padding: '24px' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Xem trước bài viết</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px' }}>✕</button>
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+          Đăng bởi <strong style={{ color: 'var(--text-secondary)' }}>{post.userFullName}</strong> · {new Date(post.createdAt).toLocaleString('vi-VN')}
+        </p>
+        <div style={{ fontSize: '15px', color: 'var(--text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+          {post.content}
+        </div>
+        {post.image && (
+          <img src={post.image} alt="" style={{ width: '100%', marginTop: '16px', borderRadius: '12px', maxHeight: '320px', objectFit: 'contain' }} />
+        )}
       </div>
     </div>
   );
@@ -372,7 +402,9 @@ export default function Admin() {
   const [users,     setUsers]     = useState([]);
   const [groups,    setGroups]    = useState([]);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [pendingPosts, setPendingPosts] = useState([]);
   const [previewingFile, setPreviewingFile] = useState(null);
+  const [previewingPost, setPreviewingPost] = useState(null);
   const [loading,   setLoading]   = useState(true);
 
   // Toasts
@@ -409,14 +441,16 @@ export default function Admin() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [allUsers, allGroups, allPendingFiles] = await Promise.all([
+      const [allUsers, allGroups, allPendingFiles, allPendingPosts] = await Promise.all([
         adminGetUsers(),
         adminGetGroups(),
-        getPendingFiles()
+        getPendingFiles(),
+        getPendingPosts()
       ]);
       setUsers(allUsers);
       setGroups(allGroups);
       setPendingFiles(allPendingFiles);
+      setPendingPosts(allPendingPosts);
     } catch (err) {
       showToast(err.message || 'Không thể tải dữ liệu admin', 'error');
     } finally {
@@ -586,6 +620,8 @@ export default function Admin() {
     );
   }
 
+  const pendingModerationCount = pendingFiles.length + pendingPosts.length;
+
   // ── Dashboard ────────────────────────────────────────────────────
   return (
     <AppLayout hideSidebar={true} hideNavbar={true}>
@@ -659,8 +695,8 @@ export default function Admin() {
                 BẢNG ĐIỀU HÀNH QUẢN TRỊ
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '6px 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span>Hệ thống quản lý tài khoản, phòng học và kiểm duyệt tài liệu độc lập</span>
-                {pendingFiles.length > 0 && (
+                <span>Hệ thống quản lý tài khoản, phòng học và kiểm duyệt nội dung</span>
+                {pendingModerationCount > 0 && (
                   <span style={{
                     background: 'rgba(244,63,94,0.12)',
                     color: 'var(--error)',
@@ -674,7 +710,7 @@ export default function Admin() {
                     gap: '4px'
                   }}>
                     <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--error)', animation: 'pulseGlow 1.8s infinite' }} />
-                    Có {pendingFiles.length} tài liệu chờ duyệt
+                    Có {pendingModerationCount} nội dung chờ duyệt
                   </span>
                 )}
               </p>
@@ -723,7 +759,7 @@ export default function Admin() {
               },
               {
                 key: 'pendingFiles',
-                label: 'Kiểm duyệt tài liệu',
+                label: 'Kiểm duyệt nội dung',
                 icon: (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -733,7 +769,7 @@ export default function Admin() {
                     <polyline points="10 9 9 9 8 9" />
                   </svg>
                 ),
-                count: pendingFiles.length
+                count: pendingModerationCount
               },
               {
                 key: 'stats',
@@ -839,13 +875,14 @@ export default function Admin() {
               {activeTab === 'pendingFiles' && (
                 <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '28px 32px', boxShadow: 'var(--shadow), var(--shadow-glow)', backdropFilter: 'blur(16px)' }}>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Danh sách tài liệu chờ kiểm duyệt</h3>
-                      <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Tài liệu cần được admin phê duyệt trước khi xuất hiện trong nhóm học</p>
+                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Kiểm duyệt nội dung</h3>
+                      <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Bài viết và tài liệu cần được admin phê duyệt trước khi hiển thị công khai</p>
                     </div>
                   </div>
-                  {pendingFiles.length === 0 ? (
+
+                  {pendingModerationCount === 0 ? (
                     <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
                       <div style={{ display: 'inline-flex', width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(52,211,153,0.1)', alignItems: 'center', justifyContent: 'center', color: '#34d399', marginBottom: '16px', border: '1px solid rgba(52,211,153,0.2)', boxShadow: '0 0 15px rgba(52,211,153,0.1)' }}>
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -853,24 +890,107 @@ export default function Admin() {
                           <polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
                       </div>
-                      <p style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Không có tài liệu nào đang chờ duyệt</p>
-                      <p style={{ fontSize: '13px', margin: '4px 0 0 0' }}>Tất cả tài liệu đăng lên đã được xử lý sạch sẽ.</p>
+                      <p style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Không có nội dung nào đang chờ duyệt</p>
+                      <p style={{ fontSize: '13px', margin: '4px 0 0 0' }}>Tất cả bài viết và tài liệu đã được xử lý.</p>
                     </div>
                   ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                            <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>TÊN TÀI LIỆU</th>
-                            <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>NHÓM HỌC</th>
-                            <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>NGƯỜI ĐĂNG</th>
-                            <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>THỜI GIAN ĐĂNG</th>
-                            <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>DUNG LƯỢNG</th>
-                            <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap', width: '1%' }}>HÀNH ĐỘNG</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pendingFiles.map((f) => (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                      {pendingPosts.length > 0 && (
+                        <div>
+                          <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>Bài viết chờ duyệt ({pendingPosts.length})</h4>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px' }}>
+                              <thead>
+                                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>NỘI DUNG</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>NGƯỜI ĐĂNG</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>THỜI GIAN</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, width: '1%' }}>HÀNH ĐỘNG</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {pendingPosts.map((p) => (
+                                  <tr key={p.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                                    <td style={{ padding: '16px', maxWidth: '360px' }}>
+                                      <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                        {p.content}
+                                      </div>
+                                      {p.image && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>📷 Có ảnh đính kèm</span>}
+                                    </td>
+                                    <td style={{ padding: '16px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{p.userFullName}</td>
+                                    <td style={{ padding: '16px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{new Date(p.createdAt).toLocaleString('vi-VN')}</td>
+                                    <td style={{ padding: '16px', width: '1%', whiteSpace: 'nowrap' }}>
+                                      <div style={{ display: 'flex', gap: '6px' }}>
+                                        <button onClick={() => setPreviewingPost(p)} style={{ padding: '5px 10px', background: 'rgba(108,99,255,0.1)', border: '1px solid rgba(108,99,255,0.2)', color: 'var(--primary-light)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}>Xem</button>
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              await approvePost(p.id);
+                                              if (adminChannelRef.current) {
+                                                adminChannelRef.current.send({
+                                                  type: 'broadcast',
+                                                  event: 'post_approved',
+                                                  payload: { postId: p.id, userId: p.userId, userFullName: p.userFullName }
+                                                });
+                                              }
+                                              showToast('Phê duyệt bài viết thành công!');
+                                              loadData();
+                                            } catch (err) {
+                                              showToast(err.message || 'Lỗi duyệt bài viết', 'error');
+                                            }
+                                          }}
+                                          style={{ padding: '5px 10px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', color: '#4ade80', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                                        >Duyệt</button>
+                                        <button
+                                          onClick={() => {
+                                            setConfirmConfig({
+                                              title: 'Từ chối bài viết',
+                                              message: 'Bạn có chắc chắn muốn từ chối và xóa bài viết này?',
+                                              confirmText: 'Từ chối & Xóa',
+                                              cancelText: 'Giữ lại',
+                                              variant: 'danger',
+                                              onConfirm: async () => {
+                                                setConfirmConfig(null);
+                                                try {
+                                                  await adminDeletePost(p.id);
+                                                  showToast('Đã từ chối và xóa bài viết!');
+                                                  loadData();
+                                                } catch (err) {
+                                                  showToast(err.message || 'Lỗi xóa bài viết', 'error');
+                                                }
+                                              },
+                                              onCancel: () => setConfirmConfig(null),
+                                            });
+                                          }}
+                                          style={{ padding: '5px 10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                                        >Xóa</button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {pendingFiles.length > 0 && (
+                        <div>
+                          <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>Tài liệu chờ duyệt ({pendingFiles.length})</h4>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px' }}>
+                              <thead>
+                                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>TÊN TÀI LIỆU</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>NHÓM HỌC</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>NGƯỜI ĐĂNG</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>THỜI GIAN ĐĂNG</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>DUNG LƯỢNG</th>
+                                  <th style={{ padding: '12px 16px', fontWeight: 600, whiteSpace: 'nowrap', width: '1%' }}>HÀNH ĐỘNG</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {pendingFiles.map((f) => (
                             <tr key={f.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}>
                               <td style={{ padding: '16px', fontWeight: 600 }}>
                                 <a href={f.fileData} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-light)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -984,6 +1104,9 @@ export default function Admin() {
                         </tbody>
                       </table>
                     </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -1089,6 +1212,7 @@ export default function Admin() {
       <GroupFormModal show={showGroupModal} onClose={() => setShowGroupModal(false)} currentEditGroup={currentEditGroup} groupForm={groupForm} setGroupForm={setGroupForm} locationSearchVal={locationSearchVal} setLocationSearchVal={setLocationSearchVal} onSubmit={handleGroupSubmit} submitting={submittingGroup} />
       <MembersModal group={selectedGroupMembers} users={users} onClose={() => setSelectedGroupMembers(null)} />
       <FilePreviewModal file={previewingFile} onClose={() => setPreviewingFile(null)} />
+      <PostPreviewModal post={previewingPost} onClose={() => setPreviewingPost(null)} />
       <ConfirmModal
         isOpen={!!confirmConfig}
         title={confirmConfig?.title}

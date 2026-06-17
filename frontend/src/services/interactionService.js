@@ -50,6 +50,7 @@ export const getPosts = async (currentUserId) => {
       )
     `)
     .in('user_id', allowedUserIds)
+    .eq('approved', true)
     .order('created_at', { ascending: false })
     .limit(10);
 
@@ -94,10 +95,10 @@ export const getPosts = async (currentUserId) => {
 
     const [usersRes, groupsRes] = await Promise.all([
       taggedUserIds.length > 0
-        ? supabase.from('users').select('id, full_name').in('id', taggedUserIds.map(Number))
+        ? supabase.from('users').select('id, full_name').in('id', taggedUserIds.map(Number)).limit(50)
         : Promise.resolve({ data: [] }),
       taggedGroupIds.length > 0
-        ? supabase.from('study_groups').select('id, name').in('id', taggedGroupIds.map(Number))
+        ? supabase.from('study_groups').select('id, name').in('id', taggedGroupIds.map(Number)).limit(50)
         : Promise.resolve({ data: [] })
     ]);
 
@@ -202,7 +203,8 @@ export const createPost = async (groupIdOrDetails, detailsObject) => {
         comments_count: 0,
         likes: [],
         group_id: safeGroupId,
-        image: image || null
+        image: image || null,
+        approved: false
       }
     ])
     .select(`
@@ -336,6 +338,45 @@ export const deletePost = async (postId) => {
 
   if (error) {
     throw new Error(`Xóa câu hỏi thất bại: ${error.message}`);
+  }
+};
+
+export const getPendingPosts = async () => {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`
+      id, content, image, tag, created_at, user_id,
+      users (
+        full_name,
+        avatar
+      )
+    `)
+    .eq('approved', false)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) return [];
+
+  return (data || []).map(p => ({
+    id: p.id.toString(),
+    userId: p.user_id,
+    userFullName: p.users?.full_name || 'Người dùng',
+    userAvatar: p.users?.avatar || '',
+    content: p.content,
+    image: p.image || null,
+    tag: p.tag || null,
+    createdAt: p.created_at
+  }));
+};
+
+export const approvePost = async (postId) => {
+  const { error } = await supabase
+    .from('posts')
+    .update({ approved: true })
+    .eq('id', parseInt(postId, 10));
+
+  if (error) {
+    throw new Error(`Duyệt bài viết thất bại: ${error.message}`);
   }
 };
 
@@ -477,9 +518,11 @@ export const getFiles = async (groupId) => {
   const { data, error } = await supabase
     .from('files')
     .select(`
-      *,
+      id, group_id, user_id, file_name, file_url, file_type, file_size, approved, created_at,
       users (
-        full_name
+        id,
+        full_name,
+        avatar
       )
     `)
     .eq('group_id', parseInt(groupId, 10))
@@ -527,7 +570,7 @@ export const getPendingFiles = async () => {
   const { data, error } = await supabase
     .from('files')
     .select(`
-      *,
+      id, group_id, user_id, file_name, file_size, file_type, file_url, approved, created_at,
       users (
         full_name
       ),
@@ -597,7 +640,8 @@ export const uploadFile = async (groupId, { fileName, fileSize, fileType, fileDa
         file_name: fileName,
         file_size: fileSize || 0,
         file_type: fileType || '',
-        file_url: fileData // Base64 data url or secure URL
+        file_url: fileData, // Base64 data url or secure URL
+        approved: false
       }
     ])
     .select(`
@@ -736,13 +780,14 @@ export const getDeadlines = async (groupId) => {
   const { data, error } = await supabase
     .from('deadlines')
     .select(`
-      *,
+      id, title, due_date, group_id, creator_id, description, assignee_id, completed, created_at,
       users:users!assignee_id (
         full_name
       )
     `)
     .eq('group_id', parseInt(groupId, 10))
-    .order('due_date', { ascending: true });
+    .order('due_date', { ascending: true })
+    .limit(50);
 
   if (error) {
     // Fallback if relation not supported
@@ -1139,6 +1184,7 @@ export const getUserPosts = async (friendId) => {
       users (full_name, avatar, university)
     `)
     .eq('user_id', uid)
+    .eq('approved', true)
     .order('created_at', { ascending: false })
     .limit(10);
 

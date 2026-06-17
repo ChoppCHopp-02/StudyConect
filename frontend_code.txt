@@ -1,4 +1,4 @@
-﻿===== D:\StudyConect\frontend\src\App.jsx =====
+﻿===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\App.jsx =====
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -205,7 +205,7 @@ export default function App() {
   );
 }
 
-===== D:\StudyConect\frontend\src\components\admin\AdminStats.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\admin\AdminStats.jsx =====
 // Admin Stats bar component
 export default function AdminStats({ totalUsersCount, totalGroupsCount, totalAdminsCount }) {
   const stats = [
@@ -241,7 +241,7 @@ export default function AdminStats({ totalUsersCount, totalGroupsCount, totalAdm
   );
 }
 
-===== D:\StudyConect\frontend\src\components\admin\GroupFormModal.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\admin\GroupFormModal.jsx =====
 export default function GroupFormModal({ show, onClose, currentEditGroup, groupForm, setGroupForm, onSubmit, submitting }) {
   if (!show) return null;
   return (
@@ -320,7 +320,7 @@ export default function GroupFormModal({ show, onClose, currentEditGroup, groupF
   );
 }
 
-===== D:\StudyConect\frontend\src\components\admin\GroupTable.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\admin\GroupTable.jsx =====
 export default function GroupTable({ filteredGroups, groupSearch, setGroupSearch, users, onEdit, onDelete, onViewMembers, onCreateNew }) {
   return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '28px 32px', boxShadow: 'var(--shadow), var(--shadow-glow)', backdropFilter: 'blur(16px)' }}>
@@ -451,7 +451,7 @@ export default function GroupTable({ filteredGroups, groupSearch, setGroupSearch
   );
 }
 
-===== D:\StudyConect\frontend\src\components\admin\UserFormModal.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\admin\UserFormModal.jsx =====
 import { HCM_UNIVERSITIES, MAJORS } from '@/constants/educationData';
 
 const IS = { // inputStyle shorthand
@@ -573,7 +573,7 @@ export default function UserFormModal({ show, onClose, currentEditUser, userForm
   );
 }
 
-===== D:\StudyConect\frontend\src\components\admin\UserTable.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\admin\UserTable.jsx =====
 // User management table for Admin panel
 export default function UserTable({ filteredUsers, admin, userSearch, setUserSearch, onEdit, onDelete, onCreateNew }) {
   return (
@@ -694,7 +694,7 @@ export default function UserTable({ filteredUsers, admin, userSearch, setUserSea
   );
 }
 
-===== D:\StudyConect\frontend\src\components\CallNotification.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\CallNotification.jsx =====
 // src/components/CallNotification.jsx
 // Popup thĂ´ng bĂ¡o cuá»™c gá»i Ä‘áº¿n â€” hiá»ƒn thá»‹ overlay trĂªn Má»ŒI trang
 import { useEffect, useRef } from 'react';
@@ -967,7 +967,7 @@ export default function CallNotification() {
   );
 }
 
-===== D:\StudyConect\frontend\src\components\common\Avatar.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\common\Avatar.jsx =====
 // src/components/common/Avatar.jsx
 // Reusable avatar component â€” hiá»ƒn thá»‹ áº£nh hoáº·c initial letter
 
@@ -1034,7 +1034,7 @@ export default function Avatar({ src, initial = 'U', color, size = 40, alt = '' 
   );
 }
 
-===== D:\StudyConect\frontend\src\components\common\ErrorBoundary.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\common\ErrorBoundary.jsx =====
 // src/components/common/ErrorBoundary.jsx
 // React Error Boundary â€” ngÄƒn toĂ n app crash khi 1 component lá»—i
 
@@ -1111,7 +1111,7 @@ export default class ErrorBoundary extends Component {
   }
 }
 
-===== D:\StudyConect\frontend\src\components\common\index.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\common\index.js =====
 // src/components/common/index.js
 // Barrel export cho táº¥t cáº£ common components
 export { default as Avatar } from './Avatar';
@@ -1120,7 +1120,7 @@ export { default as Spinner } from './Spinner';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { Toast, useToast } from './Toast';
 
-===== D:\StudyConect\frontend\src\components\common\Modal.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\common\Modal.jsx =====
 // src/components/common/Modal.jsx
 // Reusable base modal â€” backdrop + container + close-on-backdrop
 
@@ -1296,7 +1296,7 @@ Modal.Footer = function ModalFooter({ children, style = {} }) {
   );
 };
 
-===== D:\StudyConect\frontend\src\components\common\Spinner.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\common\Spinner.jsx =====
 // src/components/common/Spinner.jsx
 // Loading spinner component
 
@@ -1341,7 +1341,7 @@ export default function Spinner({ size = 'md', color = 'var(--primary-light)', l
   );
 }
 
-===== D:\StudyConect\frontend\src\components\common\Toast.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\common\Toast.jsx =====
 // src/components/common/Toast.jsx
 // Toast notification component + useToast hook
 /* eslint-disable react-refresh/only-export-components */
@@ -1413,7 +1413,7 @@ export const useToast = () => {
 
 export default Toast;
 
-===== D:\StudyConect\frontend\src\components\ConfirmModal.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\ConfirmModal.jsx =====
 import { useEffect } from 'react';
 
 /**
@@ -1591,7 +1591,7 @@ export default function ConfirmModal({
   );
 }
 
-===== D:\StudyConect\frontend\src\components\GlobalMessageListener.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\GlobalMessageListener.jsx =====
 import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../config/supabaseClient';
@@ -2148,7 +2148,7 @@ export default function GlobalMessageListener() {
   return null;
 }
 
-===== D:\StudyConect\frontend\src\components\groups\GroupChatPanel.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\groups\GroupChatPanel.jsx =====
 import { useRef, useEffect, useState } from 'react';
 import { formatBytes } from '../../utils';
 import MessageMenu from './MessageMenu';
@@ -3173,7 +3173,7 @@ export default function GroupChatPanel({
   );
 }
 
-===== D:\StudyConect\frontend\src\components\groups\GroupDeadlines.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\groups\GroupDeadlines.jsx =====
 import { useRef } from 'react';
 
 const format24h = (dateStr) => {
@@ -4248,7 +4248,7 @@ export default function GroupDeadlines({
   );
 }
 
-===== D:\StudyConect\frontend\src\components\groups\GroupDocuments.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\groups\GroupDocuments.jsx =====
 import { useState } from 'react';
 import { formatBytes } from '@/utils';
 
@@ -4576,7 +4576,7 @@ export default function GroupDocuments({
   );
 }
 
-===== D:\StudyConect\frontend\src\components\groups\GroupMembers.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\groups\GroupMembers.jsx =====
 export default function GroupMembers({
   group,
   user,
@@ -4914,7 +4914,7 @@ export default function GroupMembers({
   );
 }
 
-===== D:\StudyConect\frontend\src\components\groups\GroupSchedule.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\groups\GroupSchedule.jsx =====
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { geocodeAddress, staticMapUrl, googleMapsSearchUrl } from '../../utils/geocoding';
@@ -5788,7 +5788,7 @@ export default function GroupSchedule({
   );
 }
 
-===== D:\StudyConect\frontend\src\components\groups\MessageMenu.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\groups\MessageMenu.jsx =====
 import { useEffect, useRef, useState } from 'react';
 
 export default function MessageMenu({ x, y, isMine, isPinned, canPin, onDelete, onReply, onPin, onClose }) {
@@ -5946,7 +5946,7 @@ export default function MessageMenu({ x, y, isMine, isPinned, canPin, onDelete, 
   );
 }
 
-===== D:\StudyConect\frontend\src\components\notifications\NotificationBell.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\notifications\NotificationBell.jsx =====
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '@/context/NotificationContext';
@@ -6251,7 +6251,7 @@ export default function NotificationBell({ style }) {
   );
 }
 
-===== D:\StudyConect\frontend\src\components\notifications\NotificationItem.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\notifications\NotificationItem.jsx =====
 import { timeAgo } from '@/utils';
 
 export default function NotificationItem({
@@ -6501,7 +6501,7 @@ export default function NotificationItem({
   );
 }
 
-===== D:\StudyConect\frontend\src\components\posts\CommentRow.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\posts\CommentRow.jsx =====
 import Avatar from '@/components/common/Avatar';
 import { timeAgo } from '@/utils';
 
@@ -6567,7 +6567,7 @@ export default function CommentRow({ comment: c, onReply }) {
   );
 }
 
-===== D:\StudyConect\frontend\src\components\posts\CreatePostModal.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\posts\CreatePostModal.jsx =====
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Avatar from '@/components/common/Avatar';
 import { createPost } from '@/services/interactionService';
@@ -6920,7 +6920,7 @@ export default function CreatePostModal({ user, friends = [], myLeaderGroups = [
   );
 }
 
-===== D:\StudyConect\frontend\src\components\posts\LikeCommentBar.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\posts\LikeCommentBar.jsx =====
 import { useState, useRef, useEffect } from 'react';
 
 export default function LikeCommentBar({ isLiked, likedEmoji, showComments, onLike, onToggleComments }) {
@@ -6983,7 +6983,7 @@ export default function LikeCommentBar({ isLiked, likedEmoji, showComments, onLi
   );
 }
 
-===== D:\StudyConect\frontend\src\components\posts\PostCard.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\posts\PostCard.jsx =====
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Avatar from '@/components/common/Avatar';
@@ -7402,7 +7402,7 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
   );
 }
 
-===== D:\StudyConect\frontend\src\components\posts\PostList.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\posts\PostList.jsx =====
 import PostCard from './PostCard';
 
 export default function PostList({ posts, currentUser, onLike, onDelete, onComment, onPin }) {
@@ -7441,12 +7441,12 @@ export default function PostList({ posts, currentUser, onLike, onDelete, onComme
   );
 }
 
-===== D:\StudyConect\frontend\src\components\Toast.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\components\Toast.jsx =====
 // src/components/Toast.jsx
 // Redirects useToast to our global ToastContext for absolute unified state
 export { useToast } from '@/context/ToastContext';
 
-===== D:\StudyConect\frontend\src\config\supabaseClient.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\config\supabaseClient.js =====
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -7464,7 +7464,7 @@ export const supabase = createClient(
   supabaseKey || ''
 );
 
-===== D:\StudyConect\frontend\src\constants\educationData.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\constants\educationData.js =====
 // src/constants/educationData.js
 
 export const HCM_UNIVERSITIES = [
@@ -7859,7 +7859,7 @@ export const SUBJECTS_BY_MAJOR = {
   ],
 };
 
-===== D:\StudyConect\frontend\src\constants\index.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\constants\index.js =====
 // src/constants/index.js
 // Barrel export â€” táº¥t cáº£ constants trong app
 
@@ -7929,7 +7929,7 @@ export const AVATAR_COLORS = [
   '#ef4444',
 ];
 
-===== D:\StudyConect\frontend\src\constants\locationData.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\constants\locationData.js =====
 // src/constants/locationData.js
 
 export const VIETNAM_LOCATIONS = {
@@ -7969,7 +7969,7 @@ export const VIETNAM_LOCATIONS = {
   'VÄ©nh Long': ['ThĂ nh phá»‘ VÄ©nh Long', 'Thá»‹ xĂ£ BĂ¬nh Minh', 'Huyá»‡n Long Há»“', 'Huyá»‡n Mang ThĂ­t', 'Huyá»‡n VÅ©ng LiĂªm', 'Huyá»‡n Tam BĂ¬nh', 'Huyá»‡n TrĂ  Ă”n', 'Huyá»‡n BĂ¬nh TĂ¢n', 'ThĂ nh phá»‘ Báº¿n Tre', 'Huyá»‡n Ba Tri', 'Huyá»‡n BĂ¬nh Äáº¡i', 'Huyá»‡n ChĂ¢u ThĂ nh', 'Huyá»‡n Chá»£ LĂ¡ch', 'Huyá»‡n Giá»“ng TrĂ´m', 'Huyá»‡n Má» CĂ y Báº¯c', 'Huyá»‡n Má» CĂ y Nam', 'Huyá»‡n Tháº¡nh PhĂº', 'ThĂ nh phá»‘ TrĂ  Vinh', 'Thá»‹ xĂ£ DuyĂªn Háº£i', 'Huyá»‡n CĂ ng Long', 'Huyá»‡n Cáº§u KĂ¨', 'Huyá»‡n Tiá»ƒu Cáº§n', 'Huyá»‡n ChĂ¢u ThĂ nh', 'Huyá»‡n TrĂ  CĂº', 'Huyá»‡n Cáº§u Ngang', 'Huyá»‡n DuyĂªn Háº£i']
 };
 
-===== D:\StudyConect\frontend\src\constants\storageKeys.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\constants\storageKeys.js =====
 // src/constants/storageKeys.js
 // Táº­p trung táº¥t cáº£ localStorage keys â€” trĂ¡nh hardcode ráº£i rĂ¡c
 
@@ -7985,7 +7985,7 @@ export const STORAGE_KEYS = {
   submissions: (groupId) => `sc_submissions_${groupId}`,
 };
 
-===== D:\StudyConect\frontend\src\context\AuthContext.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\context\AuthContext.jsx =====
 // src/context/AuthContext.jsx
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState } from 'react';
@@ -8050,7 +8050,7 @@ export const useAuth = () => {
   return ctx;
 };
 
-===== D:\StudyConect\frontend\src\context\CallContext.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\context\CallContext.jsx =====
 // src/context/CallContext.jsx
 // Context toĂ n cá»¥c quáº£n lĂ½ gá»i video riĂªng tÆ° â€” hoáº¡t Ä‘á»™ng trĂªn má»i trang
 /* eslint-disable react-refresh/only-export-components */
@@ -8313,7 +8313,7 @@ export const useCall = () => {
   return ctx;
 };
 
-===== D:\StudyConect\frontend\src\context\NotificationContext.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\context\NotificationContext.jsx =====
 import { createContext, useContext, useState } from 'react';
 import { useAuth } from './AuthContext';
 import useNotifications from '../hooks/useNotifications';
@@ -8358,7 +8358,7 @@ export const NotificationProvider = ({ children }) => {
   );
 };
 
-===== D:\StudyConect\frontend\src\context\ToastContext.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\context\ToastContext.jsx =====
 import { createContext, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8505,7 +8505,7 @@ export const ToastProvider = ({ children }) => {
   );
 };
 
-===== D:\StudyConect\frontend\src\hooks\useGroupDetail.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\hooks\useGroupDetail.js =====
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -8736,7 +8736,7 @@ export default function useGroupDetail(groupId, user, addToast) {
     try {
       const { data, error } = await supabase
         .from('friendships')
-        .select('*')
+        .select('id, from_user_id, to_user_id, status')
         .or(`from_user_id.eq.${parseInt(user.id, 10)},to_user_id.eq.${parseInt(user.id, 10)}`);
       
       if (!error && data) {
@@ -9785,7 +9785,7 @@ export default function useGroupDetail(groupId, user, addToast) {
   };
 }
 
-===== D:\StudyConect\frontend\src\hooks\useNotifications.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\hooks\useNotifications.js =====
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/config/supabaseClient';
@@ -9989,13 +9989,14 @@ export default function useNotifications(userId) {
         const { data: schedules } = await supabase
           .from('schedules')
           .select(`
-            *,
+            id, group_id, topic, date_time, created_at,
             study_groups (
               name
             )
           `)
           .in('group_id', joinedIds)
-          .gte('date_time', now.toISOString());
+          .gte('date_time', now.toISOString())
+          .limit(50);
 
         if (schedules) {
           schedules
@@ -10016,13 +10017,14 @@ export default function useNotifications(userId) {
         const { data: deadlines } = await supabase
           .from('deadlines')
           .select(`
-            *,
+            id, group_id, title, due_date, assignee_id, created_at,
             study_groups (
               name
             )
           `)
           .in('group_id', joinedIds)
-          .eq('completed', false);
+          .eq('completed', false)
+          .limit(50);
 
         if (deadlines) {
           deadlines
@@ -10439,96 +10441,6 @@ export default function useNotifications(userId) {
         console.warn('Error reading local demotions:', err);
       }
 
-      // 4b. Fetch messages, comments, reactions, and files from localStorage (as fallback/offline/fast sync)
-      // Local Private Messages
-      try {
-        const localChats = JSON.parse(localStorage.getItem('sc_chats') || '[]');
-        if (Array.isArray(localChats)) {
-          localChats.forEach(m => {
-            if (String(m.receiver_id) === String(uid) && String(m.sender_id) !== String(uid)) {
-              const age = now - new Date(m.created_at);
-              if (age > 0 && age < 5 * 60 * 1000) { // 5 minutes
-                const key = `privatemsg:local:${m.id || m.created_at}`;
-                if (!notifsList.some(n => n.key === key)) {
-                  notifsList.push({
-                    key,
-                    type: 'privatemsg',
-                    title: `đŸ’¬ Tin nháº¯n tá»« ${m.sender_name || 'NgÆ°á»i dĂ¹ng'}`,
-                    body: m.content || '',
-                    createdAt: m.created_at,
-                    senderId: String(m.sender_id)
-                  });
-                }
-              }
-            }
-          });
-        }
-      } catch (err) {
-        console.warn('Error parsing local messages:', err);
-      }
-
-
-
-      // Local Reactions
-      try {
-        for (let i = 0; i < localStorage.length; i++) {
-          const lKey = localStorage.key(i);
-          if (lKey && lKey.startsWith('reactions_')) {
-            const postId = lKey.replace('reactions_', '');
-            const localReactions = JSON.parse(localStorage.getItem(lKey) || '[]');
-            if (Array.isArray(localReactions)) {
-              localReactions.forEach(r => {
-                const age = now - new Date(r.createdAt || r.created_at);
-                if (age > 0 && age < 60 * 60 * 1000) { // 1 hour
-                  if (String(r.postOwnerId || r.post_owner_id) === String(uid) && String(r.userId || r.user_id) !== String(uid)) {
-                    const key = `like:local:${postId}:${r.userId || r.user_id}`;
-                    if (!notifsList.some(n => n.key === key)) {
-                      const emoji = r.emoji || 'â¤ï¸';
-                      notifsList.push({
-                        key,
-                        type: 'like',
-                        title: `${emoji} TÆ°Æ¡ng tĂ¡c bĂ i viáº¿t`,
-                        body: `${r.userName || r.user_name || 'NgÆ°á»i dĂ¹ng'} Ä‘Ă£ tháº£ cáº£m xĂºc vĂ o bĂ i viáº¿t cá»§a báº¡n`,
-                        createdAt: r.createdAt || r.created_at,
-                        postId: postId
-                      });
-                    }
-                  }
-                }
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Error parsing local reactions:', err);
-      }
-
-      // Local Files
-      try {
-        const localFiles = JSON.parse(localStorage.getItem('sc_files') || '[]');
-        if (Array.isArray(localFiles)) {
-          localFiles.forEach(f => {
-            const age = now - new Date(f.created_at);
-            if (age > 0 && age < 24 * 60 * 60 * 1000) { // 24 hours
-              if (String(f.user_id) !== String(uid) && userGroupIds.has(Number(f.group_id))) {
-                const key = `file:local:${f.id || f.created_at}`;
-                if (!notifsList.some(n => n.key === key)) {
-                  notifsList.push({
-                    key,
-                    type: 'fileupload',
-                    title: 'đŸ“ TĂ i liá»‡u nhĂ³m má»›i',
-                    body: `${f.user_name || 'ThĂ nh viĂªn'} Ä‘Ă£ táº£i lĂªn tĂ i liá»‡u "${f.file_name}" trong nhĂ³m "${f.group_name || 'há»c'}"`,
-                    createdAt: f.created_at,
-                    groupId: String(f.group_id)
-                  });
-                }
-              }
-            }
-          });
-        }
-      } catch (err) {
-        console.warn('Error parsing local files:', err);
-      }
       // Post Tag Notifications (from Supabase post_tags)
       try {
         const joinedGroupIdsStr = Array.from(userGroupIds).map(String);
@@ -10761,7 +10673,7 @@ export default function useNotifications(userId) {
   };
 }
 
-===== D:\StudyConect\frontend\src\layouts\AppLayout.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\layouts\AppLayout.jsx =====
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -11347,7 +11259,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
   );
 }
 
-===== D:\StudyConect\frontend\src\main.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\main.jsx =====
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
@@ -11359,7 +11271,7 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-===== D:\StudyConect\frontend\src\pages\Admin.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Admin.jsx =====
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../layouts/AppLayout';
@@ -12465,7 +12377,7 @@ export default function Admin() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Chat.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Chat.jsx =====
 // src/pages/Chat.jsx
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -15131,7 +15043,7 @@ export default function Chat() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\ForgotPassword.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\ForgotPassword.jsx =====
 // src/pages/ForgotPassword.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -15376,7 +15288,7 @@ export default function ForgotPassword() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Friend.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Friend.jsx =====
 // src/pages/Friends.jsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -16159,7 +16071,7 @@ export default function Friends() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\FriendDetail.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\FriendDetail.jsx =====
 // src/pages/FriendDetail.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -16310,7 +16222,7 @@ export default function FriendDetail() {
       try {
         const { data, error } = await supabase
           .from('users')
-          .select('*')
+          .select('id, full_name, email, avatar, university, major, bio, created_at')
           .eq('id', parseInt(id, 10))
           .single();
 
@@ -16877,7 +16789,7 @@ export default function FriendDetail() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\GroupDetail.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\GroupDetail.jsx =====
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -17292,7 +17204,7 @@ export default function GroupDetail() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Groups.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Groups.jsx =====
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -18828,7 +18740,7 @@ export default function Groups() {
 );
 }
 
-===== D:\StudyConect\frontend\src\pages\Home.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Home.jsx =====
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
@@ -18934,14 +18846,8 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const fetchPosts = useCallback(async () => {
     if (!user?.id) return;
-    if (import.meta.env.DEV) {
-      console.log('user.id:', user?.id);
-    }
     try {
       const data = await getPosts(user.id);
-      if (import.meta.env.DEV) {
-        console.log('posts fetched:', data?.length);
-      }
       setPosts(data);
       // Cache removed to comply with quota limits
     } catch (err) {
@@ -19400,7 +19306,7 @@ export default function Home() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Login.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Login.jsx =====
 // src/pages/Login.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19556,7 +19462,7 @@ export default function Login() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Meetroom.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Meetroom.jsx =====
 // src/pages/Meetroom.jsx  â€” WebRTC Video Call (phĂ²ng há»c online thá»±c sá»±)
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
@@ -21712,7 +21618,7 @@ function CtrlBtn({ active, onClick, danger, highlight, icon, label, badge = null
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\MyDocument.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\MyDocument.jsx =====
 // src/pages/MyDocuments.jsx
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
@@ -22289,7 +22195,7 @@ export default function MyDocuments() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\PrivateCall.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\PrivateCall.jsx =====
 /* eslint-disable no-undef */
 // src/pages/PrivateCall.jsx
 // Trang gá»i video riĂªng tÆ° 1-1 â€” hoĂ n toĂ n khĂ¡c vá»›i Meetroom
@@ -23152,7 +23058,7 @@ export default function PrivateCall() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Profile.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Profile.jsx =====
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
@@ -23787,7 +23693,7 @@ export default function Profile() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Register.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Register.jsx =====
 // src/pages/Register.jsx
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -24380,7 +24286,7 @@ export default function Register() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\ResetPassword.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\ResetPassword.jsx =====
 // src/pages/ResetPassword.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -24680,7 +24586,7 @@ export default function ResetPassword() {
   );
 }
 
-===== D:\StudyConect\frontend\src\pages\Schedule.jsx =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\pages\Schedule.jsx =====
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -25163,7 +25069,7 @@ export default function Schedule() {
   );
 }
 
-===== D:\StudyConect\frontend\src\services\adminService.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\services\adminService.js =====
 // src/services/adminService.js
 import { supabase } from '@/config/supabaseClient';
 import { hashPassword } from './authService';
@@ -25209,7 +25115,7 @@ const mapGroup = (g) => {
 export const adminGetUsers = async () => {
   const { data, error } = await supabase
     .from('users')
-    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Lá»—i táº£i danh sĂ¡ch ngÆ°á»i dĂ¹ng: ${error.message}`);
@@ -25243,7 +25149,7 @@ export const adminCreateUser = async ({ fullName, email, password, role, univers
         avatar: ''
       }
     ])
-    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned')
     .single();
 
   if (insertError) throw new Error(`ThĂªm ngÆ°á»i dĂ¹ng tháº¥t báº¡i: ${insertError.message}`);
@@ -25286,7 +25192,7 @@ export const adminUpdateUser = async (userId, data) => {
     .from('users')
     .update(updateData)
     .eq('id', uid)
-    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned')
     .single();
 
   if (updateError) throw new Error(`Cáº­p nháº­t ngÆ°á»i dĂ¹ng tháº¥t báº¡i: ${updateError.message}`);
@@ -25337,7 +25243,7 @@ export const adminDeleteUser = async (userId) => {
 export const adminGetGroups = async () => {
   const { data, error } = await supabase
     .from('study_groups')
-    .select('id, name, subject, description, creator_id, created_at, group_members(user_id, role)');
+    .select('id, name, subject, description, is_private, max_members, creator_id, created_at, group_members(user_id, role)');
 
   if (error) throw new Error(`Lá»—i táº£i danh sĂ¡ch nhĂ³m: ${error.message}`);
   
@@ -25537,7 +25443,7 @@ export const adminDeleteGroup = async (groupId) => {
   if (error) throw new Error(`XĂ³a nhĂ³m tháº¥t báº¡i: ${error.message}`);
 };
 
-===== D:\StudyConect\frontend\src\services\authService.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\services\authService.js =====
 // src/services/authService.js
 import { supabase } from '@/config/supabaseClient';
 
@@ -25643,7 +25549,7 @@ export const login = async ({ email, password }) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned, password')
+    .select('id, full_name, email, password, role, university, major, avatar, bio, created_at, is_banned, reset_token, reset_expires')
     .eq('email', normalizedEmail)
     .maybeSingle();
 
@@ -25708,7 +25614,7 @@ export const adminLogin = async ({ email, password }) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned, password')
+    .select('id, full_name, email, password, role, created_at, is_banned')
     .eq('email', normalizedEmail)
     .maybeSingle();
 
@@ -25949,7 +25855,7 @@ const fileToBase64 = (file) =>
     r.onerror = rej;
   });
 
-===== D:\StudyConect\frontend\src\services\chatServiceTEMP.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\services\chatServiceTEMP.js =====
 // src/services/chatService.js
 // Chat vá»›i báº¡n bĂ¨ â€” LÆ°u trá»¯ Ä‘á»“ng bá»™ trá»±c tiáº¿p vĂ o database Supabase
 import { supabase } from '../config/supabaseClient';
@@ -26010,7 +25916,7 @@ export const refreshCache = async (userId) => {
   try {
     let query = supabase
       .from('messages')
-      .select('*')
+      .select('id, sender_id, receiver_id, content, file_attachment, is_read, created_at')
       .is('group_id', null)
       .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`);
 
@@ -26079,7 +25985,7 @@ export const syncConversation = async (userId, friendId) => {
 
   let query = supabase
     .from('messages')
-    .select('*')
+    .select('id, sender_id, receiver_id, content, file_attachment, is_read, created_at')
     .is('group_id', null)
     .or(`and(sender_id.eq.${uid},receiver_id.eq.${fid}),and(sender_id.eq.${fid},receiver_id.eq.${uid})`)
     .order('created_at', { ascending: true });
@@ -26117,7 +26023,7 @@ export const getConversation = async (userId, friendId) => {
 
   const { data, error } = await supabase
     .from('messages')
-    .select('*')
+    .select('id, sender_id, receiver_id, content, file_attachment, is_read, created_at')
     .is('group_id', null)
     .or(`and(sender_id.eq.${uid},receiver_id.eq.${fid}),and(sender_id.eq.${fid},receiver_id.eq.${uid})`)
     .order('created_at', { ascending: true });
@@ -26196,7 +26102,7 @@ export const deleteMessage = async (msgId) => {
   cachedMessages = cachedMessages.filter(m => m.id !== String(msgId));
 };
 
-===== D:\StudyConect\frontend\src\services\friendService.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\services\friendService.js =====
 // src/services/friendService.js
 import { supabase } from '@/config/supabaseClient';
 
@@ -26291,7 +26197,7 @@ export const getFriends = async (userId, includePending = false) => {
 
   const { data: friendships, error: fetchError } = await query
     .or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`)
-    .limit(50);
+    .limit(100);
 
   if (fetchError || !friendships || friendships.length === 0) return [];
 
@@ -26462,7 +26368,7 @@ export const getFriendshipStatus = async (userId, targetId) => {
   };
 };
 
-===== D:\StudyConect\frontend\src\services\groupInviteService.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\services\groupInviteService.js =====
 // src/services/groupInviteService.js
 import { supabase } from '@/config/supabaseClient';
 
@@ -26547,8 +26453,8 @@ export const getMyPendingInvites = async (userId) => {
   const inviterIds = invites.map(i => i.inviter_id);
 
   // Fetch groups and inviters details
-  const { data: groups } = await supabase.from('study_groups').select('id, name').in('id', groupIds);
-  const { data: users } = await supabase.from('users').select('id, full_name').in('id', inviterIds);
+  const { data: groups } = await supabase.from('study_groups').select('id, name').in('id', groupIds).limit(50);
+  const { data: users } = await supabase.from('users').select('id, full_name').in('id', inviterIds).limit(50);
 
   return invites.map(inv => {
     const group = groups?.find(g => g.id === inv.group_id);
@@ -26636,7 +26542,7 @@ export const declineGroupInvite = async (inviteId) => {
   };
 };
 
-===== D:\StudyConect\frontend\src\services\groupService.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\services\groupService.js =====
 // src/services/groupService.js
 import { supabase } from '@/config/supabaseClient';
 import { SUBJECTS_BY_MAJOR } from '@/constants/educationData';
@@ -27219,7 +27125,7 @@ export const saveSubjectForMajor = async (major, subjectName) => {
   }
 };
 
-===== D:\StudyConect\frontend\src\services\interactionService.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\services\interactionService.js =====
 // src/services/interactionService.js
 import { supabase } from '@/config/supabaseClient';
 
@@ -27238,7 +27144,8 @@ export const getPosts = async (currentUserId) => {
     .from('friendships')
     .select('from_user_id, to_user_id')
     .eq('status', 'accepted')
-    .or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`);
+    .or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`)
+    .limit(50);
 
   if (friendError) {
     console.error('Error fetching friendships for feed filtering:', friendError);
@@ -27276,10 +27183,6 @@ export const getPosts = async (currentUserId) => {
 
   if (postsError) throw new Error(`Lá»—i táº£i bĂ i viáº¿t: ${postsError.message}`);
 
-  if (import.meta.env.DEV) {
-    console.log('[Debug] postsData count:', postsData?.length);
-  }
-
   if (!postsData || postsData.length === 0) return [];
 
   // 3. Fetch all comments and post_tags in parallel
@@ -27302,6 +27205,7 @@ export const getPosts = async (currentUserId) => {
       .from('post_tags')
       .select('post_id, target_type, target_id')
       .in('post_id', postIds)
+      .limit(50)
   ]);
 
   const commentsData = commentsRes.data || [];
@@ -27318,10 +27222,10 @@ export const getPosts = async (currentUserId) => {
 
     const [usersRes, groupsRes] = await Promise.all([
       taggedUserIds.length > 0
-        ? supabase.from('users').select('id, full_name').in('id', taggedUserIds.map(Number))
+        ? supabase.from('users').select('id, full_name').in('id', taggedUserIds.map(Number)).limit(50)
         : Promise.resolve({ data: [] }),
       taggedGroupIds.length > 0
-        ? supabase.from('study_groups').select('id, name').in('id', taggedGroupIds.map(Number))
+        ? supabase.from('study_groups').select('id, name').in('id', taggedGroupIds.map(Number)).limit(50)
         : Promise.resolve({ data: [] })
     ]);
 
@@ -27701,9 +27605,11 @@ export const getFiles = async (groupId) => {
   const { data, error } = await supabase
     .from('files')
     .select(`
-      *,
+      id, group_id, user_id, file_name, file_url, file_type, file_size, approved, created_at,
       users (
-        full_name
+        id,
+        full_name,
+        avatar
       )
     `)
     .eq('group_id', parseInt(groupId, 10))
@@ -27714,7 +27620,7 @@ export const getFiles = async (groupId) => {
     // Fallback if table files doesn't support approved filter or relations
     const { data: fallbackData, error: fallbackError } = await supabase
       .from('files')
-      .select('*')
+      .select('id, group_id, user_id, file_name, file_size, file_type, file_url, approved, created_at')
       .eq('group_id', parseInt(groupId, 10))
       .eq('approved', true);
     
@@ -27751,7 +27657,7 @@ export const getPendingFiles = async () => {
   const { data, error } = await supabase
     .from('files')
     .select(`
-      *,
+      id, group_id, user_id, file_name, file_size, file_type, file_url, approved, created_at,
       users (
         full_name
       ),
@@ -27765,7 +27671,7 @@ export const getPendingFiles = async () => {
   if (error) {
     const { data: fallbackData } = await supabase
       .from('files')
-      .select('*')
+      .select('id, group_id, user_id, file_name, file_size, file_type, file_url, approved, created_at')
       .eq('approved', false);
     return (fallbackData || []).map(f => ({
       id: f.id.toString(),
@@ -27864,9 +27770,10 @@ export const deleteFile = async (fileId) => {
 export const getSchedules = async (groupId) => {
   const { data, error } = await supabase
     .from('schedules')
-    .select('*')
+    .select('id, group_id, topic, date_time, location, description, creator_id, created_at')
     .eq('group_id', parseInt(groupId, 10))
-    .order('date_time', { ascending: true });
+    .order('date_time', { ascending: true })
+    .limit(50);
 
   if (error) return [];
 
@@ -27959,17 +27866,18 @@ export const getDeadlines = async (groupId) => {
   const { data, error } = await supabase
     .from('deadlines')
     .select(`
-      *,
+      id, title, due_date, group_id, creator_id, description, assignee_id, completed, created_at,
       users:users!assignee_id (
         full_name
       )
     `)
     .eq('group_id', parseInt(groupId, 10))
-    .order('due_date', { ascending: true });
+    .order('due_date', { ascending: true })
+    .limit(50);
 
   if (error) {
     // Fallback if relation not supported
-    const { data: fbData } = await supabase.from('deadlines').select('*').eq('group_id', parseInt(groupId, 10));
+    const { data: fbData } = await supabase.from('deadlines').select('id, group_id, title, due_date, description, creator_id, assignee_id, assignee_name, completed, created_at').eq('group_id', parseInt(groupId, 10)).limit(50);
     return (fbData || []).map(d => ({
       id: d.id.toString(),
       groupId: d.group_id.toString(),
@@ -28124,7 +28032,8 @@ export const getUserSchedulesAndDeadlines = async (userId) => {
   const { data: joinedMemberships, error: memError } = await supabase
     .from('group_members')
     .select('group_id, role')
-    .eq('user_id', uid);
+    .eq('user_id', uid)
+    .limit(100);
 
   if (memError || !joinedMemberships || joinedMemberships.length === 0) {
     return { schedules: [], deadlines: [] };
@@ -28142,7 +28051,8 @@ export const getUserSchedulesAndDeadlines = async (userId) => {
       )
     `)
     .in('group_id', joinedGroupIds)
-    .order('date_time', { ascending: true });
+    .order('date_time', { ascending: true })
+    .limit(50);
 
   const schedules = (schedulesData || []).map(s => {
     return {
@@ -28166,7 +28076,8 @@ export const getUserSchedulesAndDeadlines = async (userId) => {
       )
     `)
     .in('group_id', joinedGroupIds)
-    .order('due_date', { ascending: true });
+    .order('due_date', { ascending: true })
+    .limit(50);
 
   const deadlines = (deadlinesData || [])
     .filter(d => {
@@ -28198,7 +28109,8 @@ export const getChatMessages = async (groupId) => {
   const { data, error } = await supabase
     .from('messages')
     .select(`
-      *,
+      id, group_id, sender_id, content, file_attachment,
+      reply_to, is_pinned, created_at,
       users:users!sender_id (
         full_name,
         avatar
@@ -28369,14 +28281,15 @@ export const getUserPosts = async (friendId) => {
   const { data: commentsData } = await supabase
     .from('comments')
     .select(`
-      *,
+      id, post_id, user_id, parent_id, content, created_at,
       users (
         full_name,
         avatar
       )
     `)
     .in('post_id', postIds)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .limit(50);
 
   return postsData.map(p => {
     const pCommentsRaw = (commentsData || []).filter(c => c.post_id === p.id);
@@ -28415,7 +28328,7 @@ export const getUserPosts = async (friendId) => {
   });
 };
 
-===== D:\StudyConect\frontend\src\utils\dbCleanup.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\utils\dbCleanup.js =====
 import { supabase } from '../config/supabaseClient';
 
 // Gá»i 1 láº§n khi app khá»Ÿi Ä‘á»™ng, xĂ³a data cÅ©
@@ -28446,7 +28359,7 @@ export const runDbCleanup = async () => {
   }
 };
 
-===== D:\StudyConect\frontend\src\utils\geocoding.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\utils\geocoding.js =====
 // src/utils/geocoding.js
 // Gá»i Google Geocoding API Ä‘á»ƒ láº¥y lat/lng tá»« Ä‘á»‹a chá»‰ text
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -28496,7 +28409,7 @@ export function googleMapsSearchUrl(address) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
-===== D:\StudyConect\frontend\src\utils\index.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\utils\index.js =====
 // src/utils/index.js
 // Táº­p há»£p cĂ¡c utility function dĂ¹ng chung trong toĂ n bá»™ app
 
@@ -28602,7 +28515,7 @@ export function generateRoomCode() {
   return `${seg(3)}-${seg(4)}-${seg(3)}`;
 }
 
-===== D:\StudyConect\frontend\src\utils\storageCleanup.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\frontend\src\utils\storageCleanup.js =====
 // src/utils/storageCleanup.js
 
 export const runStorageCleanup = () => {

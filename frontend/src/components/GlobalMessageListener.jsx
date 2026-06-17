@@ -501,9 +501,7 @@ export default function GlobalMessageListener() {
       })
 
       .subscribe((status) => {
-        if (import.meta.env.DEV) {
-          console.log('[Realtime] Kênh thông báo:', status);
-        }
+        if (import.meta.env.DEV) console.log('[Realtime] Kênh thông báo:', status);
       });
 
     // Lắng nghe broadcast từ Admin panel
@@ -539,6 +537,17 @@ export default function GlobalMessageListener() {
         addToast(
           `Tài liệu "${fileName}" của bạn trong nhóm "${groupName || 'Nhóm học'}" đã bị Admin từ chối phê duyệt và xóa bỏ. ❌`,
           'error', 8000, null, '📁'
+        );
+      }
+    });
+
+    adminChannel.on('broadcast', { event: 'post_approved' }, async ({ payload }) => {
+      if (!payload) return;
+      const { userId } = payload;
+      if (String(userId) === String(uid)) {
+        addToast(
+          'Bài viết của bạn đã được Admin phê duyệt! 🎉',
+          'success', 7000, '/', '📝'
         );
       }
     });

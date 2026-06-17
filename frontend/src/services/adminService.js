@@ -43,7 +43,7 @@ const mapGroup = (g) => {
 export const adminGetUsers = async () => {
   const { data, error } = await supabase
     .from('users')
-    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Lỗi tải danh sách người dùng: ${error.message}`);
@@ -77,7 +77,7 @@ export const adminCreateUser = async ({ fullName, email, password, role, univers
         avatar: ''
       }
     ])
-    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned')
     .single();
 
   if (insertError) throw new Error(`Thêm người dùng thất bại: ${insertError.message}`);
@@ -120,7 +120,7 @@ export const adminUpdateUser = async (userId, data) => {
     .from('users')
     .update(updateData)
     .eq('id', uid)
-    .select('id, full_name, email, role, university, major, bio, avatar, created_at')
+    .select('id, full_name, email, role, university, major, avatar, bio, created_at, is_banned')
     .single();
 
   if (updateError) throw new Error(`Cập nhật người dùng thất bại: ${updateError.message}`);
@@ -171,7 +171,7 @@ export const adminDeleteUser = async (userId) => {
 export const adminGetGroups = async () => {
   const { data, error } = await supabase
     .from('study_groups')
-    .select('id, name, subject, description, creator_id, created_at, group_members(user_id, role)');
+    .select('id, name, subject, description, is_private, max_members, creator_id, created_at, group_members(user_id, role)');
 
   if (error) throw new Error(`Lỗi tải danh sách nhóm: ${error.message}`);
   
