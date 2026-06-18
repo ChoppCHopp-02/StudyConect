@@ -178,7 +178,8 @@ export default function useNotifications(userId) {
             )
           `)
           .in('group_id', joinedIds)
-          .neq('user_id', uid);
+          .neq('user_id', uid)
+          .limit(50);
 
         if (otherJoinedMembers) {
           otherJoinedMembers
@@ -358,7 +359,8 @@ export default function useNotifications(userId) {
             )
           `)
           .in('group_id', joinedIds)
-          .neq('user_id', uid);
+          .neq('user_id', uid)
+          .limit(50);
 
         if (recentFiles) {
           recentFiles
@@ -594,7 +596,8 @@ export default function useNotifications(userId) {
             )
           `)
           .in('group_id', myGroupIds)
-          .eq('status', 'pending');
+          .eq('status', 'pending')
+          .limit(50);
 
         if (pendingRequests) {
           pendingRequests
@@ -676,7 +679,8 @@ export default function useNotifications(userId) {
               )
             )
           `)
-          .or(orFilter);
+          .or(orFilter)
+          .limit(50);
 
         if (!dbTagsError && dbTags) {
           dbTags

@@ -8521,6 +8521,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { STORAGE_KEYS } from '@/constants/storageKeys';
 import { formatBytes } from '@/utils';
+import { compressImage } from '@/utils/imageCompress';
 import { getGroupById, assignDeputy, removeDeputy, kickMember } from '@/services/groupService';
 import { sendFriendRequest } from '@/services/friendService';
 import { supabase } from '@/config/supabaseClient';
@@ -9319,12 +9320,20 @@ export default function useGroupDetail(groupId, user, addToast) {
         setIsUploadingFile(false);
         return;
       }
-      let fileUrlValue = '';
-      const safeName = sanitizeForStorage(selectedFile.name);
+      let fileToUpload = selectedFile;
+      // Compress áº£nh trÆ°á»›c khi upload (PDF/docx giá»¯ nguyĂªn)
+      if (selectedFile.type.startsWith('image/')) {
+        try {
+          fileToUpload = await compressImage(selectedFile, { maxWidth: 1280, maxHeight: 1280, quality: 0.78 });
+        } catch {
+          fileToUpload = selectedFile; // fallback
+        }
+      }
+      const safeName = sanitizeForStorage(fileToUpload.name || selectedFile.name);
       const fileName = `${groupId}/${Date.now()}_${safeName}`;
       const { error: uploadError } = await supabase.storage
         .from('attachments')
-        .upload(fileName, selectedFile, { cacheControl: '3600', upsert: true });
+        .upload(fileName, fileToUpload, { cacheControl: '3600', upsert: true });
 
       if (uploadError) {
         if (import.meta.env.DEV) {
@@ -9336,7 +9345,7 @@ export default function useGroupDetail(groupId, user, addToast) {
       const { data: { publicUrl } } = supabase.storage
         .from('attachments')
         .getPublicUrl(fileName);
-      fileUrlValue = publicUrl;
+      let fileUrlValue = publicUrl;
 
       const finalSubject = group?.subject || 'Chung';
       const cleanFileName = customFileName.trim() || selectedFile.name;
@@ -9631,11 +9640,20 @@ export default function useGroupDetail(groupId, user, addToast) {
           return;
         }
 
-        const safeName = sanitizeForStorage(chatAttachedFile.name);
+        let fileToUpload = chatAttachedFile;
+        // Compress áº£nh trÆ°á»›c khi upload vĂ o group chat
+        if (chatAttachedFile.type.startsWith('image/')) {
+          try {
+            fileToUpload = await compressImage(chatAttachedFile, { maxWidth: 1280, maxHeight: 1280, quality: 0.78 });
+          } catch {
+            fileToUpload = chatAttachedFile; // fallback
+          }
+        }
+        const safeName = sanitizeForStorage(fileToUpload.name || chatAttachedFile.name);
         const chatFileName = `chat/${groupId}/${Date.now()}_${safeName}`;
         const { error: uploadError } = await supabase.storage
           .from('attachments')
-          .upload(chatFileName, chatAttachedFile, { cacheControl: '3600', upsert: true });
+          .upload(chatFileName, fileToUpload, { cacheControl: '3600', upsert: true });
 
         if (uploadError) {
           if (import.meta.env.DEV) {
@@ -12530,6 +12548,7 @@ import {
   deleteMessage,
 } from '../services/chatServiceTEMP.js';
 import { supabase } from '../config/supabaseClient';
+import { compressImage as compressImageFile } from '../utils/imageCompress';
 
 // â”€â”€ Avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Avatar({ src, initial, color = '#6c63ff', size = 40 }) {
@@ -13304,10 +13323,19 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
       
       let fileUrlValue = '';
       if (attachedFile) {
-        const fileName = `private/${user.id}/${Date.now()}_${attachedFile.name || 'clipboard.png'}`;
+        let fileToUpload = attachedFile;
+        // Compress áº£nh trÆ°á»›c khi upload vĂ o private chat
+        if (attachedFile.type?.startsWith('image/')) {
+          try {
+            fileToUpload = await compressImageFile(attachedFile, { maxWidth: 1280, maxHeight: 1280, quality: 0.78 });
+          } catch {
+            fileToUpload = attachedFile; // fallback
+          }
+        }
+        const fileName = `private/${user.id}/${Date.now()}_${fileToUpload.name || attachedFile.name || 'clipboard.png'}`;
         const { error: uploadError } = await supabase.storage
           .from('attachments')
-          .upload(fileName, attachedFile, { cacheControl: '3600', upsert: true });
+          .upload(fileName, fileToUpload, { cacheControl: '3600', upsert: true });
 
         if (uploadError) {
           if (import.meta.env.DEV) {
@@ -19034,14 +19062,23 @@ export default function Home() {
     fetchPosts();
     fetchSideData();
 
-    // Listen for realtime posts from Supabase
+    // Chá»‰ refetch khi cĂ³ post má»›i INSERT hoáº·c xĂ³a/sá»­a post cá»§a mĂ¬nh
     const postsChannel = supabase
       .channel('realtime-posts')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'posts' },
-        () => {
-          fetchPosts(); // Automatically refetch post feed in real-time!
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            // Post má»›i â†’ luĂ´n refetch (cĂ³ thá»ƒ lĂ  báº¡n bĂ¨ Ä‘Äƒng)
+            fetchPosts();
+          } else if (payload.eventType === 'DELETE' || payload.eventType === 'UPDATE') {
+            // Chá»‰ refetch náº¿u post Ä‘Ă³ thuá»™c vá» user hiá»‡n táº¡i hoáº·c Ä‘ang hiá»ƒn thá»‹ trong feed
+            const postUserId = payload.old?.user_id || payload.new?.user_id;
+            if (postUserId && String(postUserId) === String(user?.id)) {
+              fetchPosts();
+            }
+          }
         }
       )
       .subscribe();
@@ -19052,7 +19089,7 @@ export default function Home() {
       clearInterval(interval);
       supabase.removeChannel(postsChannel);
     };
-  }, [fetchPosts, fetchSideData]);
+  }, [fetchPosts, fetchSideData, user?.id]);
 
   // Post handlers
   const handleLikePost = async (postId, emoji, e) => {
@@ -20479,38 +20516,42 @@ export default function MeetRoom() {
   // Auto scroll chat
   useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // Load and poll meetroom messages from Supabase
+  // Load meetroom messages from Supabase â€” dĂ¹ng Realtime thay polling 5s
   useEffect(() => {
     if (!roomId) return;
+
+    const formatMsg = (m) => {
+      const rawContent = m.content;
+      const prefix = `[meetroom:${roomId}] `;
+      const text = rawContent.startsWith(prefix) ? rawContent.slice(prefix.length) : rawContent;
+      return {
+        id: m.id.toString(),
+        text,
+        sender: m.users?.full_name || 'NgÆ°á»i dĂ¹ng',
+        senderId: m.sender_id,
+        avatar: m.users?.avatar || '',
+        time: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+      };
+    };
+
+    // 1. Fetch láº§n Ä‘áº§u
     const fetchMeetMessages = async () => {
       try {
         const { data, error } = await supabase
           .from('messages')
           .select(`
-            *,
+            id, sender_id, content, created_at,
             users:users!sender_id (
               full_name,
               avatar
             )
           `)
           .like('content', `[meetroom:${roomId}]%`)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: true })
+          .limit(100);
 
         if (!error && data) {
-          const formatted = data.map(m => {
-            const rawContent = m.content;
-            const prefix = `[meetroom:${roomId}] `;
-            const text = rawContent.startsWith(prefix) ? rawContent.slice(prefix.length) : rawContent;
-            return {
-              id: m.id.toString(),
-              text,
-              sender: m.users?.full_name || 'NgÆ°á»i dĂ¹ng',
-              senderId: m.sender_id,
-              avatar: m.users?.avatar || '',
-              time: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-            };
-          });
-          setMessages(formatted);
+          setMessages(data.map(formatMsg));
         }
       } catch (err) {
         console.error('Error fetching meetroom messages:', err);
@@ -20518,8 +20559,30 @@ export default function MeetRoom() {
     };
 
     fetchMeetMessages();
-    const interval = setInterval(fetchMeetMessages, 5000);
-    return () => clearInterval(interval);
+
+    // 2. Láº¯ng nghe INSERT real-time â€” khĂ´ng cáº§n polling
+    const channel = supabase
+      .channel(`meetroom-chat-${roomId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+        const m = payload.new;
+        if (!m.content?.startsWith(`[meetroom:${roomId}]`)) return;
+        // Fetch full row kĂ¨m user info
+        try {
+          const { data } = await supabase
+            .from('messages')
+            .select(`id, sender_id, content, created_at, users:users!sender_id (full_name, avatar)`)
+            .eq('id', m.id)
+            .single();
+          if (data) {
+            setMessages(prev => [...prev, formatMsg(data)]);
+          }
+        } catch { /* ignore */ }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [roomId]);
 
   // Screen share â€” thay track video trong táº¥t cáº£ peer connections Ä‘á»ƒ remote peers tháº¥y mĂ n hĂ¬nh
@@ -25580,6 +25643,7 @@ export const adminDeleteGroup = async (groupId) => {
 ===== D:\StudyConect\frontend\src\services\authService.js =====
 // src/services/authService.js
 import { supabase } from '@/config/supabaseClient';
+import { compressAvatar } from '@/utils/imageCompress';
 
 const SESSION_KEY = 'sc_session';
 const ADMIN_SESSION_KEY = 'sc_admin_session';
@@ -25866,11 +25930,18 @@ export const updateProfile = async ({ id, fullName, university, major, bio, avat
     if (typeof avatarFile === 'string') {
       avatar = avatarFile;
     } else if (avatarFile instanceof File || avatarFile instanceof Blob) {
-      const fileExt = (avatarFile.name || 'avatar.png').split('.').pop() || 'png';
-      const fileName = `${id}_${Date.now()}.${fileExt}`;
+      // Compress avatar xuá»‘ng tá»‘i Ä‘a 400Ă—400 px trÆ°á»›c khi upload
+      let uploadFile = avatarFile;
+      try {
+        uploadFile = await compressAvatar(avatarFile);
+      } catch {
+        uploadFile = avatarFile; // fallback: upload nguyĂªn náº¿u compress lá»—i
+      }
+      const ext = (uploadFile.name || uploadFile.type?.split('/')[1] || 'webp').split('.').pop() || 'webp';
+      const fileName = `${id}_${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, avatarFile, { cacheControl: '3600', upsert: true });
+        .upload(fileName, uploadFile, { cacheControl: '3600', upsert: true });
 
       if (uploadError) {
         if (import.meta.env.DEV) {
@@ -28580,6 +28651,96 @@ export function staticMapUrl({ lat, lng, zoom = 15, width = 480, height = 180 })
 export function googleMapsSearchUrl(address) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
+
+===== D:\StudyConect\frontend\src\utils\imageCompress.js =====
+/**
+ * imageCompress.js
+ * Client-side image resize + compress báº±ng Canvas API (khĂ´ng cáº§n dependency).
+ * Giáº£m kĂ­ch thÆ°á»›c file áº£nh trÆ°á»›c khi upload lĂªn Supabase Storage Ä‘á»ƒ giáº£m egress.
+ */
+
+/**
+ * Compress / resize áº£nh vá» maxWidth x maxHeight, giá»¯ tá»· lá»‡.
+ * Output: Blob (image/webp náº¿u browser há»— trá»£, fallback sang image/jpeg)
+ *
+ * @param {File|Blob} file     File áº£nh Ä‘áº§u vĂ o
+ * @param {object}   options
+ * @param {number}   options.maxWidth   Chiá»u rá»™ng tá»‘i Ä‘a (px), máº·c Ä‘á»‹nh 1280
+ * @param {number}   options.maxHeight  Chiá»u cao tá»‘i Ä‘a (px), máº·c Ä‘á»‹nh 1280
+ * @param {number}   options.quality    Cháº¥t lÆ°á»£ng 0â€“1, máº·c Ä‘á»‹nh 0.78
+ * @returns {Promise<File>} File má»›i Ä‘Ă£ compress (type: image/webp hoáº·c image/jpeg)
+ */
+export const compressImage = (file, {
+  maxWidth = 1280,
+  maxHeight = 1280,
+  quality = 0.78,
+} = {}) => {
+  return new Promise((resolve, reject) => {
+    // Chá»‰ xá»­ lĂ½ file áº£nh
+    if (!file.type.startsWith('image/')) {
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('KhĂ´ng Ä‘á»c Ä‘Æ°á»£c file áº£nh'));
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('KhĂ´ng load Ä‘Æ°á»£c áº£nh'));
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Scale xuá»‘ng náº¿u quĂ¡ lá»›n
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Æ¯u tiĂªn WebP (nhá» hÆ¡n ~30% so vá»›i JPEG), fallback sang JPEG
+        const supportsWebP = canvas.toDataURL('image/webp').startsWith('data:image/webp');
+        const mimeType = supportsWebP ? 'image/webp' : 'image/jpeg';
+        const ext = supportsWebP ? 'webp' : 'jpg';
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              // Canvas tháº¥t báº¡i (hiáº¿m) â†’ tráº£ vá» file gá»‘c
+              resolve(file);
+              return;
+            }
+            // Náº¿u file Ä‘Ă£ nhá» hÆ¡n sau compress thĂ¬ dĂ¹ng, ngÆ°á»£c láº¡i dĂ¹ng file gá»‘c
+            if (blob.size >= file.size) {
+              resolve(file);
+              return;
+            }
+            const baseName = (file.name || 'image').replace(/\.[^.]+$/, '');
+            const newFile = new File([blob], `${baseName}.${ext}`, { type: mimeType });
+            resolve(newFile);
+          },
+          mimeType,
+          quality
+        );
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+/**
+ * Compress avatar â€” nhá» hÆ¡n, tá»‘i Ä‘a 400x400 px.
+ * @param {File|Blob} file
+ * @returns {Promise<File>}
+ */
+export const compressAvatar = (file) =>
+  compressImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.80 });
 
 ===== D:\StudyConect\frontend\src\utils\index.js =====
 // src/utils/index.js

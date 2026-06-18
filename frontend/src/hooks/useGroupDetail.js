@@ -835,7 +835,7 @@ export default function useGroupDetail(groupId, user, addToast) {
 
       await uploadFile(groupId, {
         fileName: prefixedName,
-        fileSize: selectedFile.size,
+        fileSize: fileToUpload.size,
         fileType: selectedFile.type,
         fileData: fileUrlValue,
         userId: user.id,
@@ -1152,7 +1152,7 @@ export default function useGroupDetail(groupId, user, addToast) {
           fileName: chatAttachedFile.name,
           fileType: chatAttachedFile.type,
           fileData: chatFileUrl,
-          fileSize: formatBytes(chatAttachedFile.size),
+          fileSize: formatBytes(fileToUpload.size),
           name: chatAttachedFile.name,
           type: chatAttachedFile.type,
           data: chatFileUrl,
