@@ -13,7 +13,14 @@ const getAllUserFiles = async (userId) => {
   const { data: files, error } = await supabase
     .from('files')
     .select(`
-      *,
+      id,
+      group_id,
+      user_id,
+      file_name,
+      file_size,
+      file_type,
+      file_url,
+      created_at,
       study_groups (
         name
       )
@@ -258,13 +265,13 @@ export default function MyDocuments() {
       <AppLayout>
         <main className="document-page-container">
           {/* Header Panel with search */}
-          <div className="premium-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+          <div className="premium-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', flexWrap: 'wrap', marginBottom: '24px', padding: '28px 32px' }}>
             <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tài liệu của tôi</h1>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>Danh sách tài liệu bạn đã chia sẻ trong các nhóm học.</p>
+              <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.02em' }}>Tài liệu của tôi</h1>
+              <p style={{ fontSize: '14px', color: '#94a3b8', margin: '6px 0 0 0' }}>Danh sách tài liệu bạn đã chia sẻ trong các nhóm học.</p>
             </div>
             
-            <div className="search-container" style={{ width: '100%', maxWidth: '320px', margin: 0 }}>
+            <div className="search-container" style={{ width: '100%', maxWidth: '420px', margin: 0 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
                 <circle cx="11" cy="11" r="8"/>
                 <path d="m21 21-4.3-4.3"/>
@@ -284,18 +291,27 @@ export default function MyDocuments() {
               Đang tải tài liệu...
             </div>
           ) : files.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 16px', marginTop: '20px' }}>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
+            <div className="premium-panel" style={{ textAlign: 'center', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ color: 'var(--text-muted)', display: 'flex', justifyContent: 'center', marginBottom: '18px' }}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+                  <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7" />
+                  <path d="M22 13a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4" />
+                  <path d="M22 13h-4M4 13H2" />
+                  <path d="M12 8v5" />
+                  <path d="m9 11 3 3 3-3" />
+                </svg>
+              </div>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', margin: '0 0 8px 0' }}>
                 Chưa có tài liệu nào
-              </div>
-              <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px' }}>
+              </h2>
+              <p style={{ fontSize: '14px', color: '#94a3b8', margin: '0 0 28px 0', maxWidth: '480px' }}>
                 Vào các nhóm học để tải lên tài liệu đầu tiên của bạn.
-              </div>
+              </p>
               <Link to="/groups" style={{
                 display: 'inline-block',
-                padding: '10px 24px', borderRadius: '12px',
+                padding: '12px 28px', borderRadius: '12px',
                 background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white',
-                textDecoration: 'none', fontSize: '14px', fontWeight: 700,
+                textDecoration: 'none', fontSize: '15px', fontWeight: 700,
                 boxShadow: '0 4px 15px rgba(99,102,241,0.3)', transition: 'all 0.2s'
               }}>Đến nhóm học</Link>
             </div>
@@ -333,17 +349,17 @@ export default function MyDocuments() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-muted)', fontSize: '12.5px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    <th style={{ padding: '12px 16px' }}>Tên tài liệu</th>
-                    <th style={{ padding: '12px 16px' }}>Đã chia sẻ vào nhóm</th>
-                    <th style={{ padding: '12px 16px' }}>Thời gian chia sẻ</th>
-                    <th style={{ padding: '12px 16px' }}>Dung lượng</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', width: '1%', whiteSpace: 'nowrap' }}>Thao tác</th>
+                    <th style={{ padding: '15px 16px' }}>Tên tài liệu</th>
+                    <th style={{ padding: '15px 16px' }}>Đã chia sẻ vào nhóm</th>
+                    <th style={{ padding: '15px 16px' }}>Thời gian chia sẻ</th>
+                    <th style={{ padding: '15px 16px' }}>Dung lượng</th>
+                    <th style={{ padding: '15px 16px', textAlign: 'right', width: '1%', whiteSpace: 'nowrap' }}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((file) => (
                     <tr key={file.id} style={{ borderBottom: '1px solid var(--border)', fontSize: '14px', transition: 'var(--transition)' }} className="table-row-hover">
-                      <td style={{ padding: '16px 16px' }}>
+                      <td style={{ padding: '19px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
                           <div className="file-icon-box" style={{ width: '32px', height: '32px', margin: 0 }}>
                             {fileIconSvg(file.fileType)}
@@ -357,18 +373,18 @@ export default function MyDocuments() {
                           )}
                         </div>
                       </td>
-                      <td style={{ padding: '16px 16px' }}>
+                      <td style={{ padding: '19px 16px' }}>
                         <Link to={`/groups/${file.groupId}`} style={{ color: 'var(--primary-light)', textDecoration: 'none', fontWeight: 600 }}>
                           {file.groupName}
                         </Link>
                       </td>
-                      <td style={{ padding: '16px 16px', color: 'var(--text-muted)' }}>
+                      <td style={{ padding: '19px 16px', color: 'var(--text-muted)' }}>
                         {new Date(file.createdAt).toLocaleString('vi-VN')}
                       </td>
-                      <td style={{ padding: '16px 16px', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '19px 16px', color: 'var(--text-secondary)' }}>
                         {formatFileSize(file.fileSize)}
                       </td>
-                      <td style={{ padding: '16px 16px', textAlign: 'right', width: '1%', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '19px 16px', textAlign: 'right', width: '1%', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button
                             onClick={() => handleDownload(file)}
