@@ -200,9 +200,9 @@ function TabBtn({ label, count, active, onClick, highlight = false }) {
 //  Empty state 
 function EmptyState({ icon, text }) {
   return (
-    <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)' }}>
+    <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
       {icon && <div style={{ fontSize: '32px', marginBottom: '8px' }}>{icon}</div>}
-      <div style={{ fontSize: '13px' }}>{text}</div>
+      <div style={{ fontSize: '14px', fontWeight: 500 }}>{text}</div>
     </div>
   );
 }
@@ -439,8 +439,8 @@ export default function Friends() {
       <main className="friend-page-container">
           {/* Header */}
           <div className="premium-panel">
-            <h1 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '4px', color: '#fff' }}>Kết bạn</h1>
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '12px' }}>
+            <h1 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '4px', color: 'var(--text-primary)' }}>Kết bạn</h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
               Kết nối với sinh viên cùng trường, cùng ngành và mở rộng mạng lưới học tập.
             </p>
 
@@ -670,33 +670,33 @@ export default function Friends() {
           box-sizing: border-box;
         }
         .premium-panel {
-          background: linear-gradient(135deg, rgba(108,99,255,0.10) 0%, rgba(255,122,0,0.07) 100%);
+          background: linear-gradient(135deg, rgba(42,117,118,0.08) 0%, rgba(214,158,46,0.04) 100%);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(108,99,255,0.20);
+          border: 1px solid rgba(42,117,118,0.18);
           border-radius: 20px;
           padding: 28px 32px;
-          box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+          box-shadow: var(--shadow-lg);
           margin-bottom: 20px;
         }
         .search-container {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(0,0,0,0.2);
-          border: 1px solid rgba(255,255,255,0.1);
+          background: var(--bg-input);
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 8px 12px;
           transition: all 0.3s;
         }
         .search-container:focus-within {
-          border-color: #6366f1;
-          background: rgba(0,0,0,0.3);
-          box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+          border-color: var(--primary);
+          background: var(--bg-card);
+          box-shadow: 0 0 0 2px rgba(42, 117, 118, 0.15);
         }
         .search-input {
           background: none; border: none; outline: none; flex: 1;
-          color: #fff; font-size: 13px; font-family: inherit;
+          color: var(--text-primary); font-size: 13px; font-family: inherit;
         }
         
         .tab-btn {
@@ -716,14 +716,14 @@ export default function Friends() {
           gap: 7px;
         }
         .tab-btn:hover {
-          background: rgba(255,255,255,0.1);
-          color: #fff;
+          background: var(--bg-input);
+          color: var(--text-primary);
         }
         .tab-btn.active {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          background: var(--primary);
           color: white;
           border: none;
-          box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+          box-shadow: 0 4px 15px rgba(42, 117, 118, 0.3);
         }
         .tab-btn.highlight {
           border-color: rgba(239,68,68,0.5);
@@ -742,7 +742,8 @@ export default function Friends() {
           text-align: center;
         }
         .tab-btn:not(.active) .tab-badge {
-          background: rgba(255,255,255,0.1);
+          background: var(--border);
+          color: var(--text-muted);
         }
         .tab-btn.highlight:not(.active) .tab-badge {
           background: rgba(239,68,68,0.2);
@@ -761,10 +762,10 @@ export default function Friends() {
           margin-bottom: 12px;
         }
         .person-card:hover {
-          background: rgba(108,99,255,0.05);
-          border-color: rgba(108,99,255,0.35);
+          background: rgba(42,117,118,0.04);
+          border-color: rgba(42,117,118,0.3);
           transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(108,99,255,0.14);
+          box-shadow: 0 10px 30px rgba(42,117,118,0.12);
         }
 
         @keyframes slideIn {

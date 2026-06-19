@@ -110,12 +110,12 @@ function FileCard({ file, onDelete, onPreview }) {
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontWeight: 700, fontSize: '15px', color: '#fff',
+          fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)',
           marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
         }}>
           {file.fileName}
         </div>
-        <div style={{ fontSize: '13px', color: '#94a3b8', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary-light)' }}>
               <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
@@ -159,15 +159,15 @@ function FileCard({ file, onDelete, onPreview }) {
           {menuOpen && (
             <div style={{
               position: 'absolute', right: 0, top: '42px', zIndex: 50,
-              background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
               borderRadius: '12px', overflow: 'hidden', minWidth: '150px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              boxShadow: 'var(--shadow-lg)',
             }}>
               <Link to={`/groups/${file.groupId}?tab=files`} style={{
                 display: 'block', padding: '12px 16px', fontSize: '14px', fontWeight: 500,
-                color: '#fff', textDecoration: 'none', transition: 'background 0.2s',
+                color: 'var(--text-primary)', textDecoration: 'none', transition: 'background 0.2s',
               }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >
                  Đến nhóm
@@ -267,8 +267,8 @@ export default function MyDocuments() {
           {/* Header Panel with search */}
           <div className="premium-panel" style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', padding: '16px 20px' }}>
             <div>
-              <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tài liệu của tôi</h1>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>Danh sách tài liệu bạn đã chia sẻ trong các nhóm học.</p>
+              <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tài liệu của tôi</h1>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>Danh sách tài liệu bạn đã chia sẻ trong các nhóm học.</p>
             </div>
             
             <div className="search-container" style={{ width: '100%', margin: 0 }}>
@@ -291,28 +291,26 @@ export default function MyDocuments() {
               Đang tải tài liệu...
             </div>
           ) : files.length === 0 ? (
-            <div className="premium-panel" style={{ textAlign: 'center', padding: '48px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="premium-panel" style={{ textAlign: 'center', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ color: 'var(--text-muted)', display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
-                  <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7" />
-                  <path d="M22 13a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4" />
-                  <path d="M22 13h-4M4 13H2" />
-                  <path d="M12 8v5" />
-                  <path d="m9 11 3 3 3-3" />
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                  <path d="M12 12v9" />
+                  <path d="m9 15 3-3 3 3" />
                 </svg>
               </div>
-              <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: '0 0 6px 0' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
                 Chưa có tài liệu nào
               </h2>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 20px 0', maxWidth: '400px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0', maxWidth: '400px' }}>
                 Vào các nhóm học để tải lên tài liệu đầu tiên của bạn.
               </p>
               <Link to="/groups" style={{
                 display: 'inline-block',
-                padding: '10px 24px', borderRadius: '12px',
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white',
+                padding: '12px 28px', borderRadius: 'var(--radius-md)',
+                background: 'var(--primary)', color: 'white',
                 textDecoration: 'none', fontSize: '14px', fontWeight: 700,
-                boxShadow: '0 4px 15px rgba(99,102,241,0.3)', transition: 'all 0.2s'
+                boxShadow: '0 4px 15px rgba(42, 117, 118, 0.25)', transition: 'all 0.2s'
               }}>Đến nhóm học</Link>
             </div>
           ) : filtered.length === 0 ? (
@@ -326,10 +324,10 @@ export default function MyDocuments() {
                   <path d="m9 11 3 3 3-3" />
                 </svg>
               </div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                 Không tìm thấy tài liệu
               </div>
-              <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                 Thử thay đổi từ khóa tìm kiếm.
               </div>
             </div>
@@ -365,11 +363,11 @@ export default function MyDocuments() {
                             {fileIconSvg(file.fileType)}
                           </div>
                           {file.fileData && file.fileType?.startsWith('image/') ? (
-                            <span onClick={() => setPreviewFile(file)} style={{ color: '#fff', cursor: 'pointer' }} className="hover-link">
+                            <span onClick={() => setPreviewFile(file)} style={{ color: 'var(--text-primary)', cursor: 'pointer' }} className="hover-link">
                               {file.fileName}
                             </span>
                           ) : (
-                            <span style={{ color: '#fff' }}>{file.fileName}</span>
+                            <span style={{ color: 'var(--text-primary)' }}>{file.fileName}</span>
                           )}
                         </div>
                       </td>
@@ -448,61 +446,61 @@ export default function MyDocuments() {
             }
           }
           .file-card-item {
-            background: rgba(30, 41, 59, 0.45);
+            background: var(--bg-card);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 16px 20px;
             display: flex;
             align-items: center;
             gap: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+            box-shadow: var(--shadow);
             transition: all 0.2s;
           }
           .file-card-item:hover {
-            border-color: rgba(108,99,255,0.3);
+            border-color: rgba(42, 117, 118, 0.3);
             transform: translateY(-2px);
-            background: rgba(30, 41, 59, 0.6);
+            background: rgba(42, 117, 118, 0.03);
           }
           .premium-panel {
-            background: rgba(30, 41, 59, 0.4);
+            background: var(--bg-card);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 16px 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+            box-shadow: var(--shadow);
             margin-bottom: 24px;
           }
           .search-container {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 8px 12px;
             transition: all 0.3s;
           }
           .search-container:focus-within {
-            border-color: #6366f1;
-            background: rgba(0,0,0,0.3);
-            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+            border-color: var(--primary);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 2px rgba(42, 117, 118, 0.15);
           }
           .search-input {
             background: none; border: none; outline: none; flex: 1;
-            color: #fff; font-size: 13px; font-family: inherit;
+            color: var(--text-primary); font-size: 13px; font-family: inherit;
           }
           .file-icon-box {
             width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
-            background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.25);
+            background: rgba(42, 117, 118, 0.12); border: 1px solid rgba(42, 117, 118, 0.25);
             display: flex; align-items: center; justify-content: center;
           }
           .file-action-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #e2e8f0;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             padding: 5px 10px;
             border-radius: 8px;
             font-size: 12px;
@@ -511,12 +509,12 @@ export default function MyDocuments() {
             transition: all 0.2s;
           }
           .file-action-btn:hover {
-            background: rgba(108,99,255,0.15);
-            color: #818cf8;
-            border-color: rgba(108,99,255,0.3);
+            background: rgba(42, 117, 118, 0.12);
+            color: var(--primary);
+            border-color: rgba(42, 117, 118, 0.3);
           }
           .table-row-hover:hover {
-            background: rgba(255, 255, 255, 0.04) !important;
+            background: var(--bg-input) !important;
           }
           .hover-link:hover {
             color: var(--primary-light) !important;
