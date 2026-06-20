@@ -62,16 +62,16 @@ const formatFileSize = (bytes) => {
 };
 
 function fileIconSvg(type) {
-  const base = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const base = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', stroke: 'currentColor', style: { color: 'var(--text-primary)' } };
   if (type?.startsWith('image/'))
-    return <svg {...base} stroke="#3ecfcf"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
+    return <svg {...base}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
   if (type === 'application/pdf')
-    return <svg {...base} stroke="#ef4444"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+    return <svg {...base}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
   if (type?.includes('word') || type?.startsWith('text/'))
-    return <svg {...base} stroke="#6c63ff"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>;
+    return <svg {...base}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>;
   if (type?.includes('zip') || type?.includes('rar') || type?.includes('7z'))
-    return <svg {...base} stroke="#f59e0b"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>;
-  return <svg {...base} stroke="var(--primary-light)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
+    return <svg {...base}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>;
+  return <svg {...base}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
 }
 
 
@@ -117,13 +117,13 @@ function FileCard({ file, onDelete, onPreview }) {
         </div>
         <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary-light)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)' }}>
               <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
             </svg>
             {file.groupName}
           </span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--secondary)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)' }}>
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
               <polyline points="17 21 17 13 7 13 7 21" />
               <polyline points="7 3 7 8 15 8" />
@@ -131,7 +131,7 @@ function FileCard({ file, onDelete, onPreview }) {
             {formatFileSize(file.fileSize)}
           </span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)' }}>
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -267,12 +267,12 @@ export default function MyDocuments() {
           {/* Header Panel with search */}
           <div className="premium-panel" style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', padding: '16px 20px' }}>
             <div>
-              <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tài liệu của tôi</h1>
+              <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tài liệu của tôi</h1>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>Danh sách tài liệu bạn đã chia sẻ trong các nhóm học.</p>
             </div>
             
             <div className="search-container" style={{ width: '100%', margin: 0 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)', flexShrink: 0 }}>
                 <circle cx="11" cy="11" r="8"/>
                 <path d="m21 21-4.3-4.3"/>
               </svg>
@@ -287,13 +287,13 @@ export default function MyDocuments() {
 
           {/* Main content table */}
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', width: '100%' }}>
+            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-secondary)', width: '100%' }}>
               Đang tải tài liệu...
             </div>
           ) : files.length === 0 ? (
             <div className="premium-panel" style={{ textAlign: 'center', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ color: 'var(--text-muted)', display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <div style={{ color: 'var(--text-secondary)', display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
                   <path d="M12 12v9" />
                   <path d="m9 15 3-3 3 3" />
@@ -372,7 +372,7 @@ export default function MyDocuments() {
                         </div>
                       </td>
                       <td style={{ padding: '12px 12px' }}>
-                        <Link to={`/groups/${file.groupId}`} style={{ color: 'var(--primary-light)', textDecoration: 'none', fontWeight: 600 }}>
+                        <Link to={`/groups/${file.groupId}`} style={{ color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 600 }}>
                           {file.groupName}
                         </Link>
                       </td>
@@ -517,7 +517,7 @@ export default function MyDocuments() {
             background: var(--bg-input) !important;
           }
           .hover-link:hover {
-            color: var(--primary-light) !important;
+            color: var(--primary) !important;
             text-decoration: underline !important;
           }
         `}</style>

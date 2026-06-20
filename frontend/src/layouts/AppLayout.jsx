@@ -443,6 +443,15 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                 {/* Sidebar items */}
                 {NAV_ITEMS.map((item) => {
                   const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
+                  const isAtHome = location.pathname === '/';
+                  const isHomeActive = isActive && isAtHome;
+                  const isNonHomeActive = isActive && !isAtHome;
+
+                  const sidebarBg = isHomeActive ? '#23615F' : (isNonHomeActive ? 'var(--bg-input)' : 'none');
+                  const sidebarBorder = isHomeActive ? '1px solid transparent' : (isNonHomeActive ? '1px solid var(--border)' : '1px solid transparent');
+                  const sidebarTextColor = isHomeActive ? '#FFFFFF' : (isNonHomeActive ? 'var(--text-primary)' : 'var(--text-secondary)');
+                  const sidebarIconColor = isHomeActive ? '#FFFFFF' : 'var(--text-primary)';
+
                   const hasUnread = item.key === 'chat' && unreadCount > 0;
                   const hasPending = item.key === 'friends' && pendingFriendsCount > 0;
                   return (
@@ -454,8 +463,8 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                           gap: '12px', 
                           padding: '11px 14px', 
                           borderRadius: '12px', 
-                          background: isActive ? '#23615F' : 'none', 
-                          border: isActive ? '1px solid transparent' : '1px solid transparent',
+                          background: sidebarBg, 
+                          border: sidebarBorder,
                           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
                           transform: 'translateY(0)',
                           position: 'relative' 
@@ -483,12 +492,12 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                           flexShrink: 0, 
                           filter: isActive ? 'drop-shadow(0 0 8px rgba(42, 117, 118, 0.5))' : 'none' 
                         }}>
-                          {NAV_ICONS[item.icon] ? NAV_ICONS[item.icon](isActive, '#FFFFFF') : item.icon}
+                          {NAV_ICONS[item.icon] ? NAV_ICONS[item.icon](isActive, sidebarIconColor) : item.icon}
                         </span>
                         <span style={{ 
                           fontSize: '14px', 
                           fontWeight: isActive ? 700 : 500, 
-                          color: isActive ? '#FFFFFF' : 'var(--text-secondary)', 
+                          color: sidebarTextColor, 
                           flex: 1,
                           whiteSpace: 'nowrap'
                         }}>

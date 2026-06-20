@@ -63,10 +63,10 @@ function CustomSelect({ value, onChange, options, placeholder = "Chọn...", dis
             top: 'calc(100% + 6px)',
             left: 0,
             right: 0,
-            background: '#1a1a2e',
+            background: 'var(--bg-card)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-md)',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
             maxHeight: '300px',
             overflowY: 'auto',
             overscrollBehavior: 'contain',
@@ -76,7 +76,7 @@ function CustomSelect({ value, onChange, options, placeholder = "Chọn...", dis
           }}
         >
           {/* Ô tìm kiếm nhanh */}
-          <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: '#1a1a2e', zIndex: 10 }}>
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 10 }}>
             <input
               type="text"
               placeholder="Tìm kiếm..."
@@ -86,10 +86,10 @@ function CustomSelect({ value, onChange, options, placeholder = "Chọn...", dis
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                background: 'rgba(255,255,255,0.03)',
+                background: 'var(--bg-input)',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
-                color: '#fff',
+                color: 'var(--text-primary)',
                 fontSize: '13.5px',
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -112,14 +112,14 @@ function CustomSelect({ value, onChange, options, placeholder = "Chọn...", dis
                 style={{
                   padding: '10px 16px',
                   fontSize: '14px',
-                  color: opt === value ? 'var(--primary-light)' : 'var(--text-primary)',
-                  background: opt === value ? 'rgba(108,99,255,0.12)' : 'transparent',
+                  color: opt === value ? 'var(--primary)' : 'var(--text-primary)',
+                  background: opt === value ? 'rgba(35, 97, 95, 0.12)' : 'transparent',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                   textAlign: 'left'
                 }}
                 onMouseEnter={e => {
-                  if (opt !== value) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  if (opt !== value) e.currentTarget.style.background = 'var(--bg-input)';
                 }}
                 onMouseLeave={e => {
                   if (opt !== value) e.currentTarget.style.background = 'transparent';
@@ -299,10 +299,10 @@ export default function Profile() {
             type="button" 
             onClick={() => fileRef.current?.click()} 
             style={{ 
-              background: 'rgba(108,99,255,0.08)', 
+              background: 'var(--bg-input)', 
               border: '1.5px solid var(--border)', 
               borderRadius: '12px',
-              color: 'var(--primary-light)', 
+              color: 'var(--text-primary)', 
               fontSize: '12px', 
               fontWeight: 700, 
               cursor: 'pointer', 
@@ -314,8 +314,8 @@ export default function Profile() {
               transition: 'all 0.15s ease',
               fontFamily: 'inherit'
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(108,99,255,0.15)'; e.currentTarget.style.color = 'var(--secondary)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(108,99,255,0.08)'; e.currentTarget.style.color = 'var(--primary-light)'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -330,7 +330,7 @@ export default function Profile() {
           <div className="profile-meta">
             {user?.university && (
               <div className="profile-meta-item">
-                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                     <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
@@ -341,7 +341,7 @@ export default function Profile() {
             )}
             {user?.major && (
               <div className="profile-meta-item">
-                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
                     <path d="M6 6h10" />
@@ -353,7 +353,7 @@ export default function Profile() {
             )}
             {parsed.province && parsed.district && (
               <div className="profile-meta-item">
-                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
                     <circle cx="12" cy="10" r="3"/>
@@ -372,7 +372,7 @@ export default function Profile() {
               </div>
             )}
             <div className="profile-meta-item">
-              <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+              <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                   <line x1="16" y1="2" x2="16" y2="6" />
@@ -507,7 +507,7 @@ export default function Profile() {
                   {/* Thiết lập quyền riêng tư */}
                   <div className="form-group" style={{ marginTop: '20px', marginBottom: '20px' }}>
                     <label className="form-label" style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)' }}>
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                       </svg>
                       Thiết lập quyền riêng tư

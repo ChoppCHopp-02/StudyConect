@@ -91,10 +91,11 @@ function PersonCard({ person, actions, isOnline }) {
           )}
           {person.proximityBadge && (
             <span style={{
-              background: person.proximityLevel === 1 ? 'rgba(16,185,129,0.12)' : 'rgba(108,99,255,0.12)',
-              color: person.proximityLevel === 1 ? '#10b981' : 'var(--primary-light)',
+              background: 'var(--bg-input)',
+              color: 'var(--text-primary)',
               fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px',
-              display: 'inline-flex', alignItems: 'center', gap: '4px'
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              border: '1px solid var(--border)'
             }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
@@ -446,7 +447,7 @@ export default function Friends() {
 
             {/* Search */}
              <div className="search-container">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)', flexShrink: 0 }}>
                 <circle cx="11" cy="11" r="8"/>
                 <path d="m21 21-4.3-4.3"/>
               </svg>
@@ -535,7 +536,7 @@ export default function Friends() {
                 {tab === 'nearby' && (
                   !myLocation.province ? (
                     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '32px 24px', textAlign: 'center' }}>
-                      <div style={{ color: 'var(--primary-light)', display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                      <div style={{ color: 'var(--text-primary)', display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 8px rgba(108,99,255,0.4))' }}>
                           <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
                           <circle cx="12" cy="10" r="3"/>

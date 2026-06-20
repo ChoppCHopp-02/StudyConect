@@ -210,13 +210,13 @@ function CameraModal({ onCapture, onClose }) {
     >
       <div
         style={{
-          background: '#15152a',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
           borderRadius: '24px',
           padding: '24px',
           width: '680px',
           maxWidth: '100%',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7)',
+          boxShadow: 'var(--shadow-lg)',
           animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
         onClick={e => e.stopPropagation()}
@@ -224,7 +224,7 @@ function CameraModal({ onCapture, onClose }) {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#fff' }}>Chụp ảnh trực tiếp</h3>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Chụp ảnh trực tiếp</h3>
             {ready && (
               <span
                 style={{
@@ -246,21 +246,21 @@ function CameraModal({ onCapture, onClose }) {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: 'none',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border)',
               borderRadius: '50%',
               width: '32px',
               height: '32px',
               cursor: 'pointer',
-              color: '#fff',
+              color: 'var(--text-primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '14px',
               transition: 'background 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-input)'}
           >
             ✕
           </button>
@@ -312,18 +312,18 @@ function CameraModal({ onCapture, onClose }) {
             style={{
               flex: 1,
               padding: '12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border)',
               borderRadius: '14px',
-              color: '#a0aec0',
+              color: 'var(--text-secondary)',
               fontFamily: 'inherit',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: 600,
               transition: 'all 0.2s'
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = '#a0aec0'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; }}
           >
             Hủy
           </button>
@@ -333,7 +333,7 @@ function CameraModal({ onCapture, onClose }) {
               style={{
                 flex: 2,
                 padding: '12px',
-                background: 'linear-gradient(135deg, #6c63ff, #5b53e0)',
+                background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
                 border: 'none',
                 borderRadius: '14px',
                 color: 'white',
@@ -341,7 +341,6 @@ function CameraModal({ onCapture, onClose }) {
                 fontFamily: 'inherit',
                 cursor: 'pointer',
                 fontSize: '14px',
-                boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
@@ -1933,17 +1932,17 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
         >
           <div
             style={{
-              background: '#15152a',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
               borderRadius: '24px',
               padding: '28px',
               width: '400px',
               maxWidth: '100%',
-              boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7)',
+              boxShadow: 'var(--shadow-lg)',
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: '#fff' }}>Đổi biệt danh</h3>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Đổi biệt danh</h3>
             <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
               Đặt biệt danh cho <strong>{friend.fullName}</strong>. Biệt danh này sẽ hiển thị thay thế cho tên thật trong tin nhắn và thông báo.
             </p>
@@ -1960,11 +1959,11 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
               }}
               style={{
                 width: '100%',
-                background: 'var(--bg-input, #0e0e1e)',
-                border: '1px solid var(--border, rgba(255,255,255,0.1))',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border)',
                 borderRadius: '14px',
                 padding: '12px 16px',
-                color: '#fff',
+                color: 'var(--text-primary)',
                 fontSize: '14px',
                 fontFamily: 'inherit',
                 outline: 'none',
@@ -1972,8 +1971,8 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 transition: 'border-color 0.2s',
                 boxSizing: 'border-box'
               }}
-              onFocus={e => e.currentTarget.style.borderColor = 'var(--primary, #6c63ff)'}
-              onBlur={e => e.currentTarget.style.borderColor = 'var(--border, rgba(255,255,255,0.1))'}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}
             />
 
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -1982,18 +1981,18 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border)',
                   borderRadius: '14px',
-                  color: '#a0aec0',
+                  color: 'var(--text-secondary)',
                   fontFamily: 'inherit',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 600,
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = '#a0aec0'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; }}
               >
                 Hủy bỏ
               </button>
@@ -2002,7 +2001,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'linear-gradient(135deg, var(--primary, #6c63ff), #5b53e0)',
+                  background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
                   border: 'none',
                   borderRadius: '14px',
                   color: 'white',
@@ -2010,7 +2009,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                   fontFamily: 'inherit',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)',
                   transition: 'all 0.2s'
                 }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
@@ -2041,17 +2039,17 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
         >
           <div
             style={{
-              background: '#15152a',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
               borderRadius: '24px',
               padding: '28px',
               width: '400px',
               maxWidth: '100%',
-              boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7)',
+              boxShadow: 'var(--shadow-lg)',
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: '#fff' }}>Xóa tin nhắn?</h3>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Xóa tin nhắn?</h3>
             <p style={{ margin: '0 0 24px 0', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
               Bạn có chắc chắn muốn xóa toàn bộ lịch sử tin nhắn với <strong>{nickname || friend.fullName}</strong> không? Hành động này không thể hoàn tác.
             </p>
@@ -2062,18 +2060,18 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border)',
                   borderRadius: '14px',
-                  color: '#a0aec0',
+                  color: 'var(--text-secondary)',
                   fontFamily: 'inherit',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 600,
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = '#a0aec0'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-card)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; }}
               >
                 Hủy bỏ
               </button>
@@ -2121,19 +2119,19 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
         >
           <div
             style={{
-              background: '#15152a',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
               borderRadius: '20px',
               padding: '20px',
               width: '340px',
               maxWidth: 'calc(100vw - 40px)',
-              boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7)',
+              boxShadow: 'var(--shadow-lg)',
               maxHeight: '85vh',
               overflowY: 'auto',
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: '#fff' }}>Đổi hình nền</h3>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Đổi hình nền</h3>
             <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
               Thay đổi hình nền trò chuyện giữa bạn và <strong>{nickname || friend.fullName}</strong>. Thay đổi này sẽ hiển thị ở cả hai bên thiết bị.
             </p>
@@ -2146,22 +2144,22 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                     display: 'block',
                     textAlign: 'center',
                     padding: '16px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '2px dashed rgba(255, 255, 255, 0.15)',
+                    background: 'var(--bg-input)',
+                    border: '2px dashed var(--border)',
                     borderRadius: '14px',
                     cursor: 'pointer',
-                    color: '#fff',
+                    color: 'var(--text-primary)',
                     fontSize: '14px',
                     fontWeight: 600,
                     transition: 'all 0.2s',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                    e.currentTarget.style.borderColor = 'var(--primary, #6c63ff)';
+                    e.currentTarget.style.background = 'var(--bg-card)';
+                    e.currentTarget.style.borderColor = 'var(--primary)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.background = 'var(--bg-input)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
                   }}
                 >
                   Chọn ảnh từ thiết bị
@@ -2210,7 +2208,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                   </label>
                   <label style={{
                     fontSize: '11px', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer',
-                    background: 'rgba(108,99,255,0.1)', padding: '4px 10px', borderRadius: '6px', margin: 0
+                    background: 'rgba(35,97,95,0.1)', padding: '4px 10px', borderRadius: '6px', margin: 0
                   }}>
                     Đổi ảnh
                     <input type="file" accept="image/*" onChange={handleBgFileChange} style={{ display: 'none' }} />
@@ -2260,10 +2258,10 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border)',
                   borderRadius: '14px',
-                  color: '#a0aec0',
+                  color: 'var(--text-secondary)',
                   fontFamily: 'inherit',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -2271,12 +2269,10 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                   transition: 'all 0.2s',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.background = 'var(--bg-card)';
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.color = '#a0aec0';
+                  e.currentTarget.style.background = 'var(--bg-input)';
                 }}
               >
                 Hủy bỏ
@@ -2288,7 +2284,7 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'linear-gradient(135deg, var(--primary, #6c63ff), #5b53e0)',
+                  background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
                   border: 'none',
                   borderRadius: '14px',
                   color: 'white',
@@ -2296,7 +2292,6 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                   fontFamily: 'inherit',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)',
                   transition: 'all 0.2s',
                   opacity: (!bgFilePreview) ? 0.5 : 1,
                 }}
@@ -2334,10 +2329,10 @@ function FriendList({ user, friends, onSelect, lastMessages, onlineUserIds }) {
       <div style={{ padding: '12px', flexShrink: 0 }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--bg-input)', border: '1px solid var(--border)',
           borderRadius: '12px', padding: '8px 12px', transition: 'border-color 0.2s',
         }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)', flexShrink: 0 }}>
             <circle cx="11" cy="11" r="8"/>
             <path d="m21 21-4.3-4.3"/>
           </svg>
@@ -2345,7 +2340,7 @@ function FriendList({ user, friends, onSelect, lastMessages, onlineUserIds }) {
             placeholder="Tìm kiếm bạn bè..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: '#fff', fontSize: '13px', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '13px', fontFamily: 'inherit' }}
           />
         </div>
       </div>
@@ -2357,7 +2352,7 @@ function FriendList({ user, friends, onSelect, lastMessages, onlineUserIds }) {
               <>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}></div>
                 <div style={{ fontWeight: 600, marginBottom: '8px' }}>Chưa có bạn bè nào</div>
-                <Link to="/friends" style={{ color: 'var(--primary-light)', textDecoration: 'none', fontSize: '13px' }}>Tìm bạn bè ngay</Link>
+                <Link to="/friends" style={{ color: 'var(--primary)', textDecoration: 'none', fontSize: '13px' }}>Tìm bạn bè ngay</Link>
               </>
             ) : 'Không tìm thấy kết quả.'}
           </div>
@@ -2662,12 +2657,10 @@ export default function Chat() {
           font-family: 'Inter', sans-serif;
         }
         .premium-panel {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: var(--bg-card);
+          border: 1px solid var(--border);
           border-radius: 24px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+          box-shadow: var(--shadow-sm);
         }
       `}</style>
     </AppLayout>

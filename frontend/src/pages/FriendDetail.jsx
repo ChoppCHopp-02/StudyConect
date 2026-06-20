@@ -368,7 +368,7 @@ export default function FriendDetail() {
               padding: '4px 0',
               transition: 'var(--transition)'
             }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-light)'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--primary)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
           >
             ← Quay lại bạn bè
@@ -428,7 +428,7 @@ export default function FriendDetail() {
           <div className="profile-meta" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
             {friendData.university && (
               <div className="profile-meta-item">
-                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                     <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
@@ -442,7 +442,7 @@ export default function FriendDetail() {
             )}
             {friendData.major && (
               <div className="profile-meta-item">
-                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
                     <path d="M6 6h10" />
@@ -457,7 +457,7 @@ export default function FriendDetail() {
             )}
             {locationInfo && (
               <div className="profile-meta-item">
-                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
                     <circle cx="12" cy="10" r="3"/>
@@ -471,7 +471,7 @@ export default function FriendDetail() {
             )}
             {friendData.created_at && !friendData.bio?.includes('[hide_join:1]') && (
               <div className="profile-meta-item">
-                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-light)' }}>
+                <span className="icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
@@ -498,8 +498,8 @@ export default function FriendDetail() {
                 padding: '12px',
                 borderRadius: '12px',
                 border: activeTab === 'posts' ? '1.5px solid var(--primary)' : '1px solid var(--border)',
-                background: activeTab === 'posts' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(255, 122, 0, 0.08))' : 'var(--bg-input)',
-                color: activeTab === 'posts' ? 'var(--secondary)' : 'var(--text-primary)',
+                background: activeTab === 'posts' ? 'var(--bg-input)' : 'transparent',
+                color: activeTab === 'posts' ? 'var(--text-primary)' : 'var(--text-secondary)',
                 fontWeight: 700,
                 fontSize: '14px',
                 cursor: 'pointer',
@@ -512,7 +512,7 @@ export default function FriendDetail() {
               onMouseEnter={e => {
                 if (activeTab !== 'posts') {
                   e.currentTarget.style.borderColor = 'var(--primary)';
-                  e.currentTarget.style.color = 'var(--primary-light)';
+                  e.currentTarget.style.color = 'var(--primary)';
                 }
               }}
               onMouseLeave={e => {
@@ -537,8 +537,8 @@ export default function FriendDetail() {
                 padding: '12px',
                 borderRadius: '12px',
                 border: activeTab === 'about' ? '1.5px solid var(--primary)' : '1px solid var(--border)',
-                background: activeTab === 'about' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(255, 122, 0, 0.08))' : 'var(--bg-input)',
-                color: activeTab === 'about' ? 'var(--secondary)' : 'var(--text-primary)',
+                background: activeTab === 'about' ? 'var(--bg-input)' : 'transparent',
+                color: activeTab === 'about' ? 'var(--text-primary)' : 'var(--text-secondary)',
                 fontWeight: 700,
                 fontSize: '14px',
                 cursor: 'pointer',
@@ -551,7 +551,7 @@ export default function FriendDetail() {
               onMouseEnter={e => {
                 if (activeTab !== 'about') {
                   e.currentTarget.style.borderColor = 'var(--primary)';
-                  e.currentTarget.style.color = 'var(--primary-light)';
+                  e.currentTarget.style.color = 'var(--primary)';
                 }
               }}
               onMouseLeave={e => {
@@ -622,7 +622,7 @@ export default function FriendDetail() {
             <div className="profile-card">
               <div className="profile-card-header">
                 <div className="card-header-icon-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--secondary)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)' }}>
                     <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                   </svg>
                 </div>
@@ -670,7 +670,7 @@ export default function FriendDetail() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                   <div style={{ textAlign: 'left' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary-light)' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)' }}>
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                       </svg>
@@ -679,13 +679,13 @@ export default function FriendDetail() {
                     <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>Toàn bộ các bài viết chia sẻ của {friendData.full_name}</p>
                   </div>
                   <div style={{
-                    background: 'rgba(99, 102, 241, 0.1)',
-                    color: 'var(--primary-light)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
                     fontSize: '13px',
                     fontWeight: 700,
                     padding: '6px 14px',
                     borderRadius: '20px',
-                    border: '1px solid rgba(99, 102, 241, 0.2)'
+                    border: '1px solid var(--border)'
                   }}>
                     {posts.length} Bài viết
                   </div>
