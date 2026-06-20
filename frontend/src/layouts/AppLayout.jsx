@@ -454,6 +454,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                   return (
                     <Link key={item.key} to={item.to} style={{ textDecoration: 'none' }}>
                       <div
+                        className={!isActive ? 'sc-nav-item' : ''}
                         style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
@@ -466,20 +467,12 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                           transform: 'translateY(0)',
                           position: 'relative' 
                         }}
-                        onMouseEnter={(e) => { 
+                        onMouseEnter={isActive ? (e) => { 
                           e.currentTarget.style.transform = 'translateY(-2px)';
-                          if (!isActive) {
-                            e.currentTarget.style.background = 'var(--bg-input)';
-                            e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.1)';
-                          }
-                        }}
-                        onMouseLeave={(e) => { 
+                        } : undefined}
+                        onMouseLeave={isActive ? (e) => { 
                           e.currentTarget.style.transform = 'translateY(0)';
-                          if (!isActive) {
-                            e.currentTarget.style.background = 'none';
-                            e.currentTarget.style.borderColor = 'transparent';
-                          }
-                        }}
+                        } : undefined}
                       >
                         <span style={{ 
                           width: '28px', 

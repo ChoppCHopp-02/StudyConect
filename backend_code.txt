@@ -1,4 +1,4 @@
-﻿===== C:\Users\Mervy\Desktop\StudyConect\backend\src\app.js =====
+===== C:\Users\Mervy\Desktop\StudyConect\backend\src\app.js =====
 // backend/app.js
 const express  = require('express');
 const cors     = require('cors');

@@ -1336,3 +1336,11 @@ select.form-input option {
     border-radius: 12px !important;
   }
 }
+
+.sc-nav-item {
+  transition: background 0.2s ease, transform 0.15s ease !important;
+}
+.sc-nav-item:hover {
+  background: rgba(35, 97, 95, 0.08) !important;
+  transform: translateX(2px) !important;
+}

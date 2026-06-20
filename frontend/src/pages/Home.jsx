@@ -295,6 +295,34 @@ export default function Home() {
           animation: floatEmojiUpFixed 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
           user-select: none;
         }
+        @keyframes sc-float-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .sc-card-animated {
+          animation: sc-float-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .sc-card-hover {
+          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sc-card-hover:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(35, 97, 95, 0.12);
+        }
+        @keyframes sc-pulse-dot {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.25); opacity: 0.7; }
+        }
+        .sc-online-dot {
+          animation: sc-pulse-dot 1.8s ease-in-out infinite;
+        }
+        .sc-avatar-hover {
+          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          cursor: pointer;
+        }
+        .sc-avatar-hover:hover {
+          transform: scale(1.08) rotate(-3deg);
+        }
       `}</style>
 
       {particles.map(p => (
@@ -318,8 +346,10 @@ export default function Home() {
           <main style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', paddingRight: '4px', overflow: 'hidden' }}>
             {/* Create Question Box - Fixed Top */}
             <div style={{ flexShrink: 0, paddingBottom: '14px', zIndex: 20 }}>
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
+              <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
+                <div className="sc-avatar-hover" style={{ display: 'inline-flex', borderRadius: '50%', flexShrink: 0 }}>
+                  <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
+                </div>
                 <button
                   onClick={() => setShowCreateModal(true)}
                   style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '24px', padding: '12px 18px', color: 'var(--text-muted)', fontSize: '14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center' }}
@@ -338,7 +368,7 @@ export default function Home() {
             </div>
 
             {/* Post List - Scrollable Area */}
-            <div className="no-scrollbar" style={{ flex: 1, height: 0, overflowY: 'auto' }}>
+            <div className="no-scrollbar sc-card-animated sc-card-hover" style={{ flex: 1, height: 0, overflowY: 'auto', animationDelay: '0.05s' }}>
               <PostList
                 posts={sortedPosts}
                 currentUser={user}
@@ -352,7 +382,7 @@ export default function Home() {
  
           {/* RIGHT COLUMN: fixed, does not scroll with posts */}
           <aside className="no-scrollbar" style={{ position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px' }}>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px' }}>
+            <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s' }}>
 
               {/* ─ Header chung ─ */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
@@ -419,8 +449,23 @@ export default function Home() {
 
               {/* ─ Deadline cần nộp ─ */}
               <div style={{ padding: '10px 16px 14px' }}>
-                <Link to="/schedule#deadlines" style={{ textDecoration: 'none', display: 'block' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <Link to="/schedule#deadlines" style={{ textDecoration: 'none', display: 'inline-block' }}>
+                  <div style={{
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    color: '#d99e2e',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    marginBottom: '8px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, rgba(217, 158, 46, 0.08), rgba(217, 158, 46, 0.03))',
+                    border: '1px solid rgba(217, 158, 46, 0.2)',
+                    padding: '4px 10px',
+                    borderRadius: '20px'
+                  }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
@@ -439,13 +484,24 @@ export default function Home() {
                   deadlines.map((d) => (
                     <Link key={d.id} to={`/groups/${d.groupId}?tab=deadlines`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                       <div
-                        style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)', background: d.dueSoon ? 'rgba(244,63,94,0.03)' : 'none', transition: 'all 0.2s ease', cursor: 'pointer' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = d.dueSoon ? 'rgba(244,63,94,0.08)' : 'rgba(17,24,39,0.06)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = d.dueSoon ? 'rgba(244,63,94,0.03)' : 'transparent'}
+                        style={{
+                          display: 'flex',
+                          gap: '10px',
+                          alignItems: 'center',
+                          padding: '8px 8px',
+                          margin: '2px 0',
+                          borderRadius: '8px',
+                          borderBottom: '1px solid var(--border)',
+                          background: d.dueSoon ? 'linear-gradient(135deg, rgba(217, 158, 46, 0.08), rgba(217, 158, 46, 0.03))' : 'none',
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = d.dueSoon ? 'linear-gradient(135deg, rgba(217, 158, 46, 0.15), rgba(217, 158, 46, 0.05))' : 'rgba(17,24,39,0.06)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = d.dueSoon ? 'linear-gradient(135deg, rgba(217, 158, 46, 0.08), rgba(217, 158, 46, 0.03))' : 'transparent'}
                       >
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: d.overdue ? '#64748b' : d.dueSoon ? 'var(--error)' : 'var(--success)', boxShadow: d.overdue ? 'none' : d.dueSoon ? '0 0 8px var(--error)' : '0 0 8px var(--success)' }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '12.5px', fontWeight: 600, color: d.overdue ? 'var(--text-muted)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: d.overdue ? 'var(--text-muted)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -477,11 +533,11 @@ export default function Home() {
             </div>
 
             {/* ── Bạn bè trực tuyến ── */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+            <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2A7576', boxShadow: '0 0 8px rgba(42, 117, 118, 0.45)' }} />
-                  Bạn bè trực tuyến
+                  <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2A7576', boxShadow: '0 0 8px rgba(42, 117, 118, 0.45)' }} />
+                  Bạn bè trực tuyến ({friends.filter(f => onlineUserIds.includes(f.userId.toString())).length})
                 </span>
                 <Link to="/friends" style={{ fontSize: '12px', color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
               </div>
@@ -496,49 +552,59 @@ export default function Home() {
                 padding: '10px 16px 16px 16px',
               }}>
                 {friends.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', padding: '10px 0' }}>
-                    Chưa có bạn bè nào. <Link to="/friends" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Kết bạn ngay</Link>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '10px', opacity: 0.55 }}>
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <line x1="17" y1="8" x2="21" y2="12" />
+                      <line x1="21" y1="8" x2="17" y2="12" />
+                    </svg>
+                    <span>Chưa có bạn bè nào. <Link to="/friends" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Kết bạn ngay</Link></span>
                   </div>
-                ) : (
-                  (() => {
-                    const sortedFriends = [...friends].sort((a, b) => {
-                      const aOn = onlineUserIds.includes(a.userId.toString()) ? 1 : 0;
-                      const bOn = onlineUserIds.includes(b.userId.toString()) ? 1 : 0;
-                      return bOn - aOn; // Online first
-                    });
-                    return sortedFriends.slice(0, 20).map((f) => {
-                      const isOnline = onlineUserIds.includes(f.userId.toString());
-                      return (
-                        <Link key={f.userId} to={`/friends/${f.userId}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '10px', transition: 'all 0.2s ease', cursor: 'pointer', background: 'transparent' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                          >
-                            <div style={{ position: 'relative', flexShrink: 0 }}>
-                              <Avatar src={f.avatar} initial={f.fullName} size={32} />
-                              <span style={{
-                                position: 'absolute', bottom: -1, right: -1,
-                                width: '10px', height: '10px', borderRadius: '50%',
-                                background: isOnline ? '#2A7576' : '#ef4444',
-                                border: '2px solid var(--bg-card)',
-                                boxShadow: isOnline ? '0 0 6px rgba(42, 117, 118, 0.45)' : 'none'
-                              }} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {f.fullName}
-                              </div>
-                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {isOnline ? 'Đang hoạt động' : 'Ngoại tuyến'}
-                              </div>
-                            </div>
+                ) : (() => {
+                  const onlineFriends = friends.filter(f => onlineUserIds.includes(f.userId.toString()));
+                  if (onlineFriends.length === 0) {
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '10px', opacity: 0.55 }}>
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <line x1="17" y1="8" x2="21" y2="12" />
+                          <line x1="21" y1="8" x2="17" y2="12" />
+                        </svg>
+                        <span>Chưa có bạn bè nào trực tuyến.</span>
+                      </div>
+                    );
+                  }
+                  return onlineFriends.slice(0, 20).map((f) => (
+                    <Link key={f.userId} to={`/friends/${f.userId}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '10px', transition: 'all 0.2s ease', cursor: 'pointer', background: 'transparent' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                          <Avatar src={f.avatar} initial={f.fullName} size={32} />
+                          <span style={{
+                            position: 'absolute', bottom: -1, right: -1,
+                            width: '10px', height: '10px', borderRadius: '50%',
+                            background: '#2A7576',
+                            border: '2px solid var(--bg-card)',
+                            boxShadow: '0 0 6px rgba(42, 117, 118, 0.45)'
+                          }} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {f.fullName}
                           </div>
-                        </Link>
-                      );
-                    });
-                  })()
-                )}
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            Đang hoạt động
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ));
+                })()}
               </div>
             </div>
           </aside>

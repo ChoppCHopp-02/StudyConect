@@ -41,6 +41,11 @@ export default function Avatar({ src, initial = 'U', color, size = 40, alt = '' 
     color ||
     AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 
+  const isGradient = String(bg).includes('gradient');
+  const backgroundStyle = isGradient ? bg : `linear-gradient(135deg, ${bg}, ${bg}99)`;
+  const hexMatch = String(bg).match(/#[a-fA-F0-9]{3,8}/);
+  const shadowColor = hexMatch ? hexMatch[0] : (isGradient ? 'rgba(0,0,0,0.15)' : bg);
+
   return (
     <div
       style={{
@@ -48,14 +53,14 @@ export default function Avatar({ src, initial = 'U', color, size = 40, alt = '' 
         height: size,
         borderRadius: '50%',
         flexShrink: 0,
-        background: `linear-gradient(135deg, ${bg}, ${bg}99)`,
+        background: backgroundStyle,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: size * 0.38,
         fontWeight: 800,
         color: '#fff',
-        boxShadow: `0 0 0 2px ${bg}44`,
+        boxShadow: `0 0 0 2px ${shadowColor}44`,
         userSelect: 'none',
       }}
     >
