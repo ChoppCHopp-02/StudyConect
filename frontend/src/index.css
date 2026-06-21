@@ -4,25 +4,25 @@
    DESIGN TOKENS - ENERGETIC FOCUS REDESIGN
    ═══════════════════════════════════════════ */
 :root {
-  --bg: #AFDAD0;
-  --bg-card: #F7FBFA;
-  --bg-input: #E3F3EE;
-  --border: #BFE0D8;
-  --border-hover: #A3D2C7;
-  --text-primary: #111827;
-  --text-secondary: #1F2937;
-  --text-muted: #374151;
-  --primary: #23615F;
-  --primary-dark: #194645;
-  --primary-light: #3F8A8A;
-  --secondary: #B9821F;
-  --accent: #B9821F;
-  --success: #23615F;
+  --bg: #F5EFEA;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-input: rgba(245, 239, 234, 0.7);
+  --border: rgba(232, 211, 195, 0.6);
+  --border-hover: #C9A896;
+  --text-primary: #4A2530;
+  --text-secondary: #6B3744;
+  --text-muted: #A87C87;
+  --primary: #4A2530;
+  --primary-dark: #2E1620;
+  --primary-light: #A87C87;
+  --secondary: #A87C87;
+  --accent: #A87C87;
+  --success: #4A2530;
   --error: #E53E3E;
-  --warning: #D69E2E;
-  --shadow: 0 1px 3px rgba(26, 54, 93, 0.06);
-  --shadow-lg: 0 4px 14px rgba(26, 54, 93, 0.08);
-  --shadow-glow: 0 0 0 rgba(0,0,0,0);
+  --warning: #C9A896;
+  --shadow: 0 8px 24px rgba(74, 37, 48, 0.12), 0 1px 2px rgba(74, 37, 48, 0.06);
+  --shadow-lg: 0 12px 32px rgba(74, 37, 48, 0.18), 0 2px 4px rgba(74, 37, 48, 0.08);
+  --shadow-glow: 0 0 20px rgba(168, 124, 135, 0.25);
   --radius: 16px;
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -142,6 +142,8 @@ button:active:not(:disabled) {
 /* ─── Auth Card ─── */
 .auth-card {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 36px 36px;
@@ -644,6 +646,8 @@ select.form-input option {
 /* Left panel - avatar + info */
 .profile-sidebar {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 36px 24px;
@@ -771,6 +775,8 @@ select.form-input option {
 
 .profile-card {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 32px 36px;
@@ -903,6 +909,8 @@ select.form-input option {
 
 .toast {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: var(--radius-sm);
   padding: 14px 18px;
   display: flex;
@@ -1049,6 +1057,7 @@ select.form-input option {
   height: 64px;
   background: var(--bg-card);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
   display: none;
   justify-content: space-around;
@@ -1121,6 +1130,8 @@ select.form-input option {
   width: 280px;
   max-width: 80vw;
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-right: 1px solid var(--border);
   z-index: 2001;
   transform: translateX(-100%);

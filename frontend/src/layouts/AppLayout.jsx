@@ -169,8 +169,9 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
           zIndex: 0,
           pointerEvents: 'none',
           backgroundImage: `
-            radial-gradient(circle at top right, rgba(42, 117, 118, 0.15), transparent 60%),
-            radial-gradient(circle at bottom left, rgba(214, 158, 46, 0.1), transparent 60%)
+            radial-gradient(circle at top right, rgba(168, 124, 135, 0.18), transparent 60%),
+            radial-gradient(circle at bottom left, rgba(232, 211, 195, 0.25), transparent 65%),
+            radial-gradient(circle at 10% 30%, rgba(74, 37, 48, 0.08), transparent 50%)
           `,
         }}
       />
@@ -444,10 +445,10 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                 {NAV_ITEMS.map((item) => {
                   const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
 
-                  const sidebarBg = isActive ? 'var(--bg-input)' : 'none';
-                  const sidebarBorder = isActive ? '1px solid var(--border)' : '1px solid transparent';
-                  const sidebarTextColor = isActive ? 'var(--text-primary)' : 'var(--text-secondary)';
-                  const sidebarIconColor = 'var(--text-primary)';
+                  const sidebarBg = isActive ? 'linear-gradient(135deg, #4A2530, #6B3744)' : 'none';
+                  const sidebarBorder = isActive ? '1px solid transparent' : '1px solid transparent';
+                  const sidebarTextColor = isActive ? '#ffffff' : 'var(--text-secondary)';
+                  const sidebarIconColor = isActive ? '#ffffff' : 'var(--text-primary)';
 
                   const hasUnread = item.key === 'chat' && unreadCount > 0;
                   const hasPending = item.key === 'friends' && pendingFriendsCount > 0;
@@ -480,7 +481,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                           alignItems: 'center', 
                           justifyContent: 'center', 
                           flexShrink: 0, 
-                          filter: isActive ? 'drop-shadow(0 0 8px rgba(42, 117, 118, 0.5))' : 'none' 
+                          filter: isActive ? 'drop-shadow(0 0 8px rgba(168, 124, 135, 0.5))' : 'none' 
                         }}>
                           {NAV_ICONS[item.icon] ? NAV_ICONS[item.icon](isActive, sidebarIconColor) : item.icon}
                         </span>

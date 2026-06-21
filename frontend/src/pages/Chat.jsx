@@ -35,7 +35,7 @@ function Avatar({ src, initial, color = '#6c63ff', size = 40 }) {
   );
 }
 
-const AVATAR_COLORS = ['#6c63ff', '#ff6b9d', '#3ecfcf', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6'];
+const AVATAR_COLORS = ['#4A2530', '#A87C87', '#C9A896', '#E8D3C3', '#D69E2E'];
 const colorOf = (str) => AVATAR_COLORS[(str || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 
 function fmtTime(iso) {
@@ -2394,7 +2394,7 @@ function FriendList({ user, friends, onSelect, lastMessages, onlineUserIds }) {
                     borderRadius: '50%',
                     background: isOnline ? '#2A7576' : '#ef4444',
                     border: '2px solid var(--bg-card)',
-                    boxShadow: isOnline ? '0 0 6px rgba(42, 117, 118, 0.45)' : 'none'
+                    boxShadow: isOnline ? '0 0 6px rgba(168, 124, 135, 0.7)' : 'none'
                   }} />
                 </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -2658,6 +2658,8 @@ export default function Chat() {
         }
         .premium-panel {
           background: var(--bg-card);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid var(--border);
           border-radius: 24px;
           box-shadow: var(--shadow-sm);

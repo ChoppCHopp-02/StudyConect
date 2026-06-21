@@ -1457,6 +1457,8 @@ export default function Groups() {
         }
         .premium-panel {
           background: var(--bg-card);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid var(--border);
           border-radius: var(--radius-lg);
           box-shadow: var(--shadow);
@@ -1486,6 +1488,8 @@ export default function Groups() {
         }
         .group-card {
           background: var(--bg-card);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid var(--border);
           border-radius: 20px;
           padding: 20px;

@@ -219,25 +219,25 @@ export default function App() {
    DESIGN TOKENS - ENERGETIC FOCUS REDESIGN
    ═══════════════════════════════════════════ */
 :root {
-  --bg: #AFDAD0;
-  --bg-card: #F7FBFA;
-  --bg-input: #E3F3EE;
-  --border: #BFE0D8;
-  --border-hover: #A3D2C7;
-  --text-primary: #111827;
-  --text-secondary: #1F2937;
-  --text-muted: #374151;
-  --primary: #23615F;
-  --primary-dark: #194645;
-  --primary-light: #3F8A8A;
-  --secondary: #B9821F;
-  --accent: #B9821F;
-  --success: #23615F;
+  --bg: #F5EFEA;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-input: rgba(245, 239, 234, 0.7);
+  --border: rgba(232, 211, 195, 0.6);
+  --border-hover: #C9A896;
+  --text-primary: #4A2530;
+  --text-secondary: #6B3744;
+  --text-muted: #A87C87;
+  --primary: #4A2530;
+  --primary-dark: #2E1620;
+  --primary-light: #A87C87;
+  --secondary: #A87C87;
+  --accent: #A87C87;
+  --success: #4A2530;
   --error: #E53E3E;
-  --warning: #D69E2E;
-  --shadow: 0 1px 3px rgba(26, 54, 93, 0.06);
-  --shadow-lg: 0 4px 14px rgba(26, 54, 93, 0.08);
-  --shadow-glow: 0 0 0 rgba(0,0,0,0);
+  --warning: #C9A896;
+  --shadow: 0 8px 24px rgba(74, 37, 48, 0.12), 0 1px 2px rgba(74, 37, 48, 0.06);
+  --shadow-lg: 0 12px 32px rgba(74, 37, 48, 0.18), 0 2px 4px rgba(74, 37, 48, 0.08);
+  --shadow-glow: 0 0 20px rgba(168, 124, 135, 0.25);
   --radius: 16px;
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -357,6 +357,8 @@ button:active:not(:disabled) {
 /* ─── Auth Card ─── */
 .auth-card {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 36px 36px;
@@ -859,6 +861,8 @@ select.form-input option {
 /* Left panel - avatar + info */
 .profile-sidebar {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 36px 24px;
@@ -986,6 +990,8 @@ select.form-input option {
 
 .profile-card {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 32px 36px;
@@ -1118,6 +1124,8 @@ select.form-input option {
 
 .toast {
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: var(--radius-sm);
   padding: 14px 18px;
   display: flex;
@@ -1264,6 +1272,7 @@ select.form-input option {
   height: 64px;
   background: var(--bg-card);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
   display: none;
   justify-content: space-around;
@@ -1336,6 +1345,8 @@ select.form-input option {
   width: 280px;
   max-width: 80vw;
   background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-right: 1px solid var(--border);
   z-index: 2001;
   transform: translateX(-100%);
@@ -3887,6 +3898,8 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
     <article
       style={{
         background: 'var(--bg-card)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         marginBottom: '14px',
@@ -11655,7 +11668,7 @@ function Avatar({ src, initial, color = '#6c63ff', size = 40 }) {
   );
 }
 
-const AVATAR_COLORS = ['#6c63ff', '#ff6b9d', '#3ecfcf', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6'];
+const AVATAR_COLORS = ['#4A2530', '#A87C87', '#C9A896', '#E8D3C3', '#D69E2E'];
 const colorOf = (str) => AVATAR_COLORS[(str || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 
 function fmtTime(iso) {
@@ -14014,7 +14027,7 @@ function FriendList({ user, friends, onSelect, lastMessages, onlineUserIds }) {
                     borderRadius: '50%',
                     background: isOnline ? '#2A7576' : '#ef4444',
                     border: '2px solid var(--bg-card)',
-                    boxShadow: isOnline ? '0 0 6px rgba(42, 117, 118, 0.45)' : 'none'
+                    boxShadow: isOnline ? '0 0 6px rgba(168, 124, 135, 0.7)' : 'none'
                   }} />
                 </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -14278,6 +14291,8 @@ export default function Chat() {
         }
         .premium-panel {
           background: var(--bg-card);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid var(--border);
           border-radius: 24px;
           box-shadow: var(--shadow-sm);
@@ -15171,7 +15186,7 @@ import {
   getUserPosts
 } from '../services/interactionService';
 
-const AVATAR_COLORS = ['#6c63ff', '#ff6b9d', '#3ecfcf', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6'];
+const AVATAR_COLORS = ['#4A2530', '#A87C87', '#C9A896', '#E8D3C3', '#D69E2E'];
 const colorOf = (str) => AVATAR_COLORS[(str || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 
 export default function FriendDetail() {
@@ -15545,7 +15560,7 @@ export default function FriendDetail() {
                 width: '16px', height: '16px', borderRadius: '50%',
                 background: isOnline ? '#2A7576' : '#ef4444',
                 border: '3px solid var(--bg-card)',
-                boxShadow: isOnline ? '0 0 10px rgba(42, 117, 118, 0.45)' : 'none',
+                boxShadow: isOnline ? '0 0 10px rgba(168, 124, 135, 0.7)' : 'none',
                 zIndex: 2
               }} />
             </div>
@@ -18091,7 +18106,7 @@ function Avatar({ src, initial, color = '#6c63ff', size = 40 }) {
   );
 }
 
-const AVATAR_COLORS = ['#6c63ff', '#ff6b9d', '#3ecfcf', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6'];
+const AVATAR_COLORS = ['#4A2530', '#A87C87', '#C9A896', '#E8D3C3', '#D69E2E'];
 const colorOf = (str) => AVATAR_COLORS[(str || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 
 
@@ -18127,7 +18142,7 @@ function PersonCard({ person, actions, isOnline }) {
             width: '12px', height: '12px', borderRadius: '50%',
             background: isOnline ? '#2A7576' : '#ef4444',
             border: '2px solid var(--bg-card)',
-            boxShadow: isOnline ? '0 0 6px rgba(42, 117, 118, 0.45)' : 'none'
+            boxShadow: isOnline ? '0 0 6px rgba(168, 124, 135, 0.7)' : 'none'
           }} />
         )}
       </div>
@@ -18821,6 +18836,8 @@ export default function Friends() {
 
         .person-card {
           background: var(--bg-card);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid var(--border);
           border-radius: 20px;
           padding: 22px 28px;
@@ -20431,7 +20448,7 @@ export default function Home() {
           <main style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', paddingRight: '4px', overflow: 'hidden' }}>
             {/* Create Question Box - Fixed Top */}
             <div style={{ flexShrink: 0, paddingBottom: '14px', zIndex: 20 }}>
-              <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
+              <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
                 <div className="sc-avatar-hover" style={{ display: 'inline-flex', borderRadius: '50%', flexShrink: 0 }}>
                   <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
                 </div>
@@ -20467,7 +20484,7 @@ export default function Home() {
  
           {/* RIGHT COLUMN: fixed, does not scroll with posts */}
           <aside className="no-scrollbar" style={{ position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px' }}>
-            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s' }}>
+            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s' }}>
 
               {/* ─ Header chung ─ */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
@@ -20611,10 +20628,10 @@ export default function Home() {
             </div>
 
             {/* ── Bạn bè trực tuyến ── */}
-            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s' }}>
+            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                  <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2A7576', boxShadow: '0 0 8px rgba(42, 117, 118, 0.45)' }} />
+                  <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2A7576', boxShadow: '0 0 6px rgba(168, 124, 135, 0.7)' }} />
                   Bạn bè trực tuyến ({friends.filter(f => onlineUserIds.includes(f.userId.toString())).length})
                 </span>
                 <Link to="/friends" style={{ fontSize: '12px', color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
@@ -20668,7 +20685,7 @@ export default function Home() {
                             width: '10px', height: '10px', borderRadius: '50%',
                             background: '#2A7576',
                             border: '2px solid var(--bg-card)',
-                            boxShadow: '0 0 6px rgba(42, 117, 118, 0.45)'
+                            boxShadow: '0 0 6px rgba(168, 124, 135, 0.7)'
                           }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -22176,6 +22193,8 @@ export default function Groups() {
         }
         .premium-panel {
           background: var(--bg-card);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid var(--border);
           border-radius: var(--radius-lg);
           box-shadow: var(--shadow);
@@ -22205,6 +22224,8 @@ export default function Groups() {
         }
         .group-card {
           background: var(--bg-card);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid var(--border);
           border-radius: 20px;
           padding: 20px;
@@ -27539,12 +27560,13 @@ export const FILE_LIMITS = {
 
 // ─── AVATAR COLORS ─────────────────────────────────────────────────
 export const AVATAR_COLORS = [
-  'linear-gradient(135deg, #6c63ff, #857dfa)',
-  'linear-gradient(135deg, #ff6b9d, #ff8da1)',
-  'linear-gradient(135deg, #3ecfcf, #5ce6e6)',
-  'linear-gradient(135deg, #f59e0b, #fbbf24)',
-  'linear-gradient(135deg, #22c55e, #4ade80)',
-  'linear-gradient(135deg, #ef4444, #f87171)',
+  'linear-gradient(135deg, #4A2530, #6B3744)',
+  'linear-gradient(135deg, #A87C87, #C19BA4)',
+  'linear-gradient(135deg, #C9A896, #DCC3B5)',
+  'linear-gradient(135deg, #E8D3C3, #F5E9DF)',
+  'linear-gradient(135deg, #A87C87, #C9A896)',
+  'linear-gradient(135deg, #4A2530, #A87C87)',
+  'linear-gradient(135deg, #C9A896, #E8D3C3)',
 ];
 
 
@@ -28120,8 +28142,9 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
           zIndex: 0,
           pointerEvents: 'none',
           backgroundImage: `
-            radial-gradient(circle at top right, rgba(42, 117, 118, 0.15), transparent 60%),
-            radial-gradient(circle at bottom left, rgba(214, 158, 46, 0.1), transparent 60%)
+            radial-gradient(circle at top right, rgba(168, 124, 135, 0.18), transparent 60%),
+            radial-gradient(circle at bottom left, rgba(232, 211, 195, 0.25), transparent 65%),
+            radial-gradient(circle at 10% 30%, rgba(74, 37, 48, 0.08), transparent 50%)
           `,
         }}
       />
@@ -28395,10 +28418,10 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                 {NAV_ITEMS.map((item) => {
                   const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
 
-                  const sidebarBg = isActive ? 'var(--bg-input)' : 'none';
-                  const sidebarBorder = isActive ? '1px solid var(--border)' : '1px solid transparent';
-                  const sidebarTextColor = isActive ? 'var(--text-primary)' : 'var(--text-secondary)';
-                  const sidebarIconColor = 'var(--text-primary)';
+                  const sidebarBg = isActive ? 'linear-gradient(135deg, #4A2530, #6B3744)' : 'none';
+                  const sidebarBorder = isActive ? '1px solid transparent' : '1px solid transparent';
+                  const sidebarTextColor = isActive ? '#ffffff' : 'var(--text-secondary)';
+                  const sidebarIconColor = isActive ? '#ffffff' : 'var(--text-primary)';
 
                   const hasUnread = item.key === 'chat' && unreadCount > 0;
                   const hasPending = item.key === 'friends' && pendingFriendsCount > 0;
@@ -28431,7 +28454,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                           alignItems: 'center', 
                           justifyContent: 'center', 
                           flexShrink: 0, 
-                          filter: isActive ? 'drop-shadow(0 0 8px rgba(42, 117, 118, 0.5))' : 'none' 
+                          filter: isActive ? 'drop-shadow(0 0 8px rgba(168, 124, 135, 0.5))' : 'none' 
                         }}>
                           {NAV_ICONS[item.icon] ? NAV_ICONS[item.icon](isActive, sidebarIconColor) : item.icon}
                         </span>

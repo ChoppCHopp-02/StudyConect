@@ -346,7 +346,7 @@ export default function Home() {
           <main style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', paddingRight: '4px', overflow: 'hidden' }}>
             {/* Create Question Box - Fixed Top */}
             <div style={{ flexShrink: 0, paddingBottom: '14px', zIndex: 20 }}>
-              <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
+              <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
                 <div className="sc-avatar-hover" style={{ display: 'inline-flex', borderRadius: '50%', flexShrink: 0 }}>
                   <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
                 </div>
@@ -382,7 +382,7 @@ export default function Home() {
  
           {/* RIGHT COLUMN: fixed, does not scroll with posts */}
           <aside className="no-scrollbar" style={{ position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px' }}>
-            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s' }}>
+            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s' }}>
 
               {/* ─ Header chung ─ */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
@@ -526,10 +526,10 @@ export default function Home() {
             </div>
 
             {/* ── Bạn bè trực tuyến ── */}
-            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s' }}>
+            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                  <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2A7576', boxShadow: '0 0 8px rgba(42, 117, 118, 0.45)' }} />
+                  <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2A7576', boxShadow: '0 0 6px rgba(168, 124, 135, 0.7)' }} />
                   Bạn bè trực tuyến ({friends.filter(f => onlineUserIds.includes(f.userId.toString())).length})
                 </span>
                 <Link to="/friends" style={{ fontSize: '12px', color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
@@ -583,7 +583,7 @@ export default function Home() {
                             width: '10px', height: '10px', borderRadius: '50%',
                             background: '#2A7576',
                             border: '2px solid var(--bg-card)',
-                            boxShadow: '0 0 6px rgba(42, 117, 118, 0.45)'
+                            boxShadow: '0 0 6px rgba(168, 124, 135, 0.7)'
                           }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>

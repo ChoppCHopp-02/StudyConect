@@ -74,6 +74,8 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
     <article
       style={{
         background: 'var(--bg-card)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         marginBottom: '14px',

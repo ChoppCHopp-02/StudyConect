@@ -15,7 +15,7 @@ import {
   getUserPosts
 } from '../services/interactionService';
 
-const AVATAR_COLORS = ['#6c63ff', '#ff6b9d', '#3ecfcf', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6'];
+const AVATAR_COLORS = ['#4A2530', '#A87C87', '#C9A896', '#E8D3C3', '#D69E2E'];
 const colorOf = (str) => AVATAR_COLORS[(str || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 
 export default function FriendDetail() {
@@ -389,7 +389,7 @@ export default function FriendDetail() {
                 width: '16px', height: '16px', borderRadius: '50%',
                 background: isOnline ? '#2A7576' : '#ef4444',
                 border: '3px solid var(--bg-card)',
-                boxShadow: isOnline ? '0 0 10px rgba(42, 117, 118, 0.45)' : 'none',
+                boxShadow: isOnline ? '0 0 10px rgba(168, 124, 135, 0.7)' : 'none',
                 zIndex: 2
               }} />
             </div>
