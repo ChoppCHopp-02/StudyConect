@@ -127,7 +127,7 @@ export default function Schedule() {
       <div className="schedule-container">
         {/* Page Header */}
         <div>
-          <h1 className="page-title">Lịch học & Deadline</h1>
+          <h1 className="page-title">Lịch học và Deadline</h1>
           <p className="page-subtitle">Quản lý buổi học nhóm và thời hạn nộp bài tập của bạn</p>
         </div>
 
@@ -362,8 +362,9 @@ export default function Schedule() {
           z-index: 1;
         }
         .page-title {
+          font-family: 'Fraunces', serif;
           font-size: 24px;
-          font-weight: 800;
+          font-weight: 900;
           color: var(--primary);
           margin: 0 0 6px 0;
           line-height: 1.2;

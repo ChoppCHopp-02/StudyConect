@@ -164,7 +164,7 @@ export default function GroupDetail() {
             {/* Group name + member count */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '24px', flexWrap: 'wrap' }}>
               <div>
-                <h1 className="group-header-title" style={{ fontSize: '30px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)', lineHeight: 1.2 }}>{h.group.name}</h1>
+                <h1 className="group-header-title" style={{ fontFamily: "'Fraunces', serif", fontSize: '30px', fontWeight: 900, margin: '0 0 8px 0', color: 'var(--text-primary)', lineHeight: 1.2 }}>{h.group.name}</h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0, maxWidth: '640px', lineHeight: 1.6 }}>{h.group.description || 'Chưa có mô tả cho nhóm này.'}</p>
               </div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(62,207,207,0.06)', border: '1px solid rgba(62,207,207,0.2)', borderRadius: '999px', alignSelf: 'flex-start' }}>

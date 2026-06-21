@@ -394,7 +394,7 @@ export default function Home() {
                     <line x1="3" x2="21" y1="10" y2="10"/>
                     <path d="m9 16 2 2 4-4"/>
                   </svg>
-                  Lịch & Deadline
+                  Lịch và Deadline
                 </span>
                 <Link to="/schedule" style={{ fontSize: '12px', color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
               </div>

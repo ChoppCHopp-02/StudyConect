@@ -449,7 +449,7 @@ export default function Friends() {
       <main className="friend-page-container">
           {/* Header */}
           <div className="premium-panel sc-card-animated sc-card-hover">
-            <h1 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '4px', color: 'var(--text-primary)' }}>Kết bạn</h1>
+            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 900, marginBottom: '4px', color: 'var(--text-primary)' }}>Kết bạn</h1>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
               Kết nối với sinh viên cùng trường, cùng ngành và mở rộng mạng lưới học tập.
             </p>

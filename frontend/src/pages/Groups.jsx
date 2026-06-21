@@ -973,7 +973,7 @@ export default function Groups() {
             <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg, var(--text-primary), var(--text-primary))', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '20px' }}>
               📚
             </div>
-            <span style={{ fontSize: 18, fontWeight: 900, fontFamily: "'Playfair Display', serif", fontStyle: 'italic', background: 'linear-gradient(135deg, var(--text-primary) 30%, var(--text-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.3px' }}>Studyconect</span>
+            <span style={{ fontSize: 18, fontWeight: 900, fontFamily: "'Fraunces', serif", fontStyle: 'italic', background: 'linear-gradient(135deg, var(--text-primary) 30%, var(--text-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.3px' }}>Studyconect</span>
           </div>
           <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '2px 6px', borderRadius: 6, transition: 'var(--transition)' }}>✕</button>
         </div>
@@ -1444,8 +1444,9 @@ export default function Groups() {
           font-family: 'Inter', sans-serif;
         }
         .page-title {
+          font-family: 'Fraunces', serif;
           font-size: 24px;
-          font-weight: 800;
+          font-weight: 900;
           color: var(--text-primary);
           margin: 0 0 6px 0;
           line-height: 1.2;

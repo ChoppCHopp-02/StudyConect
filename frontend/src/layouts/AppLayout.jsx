@@ -75,7 +75,7 @@ const NAV_ICONS = {
 const NAV_ITEMS = [
   { icon: 'home', label: 'Trang chủ', to: '/', key: 'home' },
   { icon: 'groups', label: 'Nhóm học', to: '/groups', key: 'groups' },
-  { icon: 'schedule', label: 'Lịch & Deadline', to: '/schedule', key: 'schedule' },
+  { icon: 'schedule', label: 'Lịch và Deadline', to: '/schedule', key: 'schedule' },
   { icon: 'friends', label: 'Kết bạn', to: '/friends', key: 'friends' },
   { icon: 'docs', label: 'Tài liệu', to: '/my-documents', key: 'docs' },
   { icon: 'chat', label: 'Nhắn tin', to: '/chat', key: 'chat' },
@@ -191,7 +191,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
               <img src="/studyconect_logo.png" alt="Logo" style={{ width: '42px', height: '42px', objectFit: 'contain' }} />
             </div>
             <span className="nav-brand-text" style={{
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Fraunces', serif",
               fontStyle: 'italic',
               fontSize: '21px',
               fontWeight: 900,
@@ -287,7 +287,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                     e.currentTarget.style.background = isActive ? 'var(--bg-input)' : 'rgba(255, 255, 255, 0.02)';
                   }}
                 >
-                  Lịch &amp; Deadline
+                  Lịch và Deadline
                 </Link>
               </div>
             )}
@@ -335,7 +335,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img src="/studyconect_logo.png" alt="Logo" style={{ width: '18px', height: '18px', objectFit: 'contain' }} />
-              <span style={{ fontSize: '18px', fontWeight: 900, fontFamily: "'Playfair Display', serif", fontStyle: 'italic', background: 'linear-gradient(135deg, var(--text-primary) 30%, var(--primary-light) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Studyconect</span>
+              <span style={{ fontSize: '18px', fontWeight: 900, fontFamily: "'Fraunces', serif", fontStyle: 'italic', background: 'linear-gradient(135deg, var(--text-primary) 30%, var(--primary-light) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Studyconect</span>
             </div>
             <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px' }}>✕</button>
           </div>
@@ -362,7 +362,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
 
             <Link to="/flashcards" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', background: location.pathname === '/flashcards' ? 'var(--bg-input)' : 'none', border: location.pathname === '/flashcards' ? '1px solid var(--border)' : '1px solid transparent', fontWeight: 600, fontSize: '14px' }}>
               {NAV_ICONS.flashcards(location.pathname === '/flashcards', 'var(--text-primary)')}
-              Thẻ học &amp; Trắc nghiệm
+              Thẻ học và Trắc nghiệm
             </Link>
             <Link to="/groups" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', background: location.pathname.startsWith('/groups') ? 'var(--bg-input)' : 'none', border: location.pathname.startsWith('/groups') ? '1px solid var(--border)' : '1px solid transparent', fontWeight: 600, fontSize: '14px' }}>
               {NAV_ICONS.groups(location.pathname.startsWith('/groups'), 'var(--text-primary)')}
@@ -370,7 +370,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
             </Link>
             <Link to="/schedule" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', background: location.pathname === '/schedule' ? 'var(--bg-input)' : 'none', border: location.pathname === '/schedule' ? '1px solid var(--border)' : '1px solid transparent', fontWeight: 600, fontSize: '14px' }}>
               {NAV_ICONS.schedule(location.pathname === '/schedule', 'var(--text-primary)')}
-              Lịch học &amp; Deadline
+              Lịch học và Deadline
             </Link>
             <Link to="/friends" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px', textDecoration: 'none', color: 'var(--text-primary)', background: location.pathname === '/friends' ? 'var(--bg-input)' : 'none', border: location.pathname === '/friends' ? '1px solid var(--border)' : '1px solid transparent', fontWeight: 600, fontSize: '14px' }}>
               {NAV_ICONS.friends(location.pathname === '/friends', 'var(--text-primary)')}

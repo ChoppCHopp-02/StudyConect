@@ -8,7 +8,7 @@ export { HCM_UNIVERSITIES, MAJORS } from './educationData';
 export const NAV_ITEMS = [
   { icon: '🏠', label: 'Trang chủ',      to: '/',             key: 'home'     },
   { icon: '👥', label: 'Nhóm học',        to: '/groups',       key: 'groups'   },
-  { icon: '📅', label: 'Lịch & Deadline', to: '/schedule',     key: 'schedule' },
+  { icon: '📅', label: 'Lịch và Deadline', to: '/schedule',     key: 'schedule' },
   { icon: '🤝', label: 'Kết bạn',         to: '/friends',      key: 'friends'  },
   { icon: '📁', label: 'Tài liệu',        to: '/my-documents', key: 'docs'     },
   { icon: '💬', label: 'Nhắn tin',        to: '/chat',         key: 'chat'     },
