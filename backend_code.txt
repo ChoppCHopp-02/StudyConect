@@ -1,4 +1,5 @@
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\app.js =====
+﻿===== D:\StudyConect\backend\src\app.js =====
+
 // backend/app.js
 const express  = require('express');
 const cors     = require('cors');
@@ -10,12 +11,12 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 phĂºt
+  windowMs: 15 * 60 * 1000, // 15 phút
   max: 100,
-  message: apiError('QuĂ¡ nhiá»u request, thá»­ láº¡i sau', 429)
+  message: apiError('Quá nhiều request, thử lại sau', 429)
 });
 
-// â”€â”€ Global middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Global middleware ──────────────────────────────────────────────
 app.use(cors({
   origin: (process.env.CORS_ORIGIN || 'http://localhost:5173').split(','),
   credentials: true,
@@ -25,12 +26,12 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(logger.requestMiddleware);
 
-// â”€â”€ Health check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Health check ───────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.json({ success: true, message: 'StudyConnect API is running đŸ€', uptime: process.uptime() });
+  res.json({ success: true, message: 'StudyConnect API is running 🚀', uptime: process.uptime() });
 });
 
-// â”€â”€ API routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── API routes ─────────────────────────────────────────────────────
 // Uncomment as controllers are implemented:
 app.use('/api/auth',          require('./controllers/authController'));
 app.use('/api/users',         require('./controllers/userController'));
@@ -39,23 +40,69 @@ app.use('/api/users',         require('./controllers/userController'));
 // app.use('/api/chat',          require('./controllers/chatController'));
 // app.use('/api/admin',         require('./controllers/adminController'));
 
-// â”€â”€ 404 handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── 404 handler ───────────────────────────────────────────────────
 app.use((_req, res) => {
-  res.status(404).json(apiError('Route khĂ´ng tá»“n táº¡i', 404));
+  res.status(404).json(apiError('Route không tồn tại', 404));
 });
 
-// â”€â”€ Global error handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Global error handler ──────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
   logger.error(err.message, { stack: err.stack });
   const status  = err.statusCode || 500;
-  const message = process.env.NODE_ENV === 'production' ? 'ÄĂ£ xáº£y ra lá»—i server' : err.message;
+  const message = process.env.NODE_ENV === 'production' ? 'Đã xảy ra lỗi server' : err.message;
   res.status(status).json(apiError(message, status));
 });
 
 module.exports = app;
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\config\database.js =====
+
+===== D:\StudyConect\backend\src\server.js =====
+
+// backend/server.js
+require('dotenv').config();
+const app              = require('./app');
+const { connectDB }    = require('./config/database');
+const logger           = require('./utils/logger');
+
+const PORT = parseInt(process.env.PORT || '5000', 10);
+
+const start = async () => {
+  try {
+    await connectDB();
+
+    const server = app.listen(PORT, () => {
+      logger.info(`🚀 StudyConnect API running on http://localhost:${PORT}`);
+      logger.info(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+
+    // Graceful shutdown
+    const shutdown = (signal) => {
+      logger.warn(`${signal} received — shutting down gracefully...`);
+      server.close(() => {
+        logger.info('✅ HTTP server closed');
+        process.exit(0);
+      });
+      setTimeout(() => {
+        logger.error('Force shutdown after timeout');
+        process.exit(1);
+      }, 10_000);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT',  () => shutdown('SIGINT'));
+
+  } catch (err) {
+    logger.error('Failed to start server:', { message: err.message });
+    process.exit(1);
+  }
+};
+
+start();
+
+
+===== D:\StudyConect\backend\src\config\database.js =====
+
 // backend/config/database.js
 const { Sequelize } = require('sequelize');
 const logger = require('../utils/logger');
@@ -98,7 +145,9 @@ const connectDB = async () => {
 
 module.exports = { sequelize, connectDB };
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\controllers\authController.js =====
+
+===== D:\StudyConect\backend\src\controllers\authController.js =====
+
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -114,7 +163,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   throw new Error(
-    '[Auth] SUPABASE_URL hoáº·c SUPABASE_SERVICE_KEY chÆ°a cáº¥u hĂ¬nh'
+    '[Auth] SUPABASE_URL hoặc SUPABASE_SERVICE_KEY chưa cấu hình'
   );
 }
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -124,14 +173,14 @@ router.post('/register', async (req, res) => {
   try {
     const { full_name, email, password } = req.body;
     if (!full_name || !email || !password) {
-      return res.status(400).json(apiError('Vui lĂ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ há» tĂªn, email vĂ  máº­t kháº©u', 400));
+      return res.status(400).json(apiError('Vui lòng điền đầy đủ họ tên, email và mật khẩu', 400));
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json(apiError('Email khĂ´ng Ä‘Ăºng Ä‘á»‹nh dáº¡ng', 400));
+      return res.status(400).json(apiError('Email không đúng định dạng', 400));
     }
     if (password.length < 8) {
-      return res.status(400).json(apiError('Máº­t kháº©u pháº£i chá»©a tá»‘i thiá»ƒu 8 kĂ½ tá»±', 400));
+      return res.status(400).json(apiError('Mật khẩu phải chứa tối thiểu 8 ký tự', 400));
     }
 
     // Check existing email
@@ -142,11 +191,11 @@ router.post('/register', async (req, res) => {
       .maybeSingle();
 
     if (checkError) {
-      logger.error('[Auth Register] Lá»—i kiá»ƒm tra email:', { message: checkError.message });
-      return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng khi kiá»ƒm tra email', 500));
+      logger.error('[Auth Register] Lỗi kiểm tra email:', { message: checkError.message });
+      return res.status(500).json(apiError('Lỗi hệ thống khi kiểm tra email', 500));
     }
     if (existingUser) {
-      return res.status(400).json(apiError('Email Ä‘Ă£ Ä‘Æ°á»£c sá»­ dá»¥ng', 400));
+      return res.status(400).json(apiError('Email đã được sử dụng', 400));
     }
 
     // Hash password
@@ -165,14 +214,14 @@ router.post('/register', async (req, res) => {
       .single();
 
     if (insertError) {
-      logger.error('[Auth Register] Lá»—i Ä‘Äƒng kĂ½ user:', { message: insertError.message });
-      return res.status(500).json(apiError('ÄÄƒng kĂ½ tĂ i khoáº£n tháº¥t báº¡i', 500));
+      logger.error('[Auth Register] Lỗi đăng ký user:', { message: insertError.message });
+      return res.status(500).json(apiError('Đăng ký tài khoản thất bại', 500));
     }
 
-    return res.status(201).json(apiSuccess(newUser, 'ÄÄƒng kĂ½ tĂ i khoáº£n thĂ nh cĂ´ng', 201));
+    return res.status(201).json(apiSuccess(newUser, 'Đăng ký tài khoản thành công', 201));
   } catch (error) {
-    logger.error('[Auth Register] Lá»—i khĂ´ng xĂ¡c Ä‘á»‹nh:', { message: error.message });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[Auth Register] Lỗi không xác định:', { message: error.message });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
@@ -181,7 +230,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json(apiError('Email vĂ  máº­t kháº©u lĂ  báº¯t buá»™c', 400));
+      return res.status(400).json(apiError('Email và mật khẩu là bắt buộc', 400));
     }
 
     // Query user including password (for comparison)
@@ -192,21 +241,21 @@ router.post('/login', async (req, res) => {
       .maybeSingle();
 
     if (queryError) {
-      logger.error('[Auth Login] Lá»—i truy váº¥n user:', { message: queryError.message });
-      return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng khi Ä‘Äƒng nháº­p', 500));
+      logger.error('[Auth Login] Lỗi truy vấn user:', { message: queryError.message });
+      return res.status(500).json(apiError('Lỗi hệ thống khi đăng nhập', 500));
     }
 
     if (!user) {
-      return res.status(401).json(apiError('Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng', 401));
+      return res.status(401).json(apiError('Email hoặc mật khẩu không đúng', 401));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json(apiError('Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng', 401));
+      return res.status(401).json(apiError('Email hoặc mật khẩu không đúng', 401));
     }
 
     if (user.is_banned) {
-      return res.status(403).json(apiError('TĂ i khoáº£n Ä‘Ă£ bá»‹ khĂ³a', 403));
+      return res.status(403).json(apiError('Tài khoản đã bị khóa', 403));
     }
 
     // Clean user object (remove password)
@@ -215,10 +264,10 @@ router.post('/login', async (req, res) => {
 
     const token = signToken(cleanedUser);
 
-    return res.status(200).json(apiSuccess({ user: cleanedUser, token }, 'ÄÄƒng nháº­p thĂ nh cĂ´ng'));
+    return res.status(200).json(apiSuccess({ user: cleanedUser, token }, 'Đăng nhập thành công'));
   } catch (error) {
-    logger.error('[Auth Login] Lá»—i khĂ´ng xĂ¡c Ä‘á»‹nh:', { message: error.message });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[Auth Login] Lỗi không xác định:', { message: error.message });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
@@ -227,7 +276,7 @@ router.post('/admin-login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json(apiError('Email vĂ  máº­t kháº©u lĂ  báº¯t buá»™c', 400));
+      return res.status(400).json(apiError('Email và mật khẩu là bắt buộc', 400));
     }
 
     const { data: user, error: queryError } = await supabase
@@ -237,25 +286,25 @@ router.post('/admin-login', async (req, res) => {
       .maybeSingle();
 
     if (queryError) {
-      logger.error('[Admin Login] Lá»—i truy váº¥n user:', { message: queryError.message });
-      return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng khi Ä‘Äƒng nháº­p', 500));
+      logger.error('[Admin Login] Lỗi truy vấn user:', { message: queryError.message });
+      return res.status(500).json(apiError('Lỗi hệ thống khi đăng nhập', 500));
     }
 
     if (!user) {
-      return res.status(401).json(apiError('Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng', 401));
+      return res.status(401).json(apiError('Email hoặc mật khẩu không đúng', 401));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json(apiError('Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng', 401));
+      return res.status(401).json(apiError('Email hoặc mật khẩu không đúng', 401));
     }
 
     if (user.is_banned) {
-      return res.status(403).json(apiError('TĂ i khoáº£n Ä‘Ă£ bá»‹ khĂ³a', 403));
+      return res.status(403).json(apiError('Tài khoản đã bị khóa', 403));
     }
 
     if (user.role !== 'admin') {
-      return res.status(403).json(apiError('Chá»‰ quáº£n trá»‹ viĂªn má»›i cĂ³ quyá»n Ä‘Äƒng nháº­p trang nĂ y', 403));
+      return res.status(403).json(apiError('Chỉ quản trị viên mới có quyền đăng nhập trang này', 403));
     }
 
     const cleanedUser = { ...user };
@@ -263,10 +312,10 @@ router.post('/admin-login', async (req, res) => {
 
     const token = signToken(cleanedUser);
 
-    return res.status(200).json(apiSuccess({ user: cleanedUser, token }, 'ÄÄƒng nháº­p quáº£n trá»‹ viĂªn thĂ nh cĂ´ng'));
+    return res.status(200).json(apiSuccess({ user: cleanedUser, token }, 'Đăng nhập quản trị viên thành công'));
   } catch (error) {
-    logger.error('[Admin Login] Lá»—i khĂ´ng xĂ¡c Ä‘á»‹nh:', { message: error.message });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[Admin Login] Lỗi không xác định:', { message: error.message });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
@@ -275,7 +324,7 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json(apiError('Email lĂ  báº¯t buá»™c', 400));
+      return res.status(400).json(apiError('Email là bắt buộc', 400));
     }
 
     // Query user
@@ -286,8 +335,8 @@ router.post('/forgot-password', async (req, res) => {
       .maybeSingle();
 
     if (queryError) {
-      logger.error('[Forgot Password] Lá»—i truy váº¥n email:', { message: queryError.message });
-      return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+      logger.error('[Forgot Password] Lỗi truy vấn email:', { message: queryError.message });
+      return res.status(500).json(apiError('Lỗi hệ thống', 500));
     }
 
     if (user) {
@@ -300,24 +349,24 @@ router.post('/forgot-password', async (req, res) => {
         .eq('id', user.id);
 
       if (updateError) {
-        logger.error('[Forgot Password] Lá»—i lÆ°u token reset:', { message: updateError.message });
-        return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+        logger.error('[Forgot Password] Lỗi lưu token reset:', { message: updateError.message });
+        return res.status(500).json(apiError('Lỗi hệ thống', 500));
       }
 
       // Send email (async, non-blocking)
       const emailHtml = resetPasswordEmail(resetToken, user.full_name);
       sendEmail({
         to: user.email,
-        subject: 'Äáº·t láº¡i máº­t kháº©u StudyConnect',
+        subject: 'Đặt lại mật khẩu StudyConnect',
         html: emailHtml
-      }).catch(err => logger.error('[Forgot Password] Gá»­i email tháº¥t báº¡i:', { message: err.message }));
+      }).catch(err => logger.error('[Forgot Password] Gửi email thất bại:', { message: err.message }));
     }
 
     // Always return success for security (prevent email enumeration)
-    return res.status(200).json(apiSuccess(null, 'YĂªu cáº§u khĂ´i phá»¥c máº­t kháº©u Ä‘Ă£ Ä‘Æ°á»£c ghi nháº­n. Náº¿u email tá»“n táº¡i trong há»‡ thá»‘ng, hÆ°á»›ng dáº«n Ä‘áº·t láº¡i máº­t kháº©u Ä‘Ă£ Ä‘Æ°á»£c gá»­i.'));
+    return res.status(200).json(apiSuccess(null, 'Yêu cầu khôi phục mật khẩu đã được ghi nhận. Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi.'));
   } catch (error) {
-    logger.error('[Forgot Password] Lá»—i khĂ´ng xĂ¡c Ä‘á»‹nh:', { message: error.message });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[Forgot Password] Lỗi không xác định:', { message: error.message });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
@@ -326,10 +375,10 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body;
     if (!token || !newPassword) {
-      return res.status(400).json(apiError('Token vĂ  máº­t kháº©u má»›i lĂ  báº¯t buá»™c', 400));
+      return res.status(400).json(apiError('Token và mật khẩu mới là bắt buộc', 400));
     }
     if (newPassword.length < 8) {
-      return res.status(400).json(apiError('Máº­t kháº©u má»›i pháº£i chá»©a tá»‘i thiá»ƒu 8 kĂ½ tá»±', 400));
+      return res.status(400).json(apiError('Mật khẩu mới phải chứa tối thiểu 8 ký tự', 400));
     }
 
     // Query user by reset token
@@ -340,18 +389,18 @@ router.post('/reset-password', async (req, res) => {
       .maybeSingle();
 
     if (queryError) {
-      logger.error('[Reset Password] Lá»—i truy váº¥n token:', { message: queryError.message });
-      return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+      logger.error('[Reset Password] Lỗi truy vấn token:', { message: queryError.message });
+      return res.status(500).json(apiError('Lỗi hệ thống', 500));
     }
 
     if (!user) {
-      return res.status(400).json(apiError('MĂ£ khĂ´i phá»¥c khĂ´ng há»£p lá»‡ hoáº·c Ä‘Ă£ Ä‘Æ°á»£c sá»­ dá»¥ng', 400));
+      return res.status(400).json(apiError('Mã khôi phục không hợp lệ hoặc đã được sử dụng', 400));
     }
 
     const now = new Date();
     const expires = new Date(user.reset_expires);
     if (expires < now) {
-      return res.status(400).json(apiError('MĂ£ khĂ´i phá»¥c Ä‘Ă£ háº¿t háº¡n', 400));
+      return res.status(400).json(apiError('Mã khôi phục đã hết hạn', 400));
     }
 
     // Hash new password
@@ -368,20 +417,22 @@ router.post('/reset-password', async (req, res) => {
       .eq('id', user.id);
 
     if (updateError) {
-      logger.error('[Reset Password] Lá»—i Ä‘áº·t láº¡i máº­t kháº©u:', { message: updateError.message });
-      return res.status(500).json(apiError('Äáº·t láº¡i máº­t kháº©u tháº¥t báº¡i', 500));
+      logger.error('[Reset Password] Lỗi đặt lại mật khẩu:', { message: updateError.message });
+      return res.status(500).json(apiError('Đặt lại mật khẩu thất bại', 500));
     }
 
-    return res.status(200).json(apiSuccess(null, 'Äáº·t láº¡i máº­t kháº©u thĂ nh cĂ´ng'));
+    return res.status(200).json(apiSuccess(null, 'Đặt lại mật khẩu thành công'));
   } catch (error) {
-    logger.error('[Reset Password] Lá»—i khĂ´ng xĂ¡c Ä‘á»‹nh:', { message: error.message });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[Reset Password] Lỗi không xác định:', { message: error.message });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
 module.exports = router;
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\controllers\userController.js =====
+
+===== D:\StudyConect\backend\src\controllers\userController.js =====
+
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
@@ -397,18 +448,18 @@ router.get('/profile/:id', protect, async (req, res) => {
   try {
     const { id } = req.params;
     if (!id || isNaN(id)) {
-      return res.status(400).json(apiError('ID ngÆ°á»i dĂ¹ng khĂ´ng há»£p lá»‡', 400));
+      return res.status(400).json(apiError('ID người dùng không hợp lệ', 400));
     }
 
     const user = await User.findByPk(id);
     if (!user) {
-      return res.status(404).json(apiError('KhĂ´ng tĂ¬m tháº¥y ngÆ°á»i dĂ¹ng', 404));
+      return res.status(404).json(apiError('Không tìm thấy người dùng', 404));
     }
 
-    return res.status(200).json(apiSuccess(user, 'Láº¥y thĂ´ng tin cĂ¡ nhĂ¢n thĂ nh cĂ´ng'));
+    return res.status(200).json(apiSuccess(user, 'Lấy thông tin cá nhân thành công'));
   } catch (error) {
-    logger.error('[User Profile] Lá»—i láº¥y thĂ´ng tin:', { message: error.message, userId: req.params.id });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[User Profile] Lỗi lấy thông tin:', { message: error.message, userId: req.params.id });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
@@ -419,12 +470,12 @@ router.put('/profile', protect, async (req, res) => {
     const { full_name, bio, university, major, avatar } = req.body;
 
     if (full_name !== undefined && (!full_name || full_name.trim() === '')) {
-      return res.status(400).json(apiError('Há» tĂªn khĂ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng', 400));
+      return res.status(400).json(apiError('Họ tên không được để trống', 400));
     }
 
     const user = await User.findByPk(userId);
     if (!user) {
-      return res.status(404).json(apiError('KhĂ´ng tĂ¬m tháº¥y ngÆ°á»i dĂ¹ng', 404));
+      return res.status(404).json(apiError('Không tìm thấy người dùng', 404));
     }
 
     // Update fields
@@ -436,10 +487,10 @@ router.put('/profile', protect, async (req, res) => {
 
     await user.save();
 
-    return res.status(200).json(apiSuccess(user, 'Cáº­p nháº­t thĂ´ng tin cĂ¡ nhĂ¢n thĂ nh cĂ´ng'));
+    return res.status(200).json(apiSuccess(user, 'Cập nhật thông tin cá nhân thành công'));
   } catch (error) {
-    logger.error('[User Update Profile] Lá»—i cáº­p nháº­t:', { message: error.message, userId: req.user?.id });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[User Update Profile] Lỗi cập nhật:', { message: error.message, userId: req.user?.id });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
@@ -450,21 +501,21 @@ router.put('/change-password', protect, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json(apiError('Máº­t kháº©u hiá»‡n táº¡i vĂ  máº­t kháº©u má»›i lĂ  báº¯t buá»™c', 400));
+      return res.status(400).json(apiError('Mật khẩu hiện tại và mật khẩu mới là bắt buộc', 400));
     }
     if (newPassword.length < 8) {
-      return res.status(400).json(apiError('Máº­t kháº©u má»›i pháº£i chá»©a tá»‘i thiá»ƒu 8 kĂ½ tá»±', 400));
+      return res.status(400).json(apiError('Mật khẩu mới phải chứa tối thiểu 8 ký tự', 400));
     }
 
     // Query user including password hash using scope
     const user = await User.scope('withPassword').findByPk(userId);
     if (!user) {
-      return res.status(404).json(apiError('KhĂ´ng tĂ¬m tháº¥y ngÆ°á»i dĂ¹ng', 404));
+      return res.status(404).json(apiError('Không tìm thấy người dùng', 404));
     }
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
-      return res.status(401).json(apiError('Máº­t kháº©u hiá»‡n táº¡i khĂ´ng chĂ­nh xĂ¡c', 401));
+      return res.status(401).json(apiError('Mật khẩu hiện tại không chính xác', 401));
     }
 
     // Hash new password
@@ -472,10 +523,10 @@ router.put('/change-password', protect, async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    return res.status(200).json(apiSuccess(null, 'Äá»•i máº­t kháº©u thĂ nh cĂ´ng'));
+    return res.status(200).json(apiSuccess(null, 'Đổi mật khẩu thành công'));
   } catch (error) {
-    logger.error('[User Change Password] Lá»—i Ä‘á»•i máº­t kháº©u:', { message: error.message, userId: req.user?.id });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[User Change Password] Lỗi đổi mật khẩu:', { message: error.message, userId: req.user?.id });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
@@ -506,21 +557,23 @@ router.get('/search', protect, async (req, res) => {
 
     return res.status(200).json(apiPaginated(rows, count, page, limit));
   } catch (error) {
-    logger.error('[User Search] Lá»—i tĂ¬m kiáº¿m:', { message: error.message, query: req.query.q });
-    return res.status(500).json(apiError('Lá»—i há»‡ thá»‘ng', 500));
+    logger.error('[User Search] Lỗi tìm kiếm:', { message: error.message, query: req.query.q });
+    return res.status(500).json(apiError('Lỗi hệ thống', 500));
   }
 });
 
 module.exports = router;
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\middleware\auth.js =====
+
+===== D:\StudyConect\backend\src\middleware\auth.js =====
+
 // backend/middleware/auth.js
 const jwt = require('jsonwebtoken');
 const { apiError } = require('../utils/apiResponse');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) throw new Error(
-  '[Auth] JWT_SECRET chÆ°a Ä‘Æ°á»£c cáº¥u hĂ¬nh trong .env'
+  '[Auth] JWT_SECRET chưa được cấu hình trong .env'
 );
 
 /**
@@ -530,7 +583,7 @@ if (!JWT_SECRET) throw new Error(
 const protect = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json(apiError('KhĂ´ng cĂ³ quyá»n truy cáº­p. Vui lĂ²ng Ä‘Äƒng nháº­p.', 401));
+    return res.status(401).json(apiError('Không có quyền truy cập. Vui lòng đăng nhập.', 401));
   }
 
   const token = authHeader.split(' ')[1];
@@ -539,7 +592,7 @@ const protect = (req, res, next) => {
     req.user = decoded;
     next();
   } catch {
-    return res.status(401).json(apiError('Token khĂ´ng há»£p lá»‡ hoáº·c Ä‘Ă£ háº¿t háº¡n.', 401));
+    return res.status(401).json(apiError('Token không hợp lệ hoặc đã hết hạn.', 401));
   }
 };
 
@@ -548,7 +601,7 @@ const protect = (req, res, next) => {
  */
 const adminOnly = (req, res, next) => {
   if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json(apiError('Chá»‰ quáº£n trá»‹ viĂªn má»›i cĂ³ quyá»n thá»±c hiá»‡n thao tĂ¡c nĂ y.', 403));
+    return res.status(403).json(apiError('Chỉ quản trị viên mới có quyền thực hiện thao tác này.', 403));
   }
   next();
 };
@@ -565,7 +618,9 @@ const signToken = (user) =>
 
 module.exports = { protect, adminOnly, signToken };
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\middleware\upload.js =====
+
+===== D:\StudyConect\backend\src\middleware\upload.js =====
+
 const multer = require('multer');
 const { apiError } = require('../utils/apiResponse');
 
@@ -585,7 +640,7 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Chá»‰ cháº¥p nháº­n cĂ¡c Ä‘á»‹nh dáº¡ng áº£nh (JPEG, PNG, GIF, WEBP) hoáº·c PDF!'), false);
+    cb(new Error('Chỉ chấp nhận các định dạng ảnh (JPEG, PNG, GIF, WEBP) hoặc PDF!'), false);
   }
 };
 
@@ -596,9 +651,9 @@ const handleMulterError = (multerMiddleware, sizeLimitStr) => {
       if (err) {
         let errMsg = err.message;
         if (err.code === 'LIMIT_FILE_SIZE') {
-          errMsg = `KĂ­ch thÆ°á»›c file vÆ°á»£t quĂ¡ giá»›i háº¡n cho phĂ©p (${sizeLimitStr})!`;
+          errMsg = `Kích thước file vượt quá giới hạn cho phép (${sizeLimitStr})!`;
         } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-          errMsg = 'TrÆ°á»ng gá»­i lĂªn khĂ´ng há»£p lá»‡ hoáº·c vÆ°á»£t quĂ¡ sá»‘ lÆ°á»£ng file tá»‘i Ä‘a!';
+          errMsg = 'Trường gửi lên không hợp lệ hoặc vượt quá số lượng file tối đa!';
         }
         return res.status(400).json(apiError(errMsg, 400));
       }
@@ -631,7 +686,7 @@ const uploadImages = handleMulterError(
     fileFilter,
     limits: { fileSize: 2 * 1024 * 1024 }
   }).array('images', 5),
-  '2MB má»—i áº£nh'
+  '2MB mỗi ảnh'
 );
 
 module.exports = {
@@ -640,7 +695,9 @@ module.exports = {
   uploadImages
 };
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\models\User.js =====
+
+===== D:\StudyConect\backend\src\models\User.js =====
+
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -695,7 +752,7 @@ const User = sequelize.define('users', {
   },
 }, {
   timestamps: false,
-  // KhĂ´ng bao giá» tráº£ vá» password trong query
+  // Không bao giờ trả về password trong query
   defaultScope: {
     attributes: {
       exclude: ['password', 'reset_token', 'reset_expires']
@@ -710,100 +767,9 @@ const User = sequelize.define('users', {
 
 module.exports = User;
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\server.js =====
-// backend/server.js
-require('dotenv').config();
-const app              = require('./app');
-const { connectDB }    = require('./config/database');
-const logger           = require('./utils/logger');
 
-const PORT = parseInt(process.env.PORT || '5000', 10);
+===== D:\StudyConect\backend\src\utils\email.js =====
 
-const start = async () => {
-  try {
-    await connectDB();
-
-    const server = app.listen(PORT, () => {
-      logger.info(`đŸ€ StudyConnect API running on http://localhost:${PORT}`);
-      logger.info(`đŸ“¦ Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
-
-    // Graceful shutdown
-    const shutdown = (signal) => {
-      logger.warn(`${signal} received â€” shutting down gracefully...`);
-      server.close(() => {
-        logger.info('âœ… HTTP server closed');
-        process.exit(0);
-      });
-      setTimeout(() => {
-        logger.error('Force shutdown after timeout');
-        process.exit(1);
-      }, 10_000);
-    };
-
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
-    process.on('SIGINT',  () => shutdown('SIGINT'));
-
-  } catch (err) {
-    logger.error('Failed to start server:', { message: err.message });
-    process.exit(1);
-  }
-};
-
-start();
-
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\utils\apiResponse.js =====
-// backend/utils/apiResponse.js
-// Standardized API response helpers
-
-/**
- * Success response wrapper
- * @param {*} data  - payload to return
- * @param {string} message - optional human-readable message
- * @param {number} statusCode - HTTP status (default 200)
- */
-const apiSuccess = (data = null, message = 'ThĂ nh cĂ´ng', statusCode = 200) => ({
-  success: true,
-  statusCode,
-  message,
-  data,
-  timestamp: new Date().toISOString(),
-});
-
-/**
- * Error response wrapper
- * @param {string} message - error description
- * @param {number} statusCode - HTTP status (default 500)
- * @param {*} errors - optional validation errors array
- */
-const apiError = (message = 'ÄĂ£ xáº£y ra lá»—i', statusCode = 500, errors = null) => ({
-  success: false,
-  statusCode,
-  message,
-  errors,
-  timestamp: new Date().toISOString(),
-});
-
-/**
- * Paginated success response
- */
-const apiPaginated = (data, total, page, limit) => ({
-  success: true,
-  statusCode: 200,
-  message: 'ThĂ nh cĂ´ng',
-  data,
-  pagination: {
-    total,
-    page: Number(page),
-    limit: Number(limit),
-    totalPages: Math.ceil(total / limit),
-  },
-  timestamp: new Date().toISOString(),
-});
-
-module.exports = { apiSuccess, apiError, apiPaginated };
-
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\utils\email.js =====
 const nodemailer = require('nodemailer');
 const logger = require('./logger');
 
@@ -811,7 +777,7 @@ const sendEmail = async ({ to, subject, html }) => {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    logger.warn('[Email] Thiáº¿u cáº¥u hĂ¬nh SMTP trong env. KhĂ´ng thá»ƒ gá»­i email.', {
+    logger.warn('[Email] Thiếu cấu hình SMTP trong env. Không thể gửi email.', {
       host: !!SMTP_HOST,
       port: !!SMTP_PORT,
       user: !!SMTP_USER,
@@ -838,28 +804,28 @@ const sendEmail = async ({ to, subject, html }) => {
       html
     });
 
-    logger.info('[Email] Gá»­i email thĂ nh cĂ´ng', { messageId: info.messageId, to });
+    logger.info('[Email] Gửi email thành công', { messageId: info.messageId, to });
     return true;
   } catch (error) {
-    logger.error('[Email] Lá»—i gá»­i email:', { message: error.message, to });
+    logger.error('[Email] Lỗi gửi email:', { message: error.message, to });
     return false;
   }
 };
 
-const resetPasswordEmail = (token, name = 'NgÆ°á»i dĂ¹ng') => {
+const resetPasswordEmail = (token, name = 'Người dùng') => {
   const resetUrl = `${process.env.CORS_ORIGIN?.split(',')[0] || 'http://localhost:5173'}/reset-password?token=${token}`;
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-      <h2 style="color: #6366f1;">Äáº·t láº¡i máº­t kháº©u StudyConnect</h2>
-      <p>Xin chĂ o <strong>${name}</strong>,</p>
-      <p>ChĂºng tĂ´i Ä‘Ă£ nháº­n Ä‘Æ°á»£c yĂªu cáº§u Ä‘áº·t láº¡i máº­t kháº©u cho tĂ i khoáº£n cá»§a báº¡n. Vui lĂ²ng báº¥m vĂ o nĂºt bĂªn dÆ°á»›i Ä‘á»ƒ tiáº¿n hĂ nh thiáº¿t láº­p máº­t kháº©u má»›i:</p>
+      <h2 style="color: #6366f1;">Đặt lại mật khẩu StudyConnect</h2>
+      <p>Xin chào <strong>${name}</strong>,</p>
+      <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Vui lòng bấm vào nút bên dưới để tiến hành thiết lập mật khẩu mới:</p>
       <div style="margin: 24px 0; text-align: center;">
-        <a href="${resetUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Äáº·t láº¡i máº­t kháº©u</a>
+        <a href="${resetUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Đặt lại mật khẩu</a>
       </div>
-      <p>ÄÆ°á»ng liĂªn káº¿t nĂ y sáº½ háº¿t háº¡n sau 1 giá».</p>
-      <p>Náº¿u báº¡n khĂ´ng gá»­i yĂªu cáº§u nĂ y, vui lĂ²ng bá» qua email nĂ y.</p>
+      <p>Đường liên kết này sẽ hết hạn sau 1 giờ.</p>
+      <p>Nếu bạn không gửi yêu cầu này, vui lòng bỏ qua email này.</p>
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-      <p style="font-size: 12px; color: #64748b;">Äá»™i ngÅ© StudyConnect</p>
+      <p style="font-size: 12px; color: #64748b;">Đội ngũ StudyConnect</p>
     </div>
   `;
 };
@@ -869,7 +835,62 @@ module.exports = {
   resetPasswordEmail
 };
 
-===== C:\Users\Mervy\Desktop\StudyConect\backend\src\utils\logger.js =====
+
+===== D:\StudyConect\backend\src\utils\apiResponse.js =====
+
+// backend/utils/apiResponse.js
+// Standardized API response helpers
+
+/**
+ * Success response wrapper
+ * @param {*} data  - payload to return
+ * @param {string} message - optional human-readable message
+ * @param {number} statusCode - HTTP status (default 200)
+ */
+const apiSuccess = (data = null, message = 'Thành công', statusCode = 200) => ({
+  success: true,
+  statusCode,
+  message,
+  data,
+  timestamp: new Date().toISOString(),
+});
+
+/**
+ * Error response wrapper
+ * @param {string} message - error description
+ * @param {number} statusCode - HTTP status (default 500)
+ * @param {*} errors - optional validation errors array
+ */
+const apiError = (message = 'Đã xảy ra lỗi', statusCode = 500, errors = null) => ({
+  success: false,
+  statusCode,
+  message,
+  errors,
+  timestamp: new Date().toISOString(),
+});
+
+/**
+ * Paginated success response
+ */
+const apiPaginated = (data, total, page, limit) => ({
+  success: true,
+  statusCode: 200,
+  message: 'Thành công',
+  data,
+  pagination: {
+    total,
+    page: Number(page),
+    limit: Number(limit),
+    totalPages: Math.ceil(total / limit),
+  },
+  timestamp: new Date().toISOString(),
+});
+
+module.exports = { apiSuccess, apiError, apiPaginated };
+
+
+===== D:\StudyConect\backend\src\utils\logger.js =====
+
 // backend/utils/logger.js
 // Lightweight structured logger (no external dependencies)
 
@@ -910,11 +931,12 @@ const logger = {
     res.on('finish', () => {
       const ms  = Date.now() - start;
       const lvl = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
-      log(lvl, `${req.method} ${req.originalUrl} ${res.statusCode} â€” ${ms}ms`);
+      log(lvl, `${req.method} ${req.originalUrl} ${res.statusCode} — ${ms}ms`);
     });
     next();
   },
 };
 
 module.exports = logger;
+
 
