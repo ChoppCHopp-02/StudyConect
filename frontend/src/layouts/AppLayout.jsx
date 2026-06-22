@@ -160,17 +160,8 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
     .toUpperCase() || '?';
 
   return (
-    <div className="app-layout-wrapper" style={{ height: '100%', overflow: 'hidden', overscrollBehavior: 'none', background: 'var(--bg)', position: 'relative' }}>
-      {/* Decorative background glows */}
-      <div
-        className="sc-animated-bg"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}
-      />
+    <div className="app-layout-wrapper sc-animated-bg" style={{ height: '100%', overflow: 'hidden', overscrollBehavior: 'none', position: 'relative' }}>
+
 
       {!hideNavbar && (
         <nav className="navbar" style={{ 
