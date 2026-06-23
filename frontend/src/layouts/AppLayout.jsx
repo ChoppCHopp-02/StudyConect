@@ -536,96 +536,106 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                   </div>
                 )}
 
-                {/* Sidebar items */}
-                {NAV_ITEMS.map((item) => {
-                  const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
+                {/* Sidebar items container */}
+                <div style={{ 
+                  background: 'var(--bg-card)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: '14px', 
+                  padding: '6px', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '4px',
+                  marginBottom: '8px' 
+                }}>
+                  {NAV_ITEMS.map((item) => {
+                    const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
 
-                  const sidebarBg = isActive ? '#1A1A1A' : 'none';
-                  const sidebarBorder = isActive ? '1px solid #1A1A1A' : '1px solid var(--border)';
-                  const sidebarTextColor = isActive ? '#ffffff' : 'var(--text-secondary)';
-                  const sidebarIconColor = isActive ? '#ffffff' : 'var(--text-primary)';
+                    const sidebarBg = isActive ? '#1A1A1A' : 'none';
+                    const sidebarBorder = isActive ? '1px solid #1A1A1A' : '1px solid transparent';
+                    const sidebarTextColor = isActive ? '#ffffff' : 'var(--text-secondary)';
+                    const sidebarIconColor = isActive ? '#ffffff' : 'var(--text-primary)';
 
-                  const hasUnread = item.key === 'chat' && unreadCount > 0;
-                  const hasPending = item.key === 'friends' && pendingFriendsCount > 0;
-                  return (
-                    <Link key={item.key} to={item.to} style={{ textDecoration: 'none' }}>
-                      <div
-                        className={!isActive ? 'sc-nav-item' : ''}
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '12px', 
-                          padding: '10px 14px', 
-                          borderRadius: 'var(--radius-md)', 
-                          background: sidebarBg, 
-                          border: sidebarBorder,
-                          marginBottom: '6px',
-                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
-                          transform: 'translateY(0)',
-                          position: 'relative' 
-                        }}
-                        onMouseEnter={isActive ? (e) => { 
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                        } : undefined}
-                        onMouseLeave={isActive ? (e) => { 
-                          e.currentTarget.style.transform = 'translateY(0)';
-                        } : undefined}
-                      >
-                        <span style={{ 
-                          width: '28px', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          flexShrink: 0, 
-                          filter: 'none' 
-                        }}>
-                          {NAV_ICONS[item.icon] ? NAV_ICONS[item.icon](isActive, sidebarIconColor) : item.icon}
-                        </span>
-                        <span style={{ 
-                          fontSize: '14px', 
-                          fontWeight: isActive ? 700 : 500, 
-                          color: sidebarTextColor, 
-                          flex: 1,
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {item.label}
-                        </span>
-                        {hasUnread && (
-                          <span style={{ 
-                            background: '#ef4444', 
-                            color: 'white', 
-                            fontSize: '10px', 
-                            fontWeight: 800, 
-                            padding: '2px 6px', 
+                    const hasUnread = item.key === 'chat' && unreadCount > 0;
+                    const hasPending = item.key === 'friends' && pendingFriendsCount > 0;
+                    return (
+                      <Link key={item.key} to={item.to} style={{ textDecoration: 'none' }}>
+                        <div
+                          className={!isActive ? 'sc-nav-item' : ''}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '12px', 
+                            padding: '10px 14px', 
                             borderRadius: '10px', 
-                            minWidth: '18px', 
-                            textAlign: 'center',
-                            boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
-                            lineHeight: 1
-                          }}>
-                            {unreadCount > 99 ? '99+' : unreadCount}
-                          </span>
-                        )}
-                        {hasPending && (
+                            background: sidebarBg, 
+                            border: sidebarBorder,
+                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
+                            transform: 'translateY(0)',
+                            position: 'relative' 
+                          }}
+                          onMouseEnter={isActive ? (e) => { 
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                          } : undefined}
+                          onMouseLeave={isActive ? (e) => { 
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          } : undefined}
+                        >
                           <span style={{ 
-                            background: '#ef4444', 
-                            color: 'white', 
-                            fontSize: '10px', 
-                            fontWeight: 800, 
-                            padding: '2px 6px', 
-                            borderRadius: '10px', 
-                            minWidth: '18px', 
-                            textAlign: 'center',
-                            boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
-                            lineHeight: 1
+                            width: '28px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            flexShrink: 0, 
+                            filter: 'none' 
                           }}>
-                            {pendingFriendsCount > 99 ? '99+' : pendingFriendsCount}
+                            {NAV_ICONS[item.icon] ? NAV_ICONS[item.icon](isActive, sidebarIconColor) : item.icon}
                           </span>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
+                          <span style={{ 
+                            fontSize: '14px', 
+                            fontWeight: isActive ? 700 : 500, 
+                            color: sidebarTextColor, 
+                            flex: 1,
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {item.label}
+                          </span>
+                          {hasUnread && (
+                            <span style={{ 
+                              background: '#ef4444', 
+                              color: 'white', 
+                              fontSize: '10px', 
+                              fontWeight: 800, 
+                              padding: '2px 6px', 
+                              borderRadius: '10px', 
+                              minWidth: '18px', 
+                              textAlign: 'center',
+                              boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
+                              lineHeight: 1
+                            }}>
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                          {hasPending && (
+                            <span style={{ 
+                              background: '#ef4444', 
+                              color: 'white', 
+                              fontSize: '10px', 
+                              fontWeight: 800, 
+                              padding: '2px 6px', 
+                              borderRadius: '10px', 
+                              minWidth: '18px', 
+                              textAlign: 'center',
+                              boxShadow: '0 0 8px rgba(239, 68, 68, 0.45)',
+                              lineHeight: 1
+                            }}>
+                              {pendingFriendsCount > 99 ? '99+' : pendingFriendsCount}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
               </aside>
               <div style={{ minWidth: 0, minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 {children}
