@@ -944,7 +944,7 @@ select.form-input option {
 /* ═══════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .auth-card { padding: 32px 24px; }
   .form-row { grid-template-columns: 1fr; }
   .profile-container { grid-template-columns: 1fr; }
@@ -1004,7 +1004,7 @@ select.form-input option {
 }
 
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .layout-2col, .layout-3col {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
@@ -1146,7 +1146,7 @@ select.form-input option {
   transform: translateX(0);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .mobile-bottom-nav {
     display: flex;
   }
@@ -1158,14 +1158,14 @@ select.form-input option {
   gap: 24px;
   align-items: start;
 }
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .grid-responsive {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .meet-body {
     flex-direction: column !important;
     overflow-y: auto !important;
@@ -1197,7 +1197,7 @@ select.form-input option {
   align-items: stretch;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .grid-2col-responsive {
     grid-template-columns: 1fr !important;
   }
@@ -1210,7 +1210,7 @@ select.form-input option {
 }
 
 /* Horizontal scrolling tabs on mobile */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .profile-tabs {
     display: flex !important;
     overflow-x: auto !important;
@@ -1233,7 +1233,7 @@ select.form-input option {
 }
 
 /* Container paddings & sizes on mobile */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .group-detail-container {
     padding: 0 12px 32px !important;
   }
@@ -1317,7 +1317,7 @@ select.form-input option {
   background: rgba(108,99,255,0.03);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .app-layout-wrapper {
     padding-bottom: 80px !important; /* Perfect space for mobile bottom nav without empty gaps */
   }
@@ -1391,7 +1391,7 @@ select.form-input option {
   align-items: stretch;
   gap: 24px;
 }
-@media (min-width: 769px) {
+@media (min-width: 1200px) {
   .layout-3col-custom {
     grid-template-columns: 260px 1fr 300px;
   }
@@ -1405,7 +1405,24 @@ select.form-input option {
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 768px) {
+@media (min-width: 992px) and (max-width: 1199px) {
+  aside.flex-desktop-only {
+    display: none !important;
+  }
+  .layout-3col-custom {
+    grid-template-columns: 260px 1fr !important;
+  }
+  .layout-2col-custom {
+    grid-template-columns: 260px 1fr;
+  }
+  .layout-2col-right-only {
+    grid-template-columns: 1fr;
+  }
+  .layout-1col-custom {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 991px) {
   .layout-3col-custom, .layout-2col-custom, .layout-2col-right-only, .layout-1col-custom {
     grid-template-columns: 1fr;
     gap: 16px;

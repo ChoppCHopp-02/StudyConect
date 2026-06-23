@@ -429,7 +429,7 @@ export default function Schedule() {
           gap: 24px;
           margin-top: 24px;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 991px) {
           .grid-responsive { grid-template-columns: 1fr; }
         }
         
