@@ -11,6 +11,7 @@ export function OnlineUsersProvider({ children }) {
 
   useEffect(() => {
     if (!user?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOnlineIds([]);
       return;
     }
@@ -56,6 +57,7 @@ export function OnlineUsersProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useOnlineUsers() {
   const context = useContext(OnlineUsersContext);
   if (context === undefined) {

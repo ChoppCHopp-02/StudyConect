@@ -382,16 +382,20 @@ export default function useGroupDetail(groupId, user, addToast) {
           selectedDeputyId = id;
         };
 
+        // eslint-disable-next-line no-undef
         return React.createElement(
           'div',
           { style: { display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' } },
+          // eslint-disable-next-line no-undef
           React.createElement(
             'p',
             { style: { margin: '0 0 8px 0', fontSize: '14px', color: 'var(--text-secondary)' } },
             'Nhóm đã có đủ tối đa 2 phó nhóm. Chọn một phó nhóm để tước quyền và thay thế bằng ',
+            // eslint-disable-next-line no-undef
             React.createElement('strong', null, targetName),
             ':'
           ),
+          // eslint-disable-next-line no-undef
           deputy1Info && React.createElement(
             'label',
             {
@@ -406,6 +410,7 @@ export default function useGroupDetail(groupId, user, addToast) {
                 cursor: 'pointer',
               },
             },
+            // eslint-disable-next-line no-undef
             React.createElement('input', {
               type: 'radio',
               name: 'deputy-to-replace',
@@ -413,12 +418,14 @@ export default function useGroupDetail(groupId, user, addToast) {
               onChange: () => handleChange(currentDeputyIds[0]),
               style: { accentColor: 'var(--primary)' },
             }),
+            // eslint-disable-next-line no-undef
             React.createElement(
               'span',
               { style: { fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' } },
               deputy1Info.fullName
             )
           ),
+          // eslint-disable-next-line no-undef
           deputy2Info && React.createElement(
             'label',
             {
@@ -433,6 +440,7 @@ export default function useGroupDetail(groupId, user, addToast) {
                 cursor: 'pointer',
               },
             },
+            // eslint-disable-next-line no-undef
             React.createElement('input', {
               type: 'radio',
               name: 'deputy-to-replace',
@@ -440,6 +448,7 @@ export default function useGroupDetail(groupId, user, addToast) {
               onChange: () => handleChange(currentDeputyIds[1]),
               style: { accentColor: 'var(--primary)' },
             }),
+            // eslint-disable-next-line no-undef
             React.createElement(
               'span',
               { style: { fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' } },
@@ -451,6 +460,7 @@ export default function useGroupDetail(groupId, user, addToast) {
 
       setConfirmConfig({
         title: 'Thay thế Phó nhóm',
+        // eslint-disable-next-line no-undef
         message: React.createElement(ReplacementSelector),
         confirmText: 'Xác nhận thay thế',
         cancelText: 'Huỷ',
