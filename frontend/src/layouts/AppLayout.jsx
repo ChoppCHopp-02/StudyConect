@@ -632,10 +632,10 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
 
               {/* Unified desktop right sidebar */}
               {showRightSidebar && (
-                <aside className="desktop-only no-scrollbar" style={{ width: '300px', position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px', flexShrink: 0 }}>
+                <aside className="desktop-only no-scrollbar" style={{ width: '300px', position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px', flexShrink: 0 }}>
                   
                   {/* Schedule and Deadline card */}
-                  <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid #1A1A1A', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s', color: 'var(--text-primary)' }}>
+                  <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s', color: 'var(--text-primary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
                       <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -761,7 +761,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
                   </div>
 
                   {/* Online Friends card */}
-                  <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid #1A1A1A', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s', color: 'var(--text-primary)' }}>
+                  <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s', color: 'var(--text-primary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid var(--border)' }}>
                       <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
                         <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2ecc71' }} />
