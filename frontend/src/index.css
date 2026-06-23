@@ -6,28 +6,28 @@
    ═══════════════════════════════════════════ */
 :root {
   --bg: #ffffff;                  /* Pure White background */
-  --bg-card: #ffffff;             /* Clean White Card background */
-  --bg-input: #f8fafc;            /* Clean light grey-white for inputs */
-  --border: #e2e8f0;              /* Subtle light divider lines */
-  --border-hover: #ff004c;        /* Vibrant pink border on hover */
-  --text-primary: #0a0813;        /* Midnight slate/indigo primary text */
-  --text-secondary: #475569;      /* Slate secondary text */
-  --text-muted: #64748b;          /* Muted grey for captions */
-  --primary: #ff004c;             /* Vibrant electric pink button */
-  --primary-dark: #d6003f;        /* Deep pink button on hover */
-  --primary-light: #ff4d80;       /* Glow pink */
-  --secondary: #0099ff;           /* Sky blue second color */
-  --accent: #9400d3;              /* Neon purple accent */
-  --success: #10b981;             /* Emerald green success */
-  --error: #ff004c;               /* Electric pink error */
-  --warning: #f59e0b;             /* Warm amber warning */
-  --shadow: 0 4px 12px rgba(10, 8, 19, 0.04);
-  --shadow-lg: 0 10px 25px rgba(10, 8, 19, 0.06);
-  --shadow-glow: 0 0 15px rgba(255, 0, 76, 0.1);
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
+  --bg-card: #ffffff;             /* Pure White Card background */
+  --bg-input: #ffffff;            /* Pure White input background */
+  --border: #000000;              /* Pure Black border */
+  --border-hover: #000000;        /* Pure Black border on hover */
+  --text-primary: #000000;        /* Pure Black primary text */
+  --text-secondary: #000000;      /* Pure Black secondary text */
+  --text-muted: #555555;          /* Dark grey for muted captions */
+  --primary: #000000;             /* Pure Black button background */
+  --primary-dark: #333333;        /* Dark grey button background on hover */
+  --primary-light: #000000;       /* Glow black */
+  --secondary: #ffffff;           /* White second color */
+  --accent: #000000;              /* Black accent */
+  --success: #000000;             /* Black success */
+  --error: #000000;               /* Black error */
+  --warning: #000000;             /* Black warning */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 15px rgba(0, 0, 0, 0.1);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -425,14 +425,16 @@ select.form-input option {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: var(--primary);
   color: white;
   width: 100%;
-  box-shadow: 0 4px 16px rgba(42, 117, 118, 0.3);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(42, 117, 118, 0.45);
+  background: var(--primary-dark);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
 }
 .btn-primary:active { transform: translateY(0); }
 
@@ -441,14 +443,14 @@ select.form-input option {
   border: 1.5px solid var(--border);
   color: var(--text-primary);
 }
-.btn-secondary:hover { border-color: var(--primary); color: var(--primary-light); }
+.btn-secondary:hover { background: #000000; color: #ffffff; }
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1.5px solid rgba(239, 68, 68, 0.3);
-  color: var(--error);
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  color: var(--text-primary);
 }
-.btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
+.btn-danger:hover { background: #000000; color: #ffffff; }
 
 .btn:disabled {
   opacity: 0.6;
