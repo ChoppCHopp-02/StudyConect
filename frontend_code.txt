@@ -10990,10 +10990,10 @@ export default function useNotifications(userId) {
    DESIGN TOKENS - ENERGETIC FOCUS REDESIGN
    ═══════════════════════════════════════════ */
 :root {
-  --bg: #EFE6DC;
-  --bg-card: #F8F4F0;
+  --bg: #D9C9B8;
+  --bg-card: #EFE6DC;
   --bg-input: #FAF7F4;
-  --border: #DCCFC3;
+  --border: #C9B49E;
   --border-hover: #E8A87C;
   --text-primary: #3D2C2E;
   --text-secondary: #5A4548;
