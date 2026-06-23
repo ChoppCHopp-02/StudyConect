@@ -12399,28 +12399,58 @@ select.form-input option {
    ═══════════════════════════════════════════ */
 
 /* Button CTA chính dạng pill */
-.btn-primary, .btn-cta, .btn-submit, button.btn-primary {
+.btn-primary, .btn-cta, .btn-submit, button.btn-primary, .btn-black {
   background: #1A1A1A !important;
   color: #FFFFFF !important;
   border-radius: 24px !important;
-  border: 1.5px solid #1A1A1A !important;
+  border: 1.5px solid #FFFFFF !important;
 }
 .btn-primary:hover, .btn-cta:hover, .btn-submit:hover, button.btn-primary:hover {
   background: #000000 !important;
-  border-color: #000000 !important;
+  border-color: #FFFFFF !important;
 }
 
 /* Button outline */
-.btn-secondary, .btn-outline, .btn-outline-primary, button.btn-secondary {
+.btn-secondary, .btn-outline, .btn-outline-primary, button.btn-secondary, .btn-danger {
   background: transparent !important;
   border: 1.5px solid #1A1A1A !important;
   color: #1A1A1A !important;
   border-radius: 24px !important;
 }
-.btn-secondary:hover, .btn-outline:hover, button.btn-secondary:hover {
+.btn-secondary:hover, .btn-outline:hover, button.btn-secondary:hover, .btn-danger:hover {
   background: #FAFAFA !important;
   color: #1A1A1A !important;
   border-color: #1A1A1A !important;
+}
+
+/* Khung trắng viền đen cho tất cả card, panel và container trong web */
+.profile-card,
+.profile-sidebar,
+.auth-card,
+.premium-panel,
+.group-card,
+.meet-sidebar,
+.sc-card-animated,
+.modal-content,
+.modal-dialog,
+.schedule-card,
+.deadline-card,
+.post-card,
+.create-post-card,
+.comment-box,
+.document-share-card,
+.search-panel,
+.form-input,
+.form-textarea {
+  border: 1.5px solid #1A1A1A !important;
+}
+
+/* Khung đen viền trắng cho các container màu đen như Active Tab */
+.profile-tab.active {
+  background: #1A1A1A !important;
+  border: 1.5px solid #FFFFFF !important;
+  color: #ffffff !important;
+  box-shadow: none;
 }
 
 /* Fix navbar/header components styling for monochrome flat style */
@@ -20459,7 +20489,7 @@ export default function Groups() {
                 justifyContent: 'center',
                 gap: '8px',
                 background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--text-primary) 100%)',
-                border: 'none',
+                border: '1.5px solid #ffffff',
                 color: '#ffffff',
                 fontWeight: 700,
                 borderRadius: '12px',
@@ -20534,7 +20564,7 @@ export default function Groups() {
                 height: '48px',
                 borderRadius: '50%',
                 background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
+                border: '1.5px solid var(--border)',
                 color: 'var(--text-muted)',
                 display: 'flex',
                 alignItems: 'center',
