@@ -1,8 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getUserSchedulesAndDeadlines, getPosts, deletePost, createComment, toggleLikePost, togglePinPost } from '@/services/interactionService';
+import { getPosts, deletePost, createComment, toggleLikePost, togglePinPost } from '@/services/interactionService';
 import { getFriends } from '@/services/friendService';
 import { getAllGroups } from '@/services/groupService';
 import { supabase } from '@/config/supabaseClient';
@@ -19,15 +18,10 @@ export default function Home() {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-
-  const [schedules, setSchedules] = useState([]);
-  const [deadlines, setDeadlines] = useState([]);
   const [confirmConfig, setConfirmConfig] = useState(null);
   const [friends, setFriends] = useState([]);
   const [myLeaderGroups, setMyLeaderGroups] = useState([]);
-  const [onlineUserIds, setOnlineUserIds] = useState([]);
   const [particles, setParticles] = useState([]); // { id, x, y, char, delay, leftOffset }
-  const myGroupIdsRef = useRef([]);
 
   const spawnParticles = (emoji, clientX, clientY) => {
     // Spawn 6 fixed-positioned emoji particles
@@ -68,39 +62,6 @@ export default function Home() {
     loadFriendsAndGroups();
   }, [user?.id]);
 
-  // Subscribe to real-time presence channel
-  useEffect(() => {
-    if (!user?.id) return;
-    const channel = supabase.channel('online-users', {
-      config: {
-        presence: {
-          key: user.id.toString(),
-        },
-      },
-    });
-
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const onlineIds = Object.keys(state);
-        setOnlineUserIds(onlineIds);
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track({
-            id: user.id.toString(),
-            onlineAt: new Date().toISOString(),
-          });
-        }
-      });
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [user?.id]);
-
-
-
   // Fetch database posts
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const fetchPosts = useCallback(async () => {
@@ -114,67 +75,9 @@ export default function Home() {
     }
   }, [user?.id]);
 
-  const fetchSideData = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      // Load user's group memberships to get group IDs
-      const { data: memberships } = await supabase
-        .from('group_members')
-        .select('group_id')
-        .eq('user_id', parseInt(user.id, 10));
-      if (memberships) {
-        myGroupIdsRef.current = memberships.map(m => m.group_id);
-      }
-
-      // Execute the async network calls in parallel using Promise.all
-      const [schedulesRes] = await Promise.all([
-        getUserSchedulesAndDeadlines(user.id).catch(err => {
-          if (import.meta.env.DEV) {
-            console.warn('Schedules fetch failed:', err);
-          }
-          return null;
-        })
-      ]);
-
-      // User schedules & deadlines list (only update if successfully fetched)
-      if (schedulesRes) {
-        const { schedules: schedList = [], deadlines: deadList = [] } = schedulesRes;
-        
-        // Filter upcoming schedules
-        const now = Date.now();
-        const upcomingSched = schedList
-          .filter((s) => new Date(s.dateTime) >= now)
-          .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
-          .slice(0, 3);
-        setSchedules(upcomingSched);
-
-        // Filter incomplete deadlines due soon
-        const oneDayMs = 24 * 60 * 60 * 1000;
-        const incompleteDead = deadList
-          .filter((d) => !d.completed)
-          .map((d) => {
-            const due = new Date(d.dueDate).getTime();
-            return {
-              ...d,
-              dueSoon: due > now && due - now <= oneDayMs,
-              overdue: due < now,
-            };
-          })
-          .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-          .slice(0, 4);
-        setDeadlines(incompleteDead);
-      }
-    } catch (err) {
-      if (import.meta.env.DEV) {
-        console.warn('Error fetching side panel data:', err);
-      }
-    }
-  }, [user]);
-
   useEffect(() => {
     if (!user?.id) return;
     fetchPosts();
-    fetchSideData();
 
     // Chỉ refetch khi có post mới INSERT hoặc xóa/sửa post của mình
     const postsChannel = supabase
@@ -197,46 +100,10 @@ export default function Home() {
       )
       .subscribe();
 
-    // Realtime channel for side data (schedules, deadlines, group memberships)
-    const sideChannel = supabase
-      .channel(`side-data-${user.id}-${Date.now()}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'schedules' },
-        (payload) => {
-          const groupId = payload.new?.group_id || payload.old?.group_id;
-          if (groupId && myGroupIdsRef.current.includes(Number(groupId))) {
-            fetchSideData();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'deadlines' },
-        (payload) => {
-          const groupId = payload.new?.group_id || payload.old?.group_id;
-          if (groupId && myGroupIdsRef.current.includes(Number(groupId))) {
-            fetchSideData();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'group_members', filter: `user_id=eq.${user.id}` },
-        () => {
-          fetchSideData();
-        }
-      )
-      .subscribe();
-
-    const interval = setInterval(fetchSideData, 300000); // fallback 5 phút
-    
     return () => {
-      clearInterval(interval);
       supabase.removeChannel(postsChannel);
-      supabase.removeChannel(sideChannel);
     };
-  }, [fetchPosts, fetchSideData, user?.id]);
+  }, [fetchPosts, user?.id]);
 
   // Post handlers
   const handleLikePost = async (postId, emoji, e) => {
@@ -391,270 +258,43 @@ export default function Home() {
         </span>
       ))}
       <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', height: '100%', alignItems: 'stretch' }}>
-
-          {/* MIDDLE COLUMN: Feed */}
-          <main style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', paddingRight: '4px', overflow: 'hidden' }}>
-            {/* Create Question Box - Fixed Top */}
-            <div style={{ flexShrink: 0, paddingBottom: '14px', zIndex: 20 }}>
-              <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
-                <div className="sc-avatar-hover" style={{ display: 'inline-flex', borderRadius: '50%', flexShrink: 0 }}>
-                  <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
-                </div>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '24px', padding: '12px 18px', color: 'var(--text-muted)', fontSize: '14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'rgba(181, 73, 91, 0.05)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-input)'; }}
-                >
-                  <Typewriter
-                    text={[
-                      'Bạn muốn chia sẻ điều gì hôm nay?',
-                      'Hôm nay học gì rồi?',
-                      'Đặt câu hỏi cho nhóm học của bạn...',
-                    ]}
-                  />
-                </button>
+        {/* MIDDLE COLUMN: Feed */}
+        <main style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', paddingRight: '4px', overflow: 'hidden', height: '100%' }}>
+          {/* Create Question Box - Fixed Top */}
+          <div style={{ flexShrink: 0, paddingBottom: '14px', zIndex: 20 }}>
+            <div className="sc-card-animated sc-card-hover" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
+              <div className="sc-avatar-hover" style={{ display: 'inline-flex', borderRadius: '50%', flexShrink: 0 }}>
+                <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
               </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '24px', padding: '12px 18px', color: 'var(--text-muted)', fontSize: '14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'rgba(181, 73, 91, 0.05)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-input)'; }}
+              >
+                <Typewriter
+                  text={[
+                    'Bạn muốn chia sẻ điều gì hôm nay?',
+                    'Hôm nay học gì rồi?',
+                    'Đặt câu hỏi cho nhóm học của bạn...',
+                  ]}
+                />
+              </button>
             </div>
+          </div>
 
-            {/* Post List - Scrollable Area */}
-            <div className="no-scrollbar sc-card-animated" style={{ flex: 1, height: 0, overflowY: 'auto', animationDelay: '0.05s' }}>
-              <PostList
-                posts={sortedPosts}
-                currentUser={user}
-                onLike={handleLikePost}
-                onDelete={handleDeletePost}
-                onComment={handleCommentPost}
-                onPin={handlePinPost}
-              />
-            </div>
-          </main>
- 
-          {/* RIGHT COLUMN: fixed, does not scroll with posts */}
-          <aside className="no-scrollbar" style={{ position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px' }}>
-            <div className="sc-card-animated" style={{ background: 'linear-gradient(135deg, #4A2530, #6B3744)', border: '1.5px solid #ffffff', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s', color: '#ffffff' }}>
-
-              {/* ─ Header chung ─ */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid rgba(255, 255, 255, 0.15)' }}>
-                <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: '#ffffff' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-                    <line x1="16" x2="16" y1="2" y2="6"/>
-                    <line x1="8" x2="8" y1="2" y2="6"/>
-                    <line x1="3" x2="21" y1="10" y2="10"/>
-                    <path d="m9 16 2 2 4-4"/>
-                  </svg>
-                  Lịch và Deadline
-                </span>
-                <Link to="/schedule" style={{ fontSize: '12px', color: '#ffffff', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
-              </div>
-
-              {/* ─ Scrollable body ─ */}
-              <div className="no-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
-
-              {/* ─ Buổi học sắp tới ─ */}
-              <div style={{ padding: '10px 16px 6px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
-                  </svg>
-                  Buổi học sắp tới
-                </div>
-                {schedules.length === 0 ? (
-                  <div style={{ padding: '10px 0 8px', textAlign: 'center', color: '#ffffff', fontSize: '12px' }}>
-                    Chưa có lịch học nào
-                  </div>
-                ) : (
-                  schedules.map((s) => (
-                    <Link key={s.id} to={`/groups/${s.groupId}?tab=schedule`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <div
-                        style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{ width: '30px', height: '30px', borderRadius: '7px', flexShrink: 0, background: 'rgba(255, 255, 255, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
-                            <path d="M6 6h10"/><path d="M6 10h10"/>
-                          </svg>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: '12.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#ffffff' }}>{s.topic}</div>
-                          <div style={{ fontSize: '11px', color: '#ffffff', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#ffffff' }}>
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            <span>{new Date(s.dateTime).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-
-              {/* ─ Divider ─ */}
-              <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)', margin: '0 16px' }} />
-
-              {/* ─ Deadline cần nộp ─ */}
-              <div style={{ padding: '10px 16px 14px' }}>
-                <div style={{
-                  fontSize: '10px',
-                  fontWeight: 800,
-                  color: '#ffffff',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  marginBottom: '8px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                  Deadline cần nộp
-                </div>
-                {deadlines.length === 0 ? (
-                  <div style={{ padding: '10px 0', textAlign: 'center', color: '#ffffff', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    Không còn deadline nào
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                  </div>
-                ) : (
-                  deadlines.map((d) => (
-                    <Link key={d.id} to={`/groups/${d.groupId}?tab=deadlines`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '10px',
-                          alignItems: 'center',
-                          padding: '8px 8px',
-                          margin: '2px 0',
-                          borderRadius: '8px',
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                          background: d.dueSoon ? 'rgba(255, 255, 255, 0.08)' : 'none',
-                          transition: 'all 0.2s ease',
-                          cursor: 'pointer'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = d.dueSoon ? 'rgba(255, 255, 255, 0.08)' : 'transparent'}
-                      >
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: d.overdue ? 'rgba(255, 255, 255, 0.4)' : d.dueSoon ? '#ff4d4d' : '#2ecc71', boxShadow: d.overdue ? 'none' : d.dueSoon ? '0 0 8px #ff4d4d' : '0 0 8px #2ecc71' }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#ffffff', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-                              </svg>
-                              {d.groupName}
-                            </span>
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                              {d.dueSoon ? (
-                                <>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                                  </svg>
-                                  Dưới 24h
-                                </>
-                              ) : (
-                                new Date(d.dueDate).toLocaleDateString('vi-VN')
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-
-              </div>{/* end scrollable body */}
-            </div>
-
-            {/* ── Bạn bè trực tuyến ── */}
-            <div className="sc-card-animated" style={{ background: 'linear-gradient(135deg, #4A2530, #6B3744)', border: '1.5px solid #ffffff', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s', color: '#ffffff' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid rgba(255, 255, 255, 0.15)' }}>
-                <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: '#ffffff' }}>
-                  <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2ecc71', boxShadow: '0 0 6px rgba(46, 204, 113, 0.6)' }} />
-                  Bạn bè trực tuyến ({friends.filter(f => onlineUserIds.includes(f.userId.toString())).length})
-                </span>
-                <Link to="/friends" style={{ fontSize: '12px', color: '#ffffff', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
-              </div>
-
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                maxHeight: '200px',
-                overflowY: 'auto',
-                overscrollBehavior: 'contain',
-                padding: '10px 16px 16px 16px',
-              }}>
-                {friends.length === 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px 0', textAlign: 'center', color: '#ffffff', fontSize: '12px' }}>
-                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '10px', opacity: 0.55 }}>
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <line x1="17" y1="8" x2="21" y2="12" />
-                      <line x1="21" y1="8" x2="17" y2="12" />
-                    </svg>
-                    <span style={{ color: '#ffffff' }}>Chưa có bạn bè nào. <Link to="/friends" style={{ color: '#ffffff', fontWeight: 600, textDecoration: 'underline' }}>Kết bạn ngay</Link></span>
-                  </div>
-                ) : (() => {
-                  const onlineFriends = friends.filter(f => onlineUserIds.includes(f.userId.toString()));
-                  if (onlineFriends.length === 0) {
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px 0', textAlign: 'center', color: '#ffffff', fontSize: '12px' }}>
-                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '10px', opacity: 0.55 }}>
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                          <circle cx="9" cy="7" r="4" />
-                          <line x1="17" y1="8" x2="21" y2="12" />
-                          <line x1="21" y1="8" x2="17" y2="12" />
-                        </svg>
-                        <span style={{ color: '#ffffff' }}>Chưa có bạn bè nào trực tuyến.</span>
-                      </div>
-                    );
-                  }
-                  return onlineFriends.slice(0, 20).map((f) => (
-                    <Link key={f.userId} to={`/friends/${f.userId}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <div
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '10px', transition: 'all 0.2s ease', cursor: 'pointer', background: 'transparent' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                          <Avatar src={f.avatar} initial={f.fullName} size={32} />
-                          <span style={{
-                            position: 'absolute', bottom: -1, right: -1,
-                            width: '10px', height: '10px', borderRadius: '50%',
-                            background: '#2ecc71',
-                            border: '2px solid #5A2C35',
-                            boxShadow: '0 0 6px rgba(46, 204, 113, 0.6)'
-                          }} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: '13px', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {f.fullName}
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            Đang hoạt động
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ));
-                })()}
-              </div>
-            </div>
-          </aside>
-
-
-        </div>
+          {/* Post List - Scrollable Area */}
+          <div className="no-scrollbar sc-card-animated" style={{ flex: 1, height: 0, overflowY: 'auto', animationDelay: '0.05s' }}>
+            <PostList
+              posts={sortedPosts}
+              currentUser={user}
+              onLike={handleLikePost}
+              onDelete={handleDeletePost}
+              onComment={handleCommentPost}
+              onPin={handlePinPost}
+            />
+          </div>
+        </main>
       </div>
 
       {showCreateModal && (

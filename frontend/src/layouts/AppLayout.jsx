@@ -5,6 +5,8 @@ import { getTotalUnread, refreshCache } from '@/services/chatServiceTEMP';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { supabase } from '@/config/supabaseClient';
 import Avatar from '@/components/common/Avatar';
+import { getUserSchedulesAndDeadlines } from '@/services/interactionService';
+import { getFriends } from '@/services/friendService';
 const NAV_ICONS = {
   home: (isActive, activeColor) => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.3s', color: isActive ? (activeColor || 'var(--secondary)') : 'var(--text-secondary)' }}>
@@ -81,7 +83,7 @@ const NAV_ITEMS = [
   { icon: 'chat', label: 'Nhắn tin', to: '/chat', key: 'chat' },
 ];
 
-export default function AppLayout({ children, hideNavbar = false, hideSidebar = false }) {
+export default function AppLayout({ children, hideNavbar = false, hideSidebar = false, hideRightSidebar = false }) {
   const { user, logout, admin, adminLogout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -93,6 +95,101 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingFriendsCount, setPendingFriendsCount] = useState(0);
+
+  const [schedules, setSchedules] = useState([]);
+  const [deadlines, setDeadlines] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [onlineUserIds, setOnlineUserIds] = useState([]);
+
+  // Fetch sidebar data: friends, schedules & deadlines
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let isMounted = true;
+
+    const loadFriends = async () => {
+      try {
+        const list = await getFriends(user.id);
+        if (isMounted) setFriends(list);
+      } catch (err) {
+        console.warn('Error fetching friends in layout:', err);
+      }
+    };
+
+    const fetchSideData = async () => {
+      try {
+        const schedulesRes = await getUserSchedulesAndDeadlines(user.id).catch(() => null);
+        if (schedulesRes && isMounted) {
+          const { schedules: schedList = [], deadlines: deadList = [] } = schedulesRes;
+          const now = Date.now();
+          const upcomingSched = schedList
+            .filter((s) => new Date(s.dateTime) >= now)
+            .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+            .slice(0, 3);
+          setSchedules(upcomingSched);
+
+          const oneDayMs = 24 * 60 * 60 * 1000;
+          const processedDeadlines = deadList
+            .map(d => {
+              const due = new Date(d.dueDate).getTime();
+              return {
+                ...d,
+                dueSoon: !d.completed && due > now && (due - now) <= oneDayMs,
+                overdue: !d.completed && due < now
+              };
+            })
+            .filter(d => !d.completed)
+            .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+            .slice(0, 4);
+          setDeadlines(processedDeadlines);
+        }
+      } catch (err) {
+        console.warn('Error fetching schedules/deadlines in layout:', err);
+      }
+    };
+
+    loadFriends();
+    fetchSideData();
+
+    // Poll schedules/deadlines every 60s
+    const interval = setInterval(fetchSideData, 60000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [user?.id]);
+
+  // Subscribe to presence for online user status
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase.channel('online-users-layout', {
+      config: {
+        presence: {
+          key: user.id.toString(),
+        },
+      },
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineIds = Object.keys(state);
+        setOnlineUserIds(onlineIds);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            id: user.id.toString(),
+            onlineAt: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user?.id]);
   
 
 
@@ -158,6 +255,17 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
     .slice(-2)
     .join('')
     .toUpperCase() || '?';
+
+  const isChatOrCallPath = location.pathname.startsWith('/chat') || 
+                            location.pathname.startsWith('/meetroom') || 
+                            location.pathname.startsWith('/call') || 
+                            location.pathname.startsWith('/admin') || 
+                            location.pathname.startsWith('/login') || 
+                            location.pathname.startsWith('/register') ||
+                            location.pathname.startsWith('/reset-password') ||
+                            location.pathname.startsWith('/forgot-password');
+  const showRightSidebar = !hideRightSidebar && !isChatOrCallPath && user;
+  const layoutClass = showRightSidebar ? 'layout-3col-custom' : 'layout-2col-custom';
 
   return (
     <div className="app-layout-wrapper sc-animated-bg" style={{ height: '100%', overflow: 'hidden', overscrollBehavior: 'none', position: 'relative' }}>
@@ -390,7 +498,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
           children
         ) : (
           <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 16px', height: '100%' }}>
-            <div className="layout-2col" style={{ height: '100%', alignItems: 'stretch' }}>
+            <div className={`layout-grid-custom ${layoutClass}`} style={{ height: '100%' }}>
               {/* Unified desktop left sidebar */}
               <aside className="desktop-only no-scrollbar" style={{ position: 'sticky', top: 0, display: 'flex', flexDirection: 'column', gap: '2px', zIndex: 10, maxHeight: '100%', overflowY: 'auto' }}>
                 {/* Profile Widget */}
@@ -521,6 +629,206 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
               <div style={{ minWidth: 0, minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 {children}
               </div>
+
+              {/* Unified desktop right sidebar */}
+              {showRightSidebar && (
+                <aside className="desktop-only no-scrollbar" style={{ width: '300px', position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px', flexShrink: 0 }}>
+                  
+                  {/* Schedule and Deadline card */}
+                  <div className="sc-card-animated" style={{ background: 'linear-gradient(135deg, #4A2530, #6B3744)', border: '1.5px solid #ffffff', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s', color: '#ffffff' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid rgba(255, 255, 255, 0.15)' }}>
+                      <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: '#ffffff' }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                          <line x1="16" x2="16" y1="2" y2="6"/>
+                          <line x1="8" x2="8" y1="2" y2="6"/>
+                          <line x1="3" x2="21" y1="10" y2="10"/>
+                          <path d="m9 16 2 2 4-4"/>
+                        </svg>
+                        Lịch và Deadline
+                      </span>
+                      <Link to="/schedule" style={{ fontSize: '12px', color: '#ffffff', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
+                    </div>
+
+                    <div className="no-scrollbar" style={{ overflowY: 'auto', flex: 1 }}>
+                      <div style={{ padding: '10px 16px 6px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+                          </svg>
+                          Buổi học sắp tới
+                        </div>
+                        {schedules.length === 0 ? (
+                          <div style={{ padding: '10px 0 8px', textAlign: 'center', color: '#ffffff', fontSize: '12px' }}>
+                            Chưa có lịch học nào
+                          </div>
+                        ) : (
+                          schedules.map((s) => (
+                            <Link key={s.id} to={`/groups/${s.groupId}?tab=schedule`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                              <div
+                                style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <div style={{ width: '30px', height: '30px', borderRadius: '7px', flexShrink: 0, background: 'rgba(255, 255, 255, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                                    <path d="M6 6h10"/><path d="M6 10h10"/>
+                                  </svg>
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontWeight: 600, fontSize: '12.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#ffffff' }}>{s.topic}</div>
+                                  <div style={{ fontSize: '11px', color: '#ffffff', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#ffffff' }}>
+                                      <circle cx="12" cy="12" r="10" />
+                                      <polyline points="12 6 12 12 16 14" />
+                                    </svg>
+                                    <span>{new Date(s.dateTime).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </Link>
+                          ))
+                        )}
+                      </div>
+
+                      <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)', margin: '0 16px' }} />
+
+                      <div style={{ padding: '10px 16px 14px' }}>
+                        <div style={{ fontSize: '10px', fontWeight: 800, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                          </svg>
+                          Deadline cần nộp
+                        </div>
+                        {deadlines.length === 0 ? (
+                          <div style={{ padding: '10px 0', textAlign: 'center', color: '#ffffff', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                            Không còn deadline nào
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                              <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                          </div>
+                        ) : (
+                          deadlines.map((d) => (
+                            <Link key={d.id} to={`/groups/${d.groupId}?tab=deadlines`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: '10px',
+                                  alignItems: 'center',
+                                  padding: '8px 8px',
+                                  margin: '2px 0',
+                                  borderRadius: '8px',
+                                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                                  background: d.dueSoon ? 'rgba(255, 255, 255, 0.08)' : 'none',
+                                  transition: 'all 0.2s ease',
+                                  cursor: 'pointer'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = d.dueSoon ? 'rgba(255, 255, 255, 0.08)' : 'transparent'}
+                              >
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: d.overdue ? 'rgba(255, 255, 255, 0.4)' : d.dueSoon ? '#ff4d4d' : '#2ecc71', boxShadow: d.overdue ? 'none' : d.dueSoon ? '0 0 8px #ff4d4d' : '0 0 8px #2ecc71' }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '11px', color: '#ffffff', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+                                      </svg>
+                                      {d.groupName}
+                                    </span>
+                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                      {d.dueSoon ? (
+                                        <>
+                                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                          </svg>
+                                          Dưới 24h
+                                        </>
+                                      ) : (
+                                        new Date(d.dueDate).toLocaleDateString('vi-VN')
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </Link>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Online Friends card */}
+                  <div className="sc-card-animated" style={{ background: 'linear-gradient(135deg, #4A2530, #6B3744)', border: '1.5px solid #ffffff', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', animationDelay: '0.15s', color: '#ffffff' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 12px', borderBottom: '1px solid rgba(255, 255, 255, 0.15)' }}>
+                      <span style={{ fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: '#ffffff' }}>
+                        <span className="sc-online-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#2ecc71', boxShadow: '0 0 6px rgba(46, 204, 113, 0.6)' }} />
+                        Bạn bè trực tuyến ({friends.filter(f => onlineUserIds.includes(f.userId.toString())).length})
+                      </span>
+                      <Link to="/friends" style={{ fontSize: '12px', color: '#ffffff', textDecoration: 'none', fontWeight: 700 }}>Tất cả</Link>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', overscrollBehavior: 'contain', padding: '10px 16px 16px 16px' }}>
+                      {friends.length === 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px 0', textAlign: 'center', color: '#ffffff', fontSize: '12px' }}>
+                          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '10px', opacity: 0.55 }}>
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <line x1="17" y1="8" x2="21" y2="12" />
+                            <line x1="21" y1="8" x2="17" y2="12" />
+                          </svg>
+                          <span style={{ color: '#ffffff' }}>Chưa có bạn bè nào. <Link to="/friends" style={{ color: '#ffffff', fontWeight: 600, textDecoration: 'underline' }}>Kết bạn ngay</Link></span>
+                        </div>
+                      ) : (() => {
+                        const onlineFriends = friends.filter(f => onlineUserIds.includes(f.userId.toString()));
+                        if (onlineFriends.length === 0) {
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px 0', textAlign: 'center', color: '#ffffff', fontSize: '12px' }}>
+                              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '10px', opacity: 0.55 }}>
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <line x1="17" y1="8" x2="21" y2="12" />
+                                <line x1="21" y1="8" x2="17" y2="12" />
+                              </svg>
+                              <span style={{ color: '#ffffff' }}>Chưa có bạn bè nào trực tuyến.</span>
+                            </div>
+                          );
+                        }
+                        return onlineFriends.slice(0, 20).map((f) => (
+                          <Link key={f.userId} to={`/friends/${f.userId}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                            <div
+                              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '10px', transition: 'all 0.2s ease', cursor: 'pointer', background: 'transparent' }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              <div style={{ position: 'relative', flexShrink: 0 }}>
+                                <Avatar src={f.avatar} initial={f.fullName} size={32} />
+                                <span style={{
+                                  position: 'absolute', bottom: -1, right: -1,
+                                  width: '10px', height: '10px', borderRadius: '50%',
+                                  background: '#2ecc71',
+                                  border: '2px solid #5A2C35',
+                                  boxShadow: '0 0 6px rgba(46, 204, 113, 0.6)'
+                                }} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: '13px', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {f.fullName}
+                                </div>
+                                <div style={{ fontSize: '11px', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  Đang hoạt động
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </aside>
+              )}
             </div>
           </div>
         )}

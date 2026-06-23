@@ -262,12 +262,12 @@ export default function MyDocuments() {
 
   return (
     <>
-      <AppLayout>
+      <AppLayout hideRightSidebar={true}>
         <main className="document-page-container">
           {/* Header Panel with search */}
           <div className="premium-panel sc-card-animated sc-card-hover" style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', padding: '16px 20px', animationDelay: '0s' }}>
             <div>
-              <h1 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Fraunces', serif" }}>Tài liệu của tôi</h1>
+              <h1 style={{ fontSize: '20px', fontWeight: 900, color: '#000000', margin: 0, fontFamily: "'Fraunces', serif" }}>Tài liệu của tôi</h1>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>Danh sách tài liệu bạn đã chia sẻ trong các nhóm học.</p>
             </div>
             
@@ -464,11 +464,11 @@ export default function MyDocuments() {
             background: rgba(42, 117, 118, 0.03);
           }
           .premium-panel {
-            background: var(--bg-card);
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
             padding: 16px 20px;
             box-shadow: var(--shadow);
             margin-bottom: 24px;
@@ -477,20 +477,20 @@ export default function MyDocuments() {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 8px 12px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 24px;
+            padding: 8px 16px;
             transition: all 0.3s;
           }
           .search-container:focus-within {
-            border-color: var(--primary);
-            background: var(--bg-card);
-            box-shadow: 0 0 0 2px rgba(42, 117, 118, 0.15);
+            border-color: #000000;
+            background: #ffffff;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
           }
           .search-input {
             background: none; border: none; outline: none; flex: 1;
-            color: var(--text-primary); font-size: 13px; font-family: inherit;
+            color: #000000; font-size: 13px; font-family: inherit;
           }
           .file-icon-box {
             width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;

@@ -417,13 +417,13 @@ export default function Friends() {
 
   return (
     <>
-      <AppLayout>
+      <AppLayout hideRightSidebar={true}>
 
       {/* Main content */}
       <main className="friend-page-container">
           {/* Header */}
           <div className="premium-panel sc-card-animated sc-card-hover">
-            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 900, marginBottom: '4px', color: 'var(--text-primary)' }}>Kết bạn</h1>
+            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 900, marginBottom: '4px', color: '#000000' }}>Kết bạn</h1>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
               Kết nối với sinh viên cùng trường, cùng ngành và mở rộng mạng lưới học tập.
             </p>
@@ -654,33 +654,33 @@ export default function Friends() {
           box-sizing: border-box;
         }
         .premium-panel {
-          background: linear-gradient(135deg, rgba(42,117,118,0.08) 0%, rgba(214,158,46,0.04) 100%);
+          background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(42,117,118,0.18);
+          border: 1px solid #e5e7eb;
           border-radius: 20px;
           padding: 28px 32px;
-          box-shadow: var(--shadow-lg);
+          box-shadow: var(--shadow);
           margin-bottom: 20px;
         }
         .search-container {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: var(--bg-input);
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          padding: 8px 12px;
+          background: #ffffff;
+          border: 1px solid #d1d5db;
+          border-radius: 24px;
+          padding: 8px 16px;
           transition: all 0.3s;
         }
         .search-container:focus-within {
-          border-color: var(--primary);
-          background: var(--bg-card);
-          box-shadow: 0 0 0 2px rgba(42, 117, 118, 0.15);
+          border-color: #000000;
+          background: #ffffff;
+          box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
         }
         .search-input {
           background: none; border: none; outline: none; flex: 1;
-          color: var(--text-primary); font-size: 13px; font-family: inherit;
+          color: #000000; font-size: 13px; font-family: inherit;
         }
         
         .tab-btn {
@@ -691,23 +691,23 @@ export default function Friends() {
           font-size: 13px;
           font-weight: 600;
           transition: all 0.2s;
-          background: var(--bg-card);
-          color: var(--text-muted);
-          border: 1px solid rgba(17, 24, 39, 0.12);
+          background: #ffffff;
+          color: #4b5563;
+          border: 1px solid #e5e7eb;
           white-space: nowrap;
           display: flex;
           align-items: center;
           gap: 7px;
         }
         .tab-btn:hover {
-          background: var(--bg-input);
-          color: var(--text-primary);
+          background: #f3f4f6;
+          color: #111827;
         }
         .tab-btn.active {
-          background: var(--primary);
-          color: white;
-          border: none;
-          box-shadow: 0 4px 15px rgba(42, 117, 118, 0.3);
+          background: #000000;
+          color: #ffffff;
+          border: 1.5px solid #000000;
+          box-shadow: none;
         }
         .tab-btn.highlight {
           border-color: rgba(239,68,68,0.5);

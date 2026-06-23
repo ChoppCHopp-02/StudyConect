@@ -1368,3 +1368,46 @@ select.form-input option {
 .sc-animated-bg {
   background: var(--bg);
 }
+
+@keyframes sc-pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.7; }
+}
+.sc-online-dot {
+  animation: sc-pulse-dot 1.8s ease-in-out infinite;
+}
+.sc-avatar-hover {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+.sc-avatar-hover:hover {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+/* Custom Responsive layout classes for AppLayout */
+.layout-grid-custom {
+  display: grid;
+  height: 100%;
+  align-items: stretch;
+  gap: 24px;
+}
+@media (min-width: 769px) {
+  .layout-3col-custom {
+    grid-template-columns: 260px 1fr 300px;
+  }
+  .layout-2col-custom {
+    grid-template-columns: 260px 1fr;
+  }
+  .layout-2col-right-only {
+    grid-template-columns: 1fr 300px;
+  }
+  .layout-1col-custom {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .layout-3col-custom, .layout-2col-custom, .layout-2col-right-only, .layout-1col-custom {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
