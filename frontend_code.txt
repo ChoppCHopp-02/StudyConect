@@ -12330,7 +12330,7 @@ select.form-input option {
   transition: background 0.2s ease, transform 0.15s ease !important;
 }
 .sc-nav-item:hover {
-  background: rgba(35, 97, 95, 0.08) !important;
+  background: rgba(74, 37, 48, 0.08) !important;
   transform: translateX(2px) !important;
 }
 
@@ -12344,7 +12344,7 @@ select.form-input option {
 }
 .sc-card-hover:hover {
   transform: translateY(-3px) !important;
-  box-shadow: 0 8px 20px rgba(35, 97, 95, 0.12) !important;
+  box-shadow: 0 8px 20px rgba(74, 37, 48, 0.15) !important;
 }
 
 .sc-animated-bg {
@@ -12392,6 +12392,153 @@ select.form-input option {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+}
+
+/* ═══════════════════════════════════════════
+   WARM DARK RED/MAROON CARD & PANEL THEME
+   ═══════════════════════════════════════════ */
+
+/* Target all card, panel, navbar, profile sidebar, and modal content elements */
+.sc-card-animated,
+.premium-panel,
+.person-card,
+.file-card-item,
+.group-card,
+.stat-card,
+article,
+.navbar,
+[data-profilecard="true"],
+.auth-card,
+.profile-card,
+.profile-sidebar,
+div[style*="background: var(--bg-card)"],
+div[style*="background:var(--bg-card)"],
+div[style*="background: 'var(--bg-card)'"],
+div[style*="background: var(--bg-input)"] {
+  --bg-card: linear-gradient(135deg, #4A2530 0%, #6B3744 100%) !important;
+  --bg-input: rgba(255, 255, 255, 0.1) !important;
+  --border: #ffffff !important;
+  --border-hover: #ffffff !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: #ffffff !important;
+  --text-muted: rgba(255, 255, 255, 0.7) !important;
+  
+  background: var(--bg-card) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #ffffff !important;
+}
+
+/* Specific text color overrides to ensure headers, labels, and icons are white inside dark panels */
+.sc-card-animated h1, .sc-card-animated h2, .sc-card-animated h3, .sc-card-animated h4, .sc-card-animated p, .sc-card-animated span, .sc-card-animated label,
+.premium-panel h1, .premium-panel h2, .premium-panel h3, .premium-panel h4, .premium-panel p, .premium-panel span, .premium-panel label,
+.person-card h1, .person-card h2, .person-card h3, .person-card p, .person-card span, .person-card label,
+.file-card-item h1, .file-card-item h2, .file-card-item p, .file-card-item span,
+.group-card h1, .group-card h2, .group-card h3, .group-card p, .group-card span, .group-card label,
+article p, article span, article a, article strong,
+.navbar span, .navbar a,
+.auth-card h1, .auth-card h2, .auth-card h3, .auth-card label, .auth-card span,
+.profile-card h1, .profile-card h2, .profile-card h3, .profile-card label, .profile-card span, .profile-card div,
+.profile-sidebar div, .profile-sidebar span {
+  color: #ffffff !important;
+}
+
+/* Hover overrides for lists and cards to keep text visible */
+.person-card:hover,
+.file-card-item:hover,
+.group-card:hover,
+article:hover,
+.stat-card:hover {
+  background: linear-gradient(135deg, #5A2C3A, #7C4051) !important;
+  border-color: #ffffff !important;
+}
+
+/* Tab button overrides for the page container view (white page background) */
+.tab-btn:not(.active) {
+  background: #ffffff !important;
+  color: #4b5563 !important;
+  border: 1px solid #e5e7eb !important;
+}
+.tab-btn:not(.active):hover {
+  background: #f3f4f6 !important;
+  color: #000000 !important;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, #4A2530, #6B3744) !important;
+  color: #ffffff !important;
+  border: 1.5px solid transparent !important;
+}
+.tab-btn.active .tab-badge {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+.tab-btn:not(.active) .tab-badge {
+  background: #e5e7eb !important;
+  color: #4b5563 !important;
+}
+
+/* Ensure inputs, selects, and textareas inside dark cards/panels have proper borders, placeholder colors, and backgrounds */
+.sc-card-animated input, .sc-card-animated textarea, .sc-card-animated select,
+.premium-panel input, .premium-panel textarea, .premium-panel select,
+.person-card input, .person-card textarea, .person-card select,
+.group-card input, .group-card textarea, .group-card select,
+article input, article textarea, article select,
+.navbar input, .navbar textarea, .navbar select,
+.auth-card input, .auth-card textarea, .auth-card select,
+.profile-card input, .profile-card textarea, .profile-card select,
+[data-profilecard="true"] input {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1.5px solid #ffffff !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+}
+
+.sc-card-animated input::placeholder, .sc-card-animated textarea::placeholder,
+.premium-panel input::placeholder, .premium-panel textarea::placeholder,
+article input::placeholder, article textarea::placeholder,
+.auth-card input::placeholder, .auth-card textarea::placeholder,
+.profile-card input::placeholder, .profile-card textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.sc-card-animated input:focus, .premium-panel input:focus, article input:focus,
+.auth-card input:focus, .profile-card input:focus {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: #ffffff !important;
+  outline: none !important;
+}
+
+/* Dropdown selections, options and tags */
+.search-suggestion-item,
+.dropdown-menu,
+.dropdown-item,
+.custom-select-option {
+  color: #000000 !important;
+}
+
+/* Buttons inside the cards: keep danger/success/logout distinct, make others solid white with black text */
+.sc-card-animated button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+.premium-panel button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+.person-card button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+.file-card-item button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+.group-card button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+article button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+.navbar button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+.profile-card button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit),
+[data-profilecard="true"] button:not(.btn-primary):not(.btn-danger):not(.btn-logout):not(.btn-submit) {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+}
+
+.sc-card-animated button:hover,
+.premium-panel button:hover,
+.person-card button:hover,
+.file-card-item button:hover,
+.group-card button:hover,
+article button:hover,
+.navbar button:hover,
+.profile-card button:hover {
+  opacity: 0.95 !important;
 }
 
 ===== D:\StudyConect\frontend\src\layouts\AppLayout.jsx =====
