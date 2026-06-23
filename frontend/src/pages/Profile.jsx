@@ -277,7 +277,7 @@ export default function Profile() {
   const initials = user?.fullName?.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase() || '?';
 
   return (
-    <AppLayout>
+    <AppLayout hideSidebar={true}>
 
       {/* Content */}
       <div className="profile-container">
