@@ -9,7 +9,7 @@ export default function PostList({ posts, currentUser, onLike, onDelete, onComme
           padding: '48px 24px',
           color: 'var(--text-muted)',
           background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
+          border: 'none',
           borderRadius: '18px',
           fontSize: '14px',
           display: 'flex',
