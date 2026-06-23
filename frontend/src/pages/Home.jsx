@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getUserSchedulesAndDeadlines, getPosts, deletePost, createComment, toggleLikePost, togglePinPost } from '@/services/interactionService';
@@ -27,6 +27,7 @@ export default function Home() {
   const [myLeaderGroups, setMyLeaderGroups] = useState([]);
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const [particles, setParticles] = useState([]); // { id, x, y, char, delay, leftOffset }
+  const myGroupIdsRef = useRef([]);
 
   const spawnParticles = (emoji, clientX, clientY) => {
     // Spawn 6 fixed-positioned emoji particles
@@ -116,12 +117,26 @@ export default function Home() {
   const fetchSideData = useCallback(async () => {
     if (!user?.id) return;
     try {
-      // 2. Execute the async network calls in parallel using Promise.all
+      // Load user's group memberships to get group IDs
+      const { data: memberships } = await supabase
+        .from('group_members')
+        .select('group_id')
+        .eq('user_id', parseInt(user.id, 10));
+      if (memberships) {
+        myGroupIdsRef.current = memberships.map(m => m.group_id);
+      }
+
+      // Execute the async network calls in parallel using Promise.all
       const [schedulesRes] = await Promise.all([
-        getUserSchedulesAndDeadlines(user.id).catch(err => { console.warn('Schedules fetch failed:', err); return null; })
+        getUserSchedulesAndDeadlines(user.id).catch(err => {
+          if (import.meta.env.DEV) {
+            console.warn('Schedules fetch failed:', err);
+          }
+          return null;
+        })
       ]);
 
-      // 4. User schedules & deadlines list (only update if successfully fetched)
+      // User schedules & deadlines list (only update if successfully fetched)
       if (schedulesRes) {
         const { schedules: schedList = [], deadlines: deadList = [] } = schedulesRes;
         
@@ -150,17 +165,20 @@ export default function Home() {
         setDeadlines(incompleteDead);
       }
     } catch (err) {
-      console.warn('Error fetching side panel data:', err);
+      if (import.meta.env.DEV) {
+        console.warn('Error fetching side panel data:', err);
+      }
     }
   }, [user]);
 
   useEffect(() => {
+    if (!user?.id) return;
     fetchPosts();
     fetchSideData();
 
     // Chỉ refetch khi có post mới INSERT hoặc xóa/sửa post của mình
     const postsChannel = supabase
-      .channel('realtime-posts')
+      .channel(`posts-${user.id}-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'posts' },
@@ -171,7 +189,7 @@ export default function Home() {
           } else if (payload.eventType === 'DELETE' || payload.eventType === 'UPDATE') {
             // Chỉ refetch nếu post đó thuộc về user hiện tại hoặc đang hiển thị trong feed
             const postUserId = payload.old?.user_id || payload.new?.user_id;
-            if (postUserId && String(postUserId) === String(user?.id)) {
+            if (postUserId && String(postUserId) === String(user.id)) {
               fetchPosts();
             }
           }
@@ -179,11 +197,44 @@ export default function Home() {
       )
       .subscribe();
 
-    const interval = setInterval(fetchSideData, 30000);
+    // Realtime channel for side data (schedules, deadlines, group memberships)
+    const sideChannel = supabase
+      .channel(`side-data-${user.id}-${Date.now()}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'schedules' },
+        (payload) => {
+          const groupId = payload.new?.group_id || payload.old?.group_id;
+          if (groupId && myGroupIdsRef.current.includes(Number(groupId))) {
+            fetchSideData();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'deadlines' },
+        (payload) => {
+          const groupId = payload.new?.group_id || payload.old?.group_id;
+          if (groupId && myGroupIdsRef.current.includes(Number(groupId))) {
+            fetchSideData();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'group_members', filter: `user_id=eq.${user.id}` },
+        () => {
+          fetchSideData();
+        }
+      )
+      .subscribe();
+
+    const interval = setInterval(fetchSideData, 300000); // fallback 5 phút
     
     return () => {
       clearInterval(interval);
       supabase.removeChannel(postsChannel);
+      supabase.removeChannel(sideChannel);
     };
   }, [fetchPosts, fetchSideData, user?.id]);
 
