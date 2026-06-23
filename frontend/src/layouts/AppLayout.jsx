@@ -632,7 +632,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
 
               {/* Unified desktop right sidebar */}
               {showRightSidebar && (
-                <aside className="desktop-only no-scrollbar" style={{ width: '300px', position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px', flexShrink: 0 }}>
+                <aside className="flex-desktop-only no-scrollbar" style={{ width: '300px', position: 'sticky', top: 0, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', paddingBottom: '24px', flexShrink: 0 }}>
                   
                   {/* Schedule and Deadline card */}
                   <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', maxHeight: '420px', animationDelay: '0.1s', color: 'var(--text-primary)' }}>
