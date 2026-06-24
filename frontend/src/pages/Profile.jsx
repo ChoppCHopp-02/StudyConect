@@ -5,7 +5,6 @@ import { useToast } from '../components/Toast';
 import { updateProfile, changePassword } from '../services/authService';
 import { HCM_UNIVERSITIES, MAJORS } from '../constants/educationData';
 import { VIETNAM_LOCATIONS } from '../constants/locationData';
-import AppLayout from '../layouts/AppLayout';
 
 
 function CustomSelect({ value, onChange, options, placeholder = "Chọn...", disabled = false }) {
@@ -282,7 +281,7 @@ export default function Profile() {
   const initials = user?.fullName?.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase() || '?';
 
   return (
-    <AppLayout hideSidebar={true}>
+    <>
 
       {/* Content */}
       <div className="profile-container">
@@ -630,6 +629,6 @@ export default function Profile() {
           </div>
         </main>
       </div>
-    </AppLayout>
+    </>
   );
 }

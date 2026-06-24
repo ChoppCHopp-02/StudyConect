@@ -161,14 +161,14 @@ function AppRoutes() {
           <Route element={<PrivateRoute><AppLayoutRoute /></PrivateRoute>}>
             <Route path="/"             element={<Home />} />
             <Route path="/friends/:id"  element={<FriendDetail />} />
+            <Route path="/profile"      element={<Profile />} />
+            <Route path="/groups"       element={<Groups />} />
+            <Route path="/groups/:id"   element={<GroupDetail />} />
+            <Route path="/schedule"     element={<Schedule />} />
+            <Route path="/friends"      element={<Friend />} />
+            <Route path="/my-documents" element={<MyDocument />} />
+            <Route path="/chat"         element={<Chat />} />
           </Route>
-          <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="/groups"       element={<PrivateRoute><Groups /></PrivateRoute>} />
-          <Route path="/groups/:id"   element={<PrivateRoute><GroupDetail /></PrivateRoute>} />
-          <Route path="/schedule"     element={<PrivateRoute><Schedule /></PrivateRoute>} />
-          <Route path="/friends"      element={<PrivateRoute><Friend /></PrivateRoute>} />
-          <Route path="/my-documents" element={<PrivateRoute><MyDocument /></PrivateRoute>} />
-          <Route path="/chat"         element={<PrivateRoute><Chat /></PrivateRoute>} />
           <Route path="/room/:roomId" element={<PrivateRoute><MeetRoom /></PrivateRoute>} />
           <Route path="/call/:callId" element={<PrivateRoute><PrivateCall /></PrivateRoute>} />
         </Route>

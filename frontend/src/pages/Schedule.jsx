@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { getUserSchedulesAndDeadlines, toggleDeadline } from '../services/interactionService';
-import AppLayout from '../layouts/AppLayout';
 
 const getProcessedDeadlines = (deadList) => {
   const now = Date.now();
@@ -123,7 +122,7 @@ export default function Schedule() {
   const completedDeadlines = deadlines.filter(d => d.completed);
 
   return (
-    <AppLayout hideSidebar={true}>
+    <>
       <div className="schedule-container">
         {/* Page Header */}
         <div>
@@ -490,6 +489,6 @@ export default function Schedule() {
         .item-card.is-urgent:hover {
           box-shadow: 0 8px 24px rgba(239,68,68,0.15);
         }
-      `}</style>    </AppLayout>
+      `}</style>    </>
   );
 }

@@ -168,14 +168,14 @@ function AppRoutes() {
           <Route element={<PrivateRoute><AppLayoutRoute /></PrivateRoute>}>
             <Route path="/"             element={<Home />} />
             <Route path="/friends/:id"  element={<FriendDetail />} />
+            <Route path="/profile"      element={<Profile />} />
+            <Route path="/groups"       element={<Groups />} />
+            <Route path="/groups/:id"   element={<GroupDetail />} />
+            <Route path="/schedule"     element={<Schedule />} />
+            <Route path="/friends"      element={<Friend />} />
+            <Route path="/my-documents" element={<MyDocument />} />
+            <Route path="/chat"         element={<Chat />} />
           </Route>
-          <Route path="/profile"      element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="/groups"       element={<PrivateRoute><Groups /></PrivateRoute>} />
-          <Route path="/groups/:id"   element={<PrivateRoute><GroupDetail /></PrivateRoute>} />
-          <Route path="/schedule"     element={<PrivateRoute><Schedule /></PrivateRoute>} />
-          <Route path="/friends"      element={<PrivateRoute><Friend /></PrivateRoute>} />
-          <Route path="/my-documents" element={<PrivateRoute><MyDocument /></PrivateRoute>} />
-          <Route path="/chat"         element={<PrivateRoute><Chat /></PrivateRoute>} />
           <Route path="/room/:roomId" element={<PrivateRoute><MeetRoom /></PrivateRoute>} />
           <Route path="/call/:callId" element={<PrivateRoute><PrivateCall /></PrivateRoute>} />
         </Route>
@@ -13575,12 +13575,34 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
 
 ===== D:\StudyConect\frontend\src\layouts\AppLayoutRoute.jsx =====
 
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import AppLayout from './AppLayout';
 
+// Cấu hình hide theo từng path — thêm path mới vào đây khi cần
+const LAYOUT_CONFIG = {
+  '/profile':       { hideSidebar: true },
+  '/groups':        { hideSidebar: true },
+  '/schedule':      { hideSidebar: true },
+  '/friends':       { hideRightSidebar: true },
+  '/my-documents':  { hideRightSidebar: true },
+  '/chat':          { hideSidebar: true },
+  // '/' và '/friends/:id' dùng mặc định (không hide gì) -> không cần khai báo
+};
+
+function matchConfig(pathname) {
+  // Match /groups/:id
+  if (pathname.startsWith('/groups/')) {
+    return { hideSidebar: true };
+  }
+  return LAYOUT_CONFIG[pathname] || {};
+}
+
 export default function AppLayoutRoute() {
+  const location = useLocation();
+  const config = matchConfig(location.pathname);
+
   return (
-    <AppLayout>
+    <AppLayout {...config}>
       <Outlet />
     </AppLayout>
   );
@@ -14840,7 +14862,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCall } from '../context/CallContext';
 import { useOnlineUsers } from '../context/OnlineUsersContext';
-import AppLayout from '../layouts/AppLayout';
 import { getFriends, acceptFriendRequest, removeFriend } from '../services/friendService.js';
 import {
   sendMessage,
@@ -17376,7 +17397,7 @@ export default function Chat() {
   if (!isAuth || !user) return null;
 
   return (
-    <AppLayout hideSidebar={true}>
+    <>
       <div className="chat-page-container" style={{
         flex: 1, maxWidth: '1200px', width: '100%', margin: isMobile ? '0 auto' : '20px auto',
         padding: isMobile ? '0' : '0 16px', display: 'grid',
@@ -17504,7 +17525,7 @@ export default function Chat() {
           box-shadow: var(--shadow-sm);
         }
       `}</style>
-    </AppLayout>
+    </>
   );
 }
 
@@ -17772,7 +17793,6 @@ import {
   acceptFriendRequest,
   removeFriend,
 } from '../services/friendService';
-import AppLayout from '../layouts/AppLayout';
 import { useToast } from '../components/Toast';
 import { supabase } from '../config/supabaseClient';
 
@@ -18189,7 +18209,6 @@ export default function Friends() {
 
   return (
     <>
-      <AppLayout hideRightSidebar={true}>
 
       {/* Main content */}
       <main className="friend-page-container">
@@ -18334,7 +18353,6 @@ export default function Friends() {
             )}
           </div>
         </main>
-      </AppLayout>
 
       {/* Confirm Unfriend Modal */}
       {confirmUnfriend && (
@@ -19237,7 +19255,6 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import useGroupDetail from '@/hooks/useGroupDetail';
-import AppLayout from '@/layouts/AppLayout';
 import GroupDocuments from '@/components/groups/GroupDocuments';
 import GroupSchedule from '@/components/groups/GroupSchedule';
 import GroupDeadlines from '@/components/groups/GroupDeadlines';
@@ -19354,12 +19371,12 @@ export default function GroupDetail() {
 
   if (h.loading) {
     return (
-      <AppLayout user={user} onLogout={handleLogout} toasts={toasts} removeToast={removeToast} hideSidebar={true}>
+      <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px', flexDirection: 'column', gap: '16px' }}>
           <div className="spinner" />
           <p style={{ color: 'var(--text-muted)' }}>Đang tải thông tin nhóm...</p>
         </div>
-      </AppLayout>
+      </>
     );
   }
 
@@ -19375,7 +19392,7 @@ export default function GroupDetail() {
   }).length;
 
   return (
-    <AppLayout user={user} onLogout={handleLogout} toasts={toasts} removeToast={removeToast} hideSidebar={true}>
+    <>
       <div className="group-detail-container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px 48px' }}>
 
         {/* ── Group Header Card ── */}
@@ -19642,7 +19659,7 @@ export default function GroupDetail() {
         onConfirm={h.confirmConfig?.onConfirm}
         onCancel={h.confirmConfig?.onCancel || (() => h.setConfirmConfig(null))}
       />
-    </AppLayout>
+    </>
   );
 }
 
@@ -19655,7 +19672,6 @@ import { useToast } from '../components/Toast';
 import { getAllGroups, createGroup, joinGroup, leaveGroup, deleteGroup, transferAdminAndLeave, getMyJoinRequestStatus, getSubjectsByMajor, saveSubjectForMajor } from '../services/groupService';
 import { getFriends } from '../services/friendService';
 import { sendGroupInvite, getGroupInvitesSent } from '../services/groupInviteService';
-import AppLayout from '../layouts/AppLayout';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../config/supabaseClient';
 import { formatBytes } from '../utils';
@@ -20609,7 +20625,6 @@ export default function Groups() {
 
   return (
     <>
-      <AppLayout hideSidebar={true}>
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -21188,7 +21203,6 @@ export default function Groups() {
           border: 1px solid;
         }
       `}</style>
-    </AppLayout>
 
     {inviteGroup && (
       <InviteFriendsModal group={inviteGroup} currentUser={user} onClose={() => setInviteGroup(null)} onInvited={fetchGroups} addToast={addToast} />
@@ -24066,7 +24080,6 @@ function CtrlBtn({ active, onClick, danger, highlight, icon, label, badge = null
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AppLayout from '../layouts/AppLayout';
 import { useToast } from '../components/Toast';
 
 
@@ -24326,7 +24339,6 @@ export default function MyDocuments() {
 
   return (
     <>
-      <AppLayout hideRightSidebar={true}>
         <main className="document-page-container">
           {/* Header Panel with search */}
           <div className="premium-panel sc-card-animated sc-card-hover" style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', padding: '16px 20px', animationDelay: '0s' }}>
@@ -24589,7 +24601,6 @@ export default function MyDocuments() {
             text-decoration: underline !important;
           }
         `}</style>
-      </AppLayout>
 
       {/* Image Preview Modal */}
       {previewFile && (
@@ -25516,7 +25527,6 @@ import { useToast } from '../components/Toast';
 import { updateProfile, changePassword } from '../services/authService';
 import { HCM_UNIVERSITIES, MAJORS } from '../constants/educationData';
 import { VIETNAM_LOCATIONS } from '../constants/locationData';
-import AppLayout from '../layouts/AppLayout';
 
 
 function CustomSelect({ value, onChange, options, placeholder = "Chọn...", disabled = false }) {
@@ -25793,7 +25803,7 @@ export default function Profile() {
   const initials = user?.fullName?.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase() || '?';
 
   return (
-    <AppLayout hideSidebar={true}>
+    <>
 
       {/* Content */}
       <div className="profile-container">
@@ -26141,7 +26151,7 @@ export default function Profile() {
           </div>
         </main>
       </div>
-    </AppLayout>
+    </>
   );
 }
 
@@ -27052,7 +27062,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { getUserSchedulesAndDeadlines, toggleDeadline } from '../services/interactionService';
-import AppLayout from '../layouts/AppLayout';
 
 const getProcessedDeadlines = (deadList) => {
   const now = Date.now();
@@ -27172,7 +27181,7 @@ export default function Schedule() {
   const completedDeadlines = deadlines.filter(d => d.completed);
 
   return (
-    <AppLayout hideSidebar={true}>
+    <>
       <div className="schedule-container">
         {/* Page Header */}
         <div>
@@ -27539,7 +27548,7 @@ export default function Schedule() {
         .item-card.is-urgent:hover {
           box-shadow: 0 8px 24px rgba(239,68,68,0.15);
         }
-      `}</style>    </AppLayout>
+      `}</style>    </>
   );
 }
 

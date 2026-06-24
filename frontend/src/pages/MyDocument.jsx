@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AppLayout from '../layouts/AppLayout';
 import { useToast } from '../components/Toast';
 
 
@@ -262,7 +261,6 @@ export default function MyDocuments() {
 
   return (
     <>
-      <AppLayout hideRightSidebar={true}>
         <main className="document-page-container">
           {/* Header Panel with search */}
           <div className="premium-panel sc-card-animated sc-card-hover" style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', padding: '16px 20px', animationDelay: '0s' }}>
@@ -525,7 +523,6 @@ export default function MyDocuments() {
             text-decoration: underline !important;
           }
         `}</style>
-      </AppLayout>
 
       {/* Image Preview Modal */}
       {previewFile && (

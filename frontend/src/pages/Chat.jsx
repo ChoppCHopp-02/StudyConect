@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCall } from '../context/CallContext';
 import { useOnlineUsers } from '../context/OnlineUsersContext';
-import AppLayout from '../layouts/AppLayout';
 import { getFriends, acceptFriendRequest, removeFriend } from '../services/friendService.js';
 import {
   sendMessage,
@@ -2540,7 +2539,7 @@ export default function Chat() {
   if (!isAuth || !user) return null;
 
   return (
-    <AppLayout hideSidebar={true}>
+    <>
       <div className="chat-page-container" style={{
         flex: 1, maxWidth: '1200px', width: '100%', margin: isMobile ? '0 auto' : '20px auto',
         padding: isMobile ? '0' : '0 16px', display: 'grid',
@@ -2668,6 +2667,6 @@ export default function Chat() {
           box-shadow: var(--shadow-sm);
         }
       `}</style>
-    </AppLayout>
+    </>
   );
 }

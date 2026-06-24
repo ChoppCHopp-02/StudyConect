@@ -5,7 +5,6 @@ import { useToast } from '../components/Toast';
 import { getAllGroups, createGroup, joinGroup, leaveGroup, deleteGroup, transferAdminAndLeave, getMyJoinRequestStatus, getSubjectsByMajor, saveSubjectForMajor } from '../services/groupService';
 import { getFriends } from '../services/friendService';
 import { sendGroupInvite, getGroupInvitesSent } from '../services/groupInviteService';
-import AppLayout from '../layouts/AppLayout';
 import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../config/supabaseClient';
 import { formatBytes } from '../utils';
@@ -959,7 +958,6 @@ export default function Groups() {
 
   return (
     <>
-      <AppLayout hideSidebar={true}>
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -1538,7 +1536,6 @@ export default function Groups() {
           border: 1px solid;
         }
       `}</style>
-    </AppLayout>
 
     {inviteGroup && (
       <InviteFriendsModal group={inviteGroup} currentUser={user} onClose={() => setInviteGroup(null)} onInvited={fetchGroups} addToast={addToast} />

@@ -12,7 +12,6 @@ import {
   acceptFriendRequest,
   removeFriend,
 } from '../services/friendService';
-import AppLayout from '../layouts/AppLayout';
 import { useToast } from '../components/Toast';
 import { supabase } from '../config/supabaseClient';
 
@@ -429,7 +428,6 @@ export default function Friends() {
 
   return (
     <>
-      <AppLayout hideRightSidebar={true}>
 
       {/* Main content */}
       <main className="friend-page-container">
@@ -574,7 +572,6 @@ export default function Friends() {
             )}
           </div>
         </main>
-      </AppLayout>
 
       {/* Confirm Unfriend Modal */}
       {confirmUnfriend && (

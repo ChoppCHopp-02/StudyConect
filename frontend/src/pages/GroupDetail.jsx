@@ -3,7 +3,6 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import useGroupDetail from '@/hooks/useGroupDetail';
-import AppLayout from '@/layouts/AppLayout';
 import GroupDocuments from '@/components/groups/GroupDocuments';
 import GroupSchedule from '@/components/groups/GroupSchedule';
 import GroupDeadlines from '@/components/groups/GroupDeadlines';
@@ -120,12 +119,12 @@ export default function GroupDetail() {
 
   if (h.loading) {
     return (
-      <AppLayout user={user} onLogout={handleLogout} toasts={toasts} removeToast={removeToast} hideSidebar={true}>
+      <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px', flexDirection: 'column', gap: '16px' }}>
           <div className="spinner" />
           <p style={{ color: 'var(--text-muted)' }}>Đang tải thông tin nhóm...</p>
         </div>
-      </AppLayout>
+      </>
     );
   }
 
@@ -141,7 +140,7 @@ export default function GroupDetail() {
   }).length;
 
   return (
-    <AppLayout user={user} onLogout={handleLogout} toasts={toasts} removeToast={removeToast} hideSidebar={true}>
+    <>
       <div className="group-detail-container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px 48px' }}>
 
         {/* ── Group Header Card ── */}
@@ -408,6 +407,6 @@ export default function GroupDetail() {
         onConfirm={h.confirmConfig?.onConfirm}
         onCancel={h.confirmConfig?.onCancel || (() => h.setConfirmConfig(null))}
       />
-    </AppLayout>
+    </>
   );
 }
