@@ -28231,7 +28231,7 @@ export const updateProfile = async ({ id, fullName, university, major, bio, avat
       const fileName = `${id}_${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, uploadFile, { cacheControl: '604800', upsert: true });
+        .upload(fileName, uploadFile, { cacheControl: '2592000', upsert: true });
 
       if (uploadError) {
         if (import.meta.env.DEV) {
@@ -28475,7 +28475,8 @@ export const syncConversation = async (userId, friendId) => {
     .select('id, sender_id, receiver_id, content, file_attachment, is_read, created_at')
     .is('group_id', null)
     .or(`and(sender_id.eq.${uid},receiver_id.eq.${fid}),and(sender_id.eq.${fid},receiver_id.eq.${uid})`)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .limit(100);
 
   // Chỉ lấy tin mới hơn tin cuối trong cache
   if (lastCreatedAt) {
@@ -31065,7 +31066,7 @@ export const compressImage = (file, {
  * @returns {Promise<File>}
  */
 export const compressAvatar = (file) =>
-  compressImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.80 });
+  compressImage(file, { maxWidth: 256, maxHeight: 256, quality: 0.80 });
 
 
 ===== D:\StudyConect\frontend\src\utils\index.js =====
