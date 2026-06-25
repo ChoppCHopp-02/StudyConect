@@ -268,29 +268,30 @@ button:active:not(:disabled) {
   padding-left: 16px;
 }
 
-/* ── DateTime-local: sáng, rõ, dễ nhìn ── */
+/* ── DateTime-local: monochrome flat style ── */
 input[type="datetime-local"].form-input {
   color-scheme: light;
-  background: #2a2f4a;
-  color: #f0f2ff;
+  background: var(--bg-input) !important;
+  color: #000000 !important;
+  border: 1.5px solid var(--border) !important;
   cursor: pointer;
 }
 input[type="datetime-local"].form-input::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(1.8);
+  filter: none !important;
   cursor: pointer;
   opacity: 0.85;
   width: 18px;
   height: 18px;
 }
 input[type="datetime-local"].form-input::-webkit-datetime-edit {
-  color: #f0f2ff;
+  color: #000000 !important;
   letter-spacing: 0.3px;
 }
 input[type="datetime-local"].form-input::-webkit-datetime-edit-fields-wrapper {
   padding: 0;
 }
 input[type="datetime-local"].form-input::-webkit-datetime-edit-text {
-  color: var(--text-secondary);
+  color: #000000 !important;
   padding: 0 2px;
 }
 input[type="datetime-local"].form-input::-webkit-datetime-edit-day-field,
@@ -299,7 +300,7 @@ input[type="datetime-local"].form-input::-webkit-datetime-edit-year-field,
 input[type="datetime-local"].form-input::-webkit-datetime-edit-hour-field,
 input[type="datetime-local"].form-input::-webkit-datetime-edit-minute-field,
 input[type="datetime-local"].form-input::-webkit-datetime-edit-ampm-field {
-  color: #f0f2ff;
+  color: #000000 !important;
   background: transparent;
   border-radius: 3px;
   padding: 0 1px;
@@ -310,17 +311,19 @@ input[type="datetime-local"].form-input::-webkit-datetime-edit-year-field:focus,
 input[type="datetime-local"].form-input::-webkit-datetime-edit-hour-field:focus,
 input[type="datetime-local"].form-input::-webkit-datetime-edit-minute-field:focus,
 input[type="datetime-local"].form-input::-webkit-datetime-edit-ampm-field:focus {
-  background: var(--primary);
-  color: white;
+  background: #1A1A1A;
+  color: white !important;
   outline: none;
 }
 
 /* Also style the non-class datetime inputs (edit modals) */
 input[type="datetime-local"]:not(.form-input) {
   color-scheme: light;
+  background: var(--bg-input) !important;
+  color: #000000 !important;
 }
 input[type="datetime-local"]:not(.form-input)::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(1.8);
+  filter: none !important;
   cursor: pointer;
   opacity: 0.85;
 }
