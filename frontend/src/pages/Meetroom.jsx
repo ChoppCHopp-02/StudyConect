@@ -271,9 +271,10 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
   const [localStream,  setLocalStream]  = useState(null);
   const [remoteFeeds,  setRemoteFeeds]  = useState({}); // { peerId: { stream, name, avatar, camOff, micMuted, screenSharing } }
   const [error,        setError]        = useState(null);
-  const peersRef     = useRef({});
-  const localRef     = useRef(null);
-  const channelRef   = useRef(null);
+  const peersRef          = useRef({});
+  const localRef          = useRef(null);
+  const channelRef        = useRef(null);
+  const iceCandidateQueues = useRef({}); // { peerId: RTCIceCandidate[] } — queue ICE trước khi setRemoteDescription
 
   // Dùng ref để các callbacks đọc được giá trị mới nhất mà không cần recreate effect
   const micOnRef        = useRef(micOn);
@@ -294,18 +295,34 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
 
   const getIceConfig = () => ({
     iceServers: [
+      // STUN servers (Google + Cloudflare)
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      // TURN servers — metered.ca free tier (more reliable than openrelay)
+      {
+        urls: [
+          'turn:a.relay.metered.ca:80',
+          'turn:a.relay.metered.ca:443',
+          'turn:a.relay.metered.ca:443?transport=tcp',
+          'turns:a.relay.metered.ca:443',
+        ],
+        username: 'e8dd65f5b20e38f5e98af0f7',
+        credential: 'uMsMpVAiCgQQbdq+',
+      },
+      // TURN fallback — openrelay (kept as last resort)
       {
         urls: [
           'turn:openrelay.metered.ca:80',
-          'turn:openrelay.metered.ca:443',
           'turn:openrelay.metered.ca:443?transport=tcp',
         ],
         username: 'openrelayproject',
         credential: 'openrelayproject',
       },
-    ]
+    ],
+    iceCandidatePoolSize: 10,
   });
 
   // ── Start local media ────────────────────────────────────────
@@ -505,6 +522,10 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
           }));
           const pc = createPeer(msg.from, msg.name, msg.avatar, false, currentStream);
           await pc.setRemoteDescription(msg.offer);
+          // Flush ICE candidates đã queue trước khi setRemoteDescription
+          const queuedOffer = iceCandidateQueues.current[msg.from] || [];
+          iceCandidateQueues.current[msg.from] = [];
+          for (const c of queuedOffer) await pc.addIceCandidate(c).catch(() => {});
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           ch.send({
@@ -529,12 +550,27 @@ function useWebRTC({ roomId, user, micOn, camOn, onForceMute }) {
             }
           }));
           const pc = peersRef.current[msg.from];
-          if (pc) pc.setRemoteDescription(msg.answer);
+          if (pc) {
+            await pc.setRemoteDescription(msg.answer);
+            // Flush ICE candidates đã queue trước khi setRemoteDescription
+            const queuedAnswer = iceCandidateQueues.current[msg.from] || [];
+            iceCandidateQueues.current[msg.from] = [];
+            for (const c of queuedAnswer) await pc.addIceCandidate(c).catch(() => {});
+          }
         }
 
         if (msg.type === 'ice') {
           const pc = peersRef.current[msg.from];
-          if (pc) pc.addIceCandidate(msg.candidate).catch(() => {});
+          if (pc && pc.remoteDescription) {
+            // remoteDescription đã set → thêm ngay
+            pc.addIceCandidate(msg.candidate).catch(() => {});
+          } else {
+            // Chưa có remoteDescription → queue lại theo peerId
+            if (!iceCandidateQueues.current[msg.from]) {
+              iceCandidateQueues.current[msg.from] = [];
+            }
+            iceCandidateQueues.current[msg.from].push(msg.candidate);
+          }
         }
 
         if (msg.type === 'force-mute') {

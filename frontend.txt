@@ -24577,18 +24577,34 @@ function Avatar({ src, name = '', size = 80 }) {
 /* ─── ICE Servers — STUN + TURN (cross-network support) ── */
 const ICE_SERVERS = {
   iceServers: [
+    // STUN servers (Google + Cloudflare)
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
+    // TURN servers — metered.ca free tier (more reliable than openrelay)
+    {
+      urls: [
+        'turn:a.relay.metered.ca:80',
+        'turn:a.relay.metered.ca:443',
+        'turn:a.relay.metered.ca:443?transport=tcp',
+        'turns:a.relay.metered.ca:443',
+      ],
+      username: 'e8dd65f5b20e38f5e98af0f7',
+      credential: 'uMsMpVAiCgQQbdq+',
+    },
+    // TURN fallback — openrelay (kept as last resort)
     {
       urls: [
         'turn:openrelay.metered.ca:80',
-        'turn:openrelay.metered.ca:443',
         'turn:openrelay.metered.ca:443?transport=tcp',
       ],
       username: 'openrelayproject',
       credential: 'openrelayproject',
     },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 /* ─── Hook WebRTC cho cuộc gọi 1-1 ─────────────────────── */
@@ -24806,6 +24822,13 @@ function usePrivateWebRTC({ callId, user, mode, micOn, camOn, onHangup }) {
       ch.subscribe(async (status) => {
         if (status !== 'SUBSCRIBED' || cancelled) return;
 
+        // Gửi ready ngay khi subscribe xong
+        ch.send({
+          type: 'broadcast', event: 'pc_signal',
+          payload: { type: 'ready', from: myId }
+        });
+
+        // Gửi lại mỗi 3s nếu chưa kết nối (tăng từ 1.5s để tránh Supabase Broadcast rate limit)
         readyIntervalRef.current = setInterval(() => {
           if (pcRef.current?.connectionState === 'connected' || pcRef.current?.iceConnectionState === 'connected') {
             clearInterval(readyIntervalRef.current);
@@ -24816,12 +24839,7 @@ function usePrivateWebRTC({ callId, user, mode, micOn, camOn, onHangup }) {
             type: 'broadcast', event: 'pc_signal',
             payload: { type: 'ready', from: myId }
           });
-        }, 1500);
-
-        ch.send({
-          type: 'broadcast', event: 'pc_signal',
-          payload: { type: 'ready', from: myId }
-        });
+        }, 3000);
       });
     };
 
@@ -25006,10 +25024,10 @@ export default function PrivateCall() {
   const { callStatus } = useCall();
 
   // Lắng nghe kênh global để bắt 'no_answer'/'cancel' khi người gọi timeout
+  // QUAN TRỌNG: phải dùng đúng tên channel 'private_calls_global' — cùng channel CallContext dùng để broadcast
   useEffect(() => {
     if (!user?.id || !callId) return;
-    // Dùng đúng channel mà CallContext gửi signal — KHÔNG được đặt tên khác
-    const ch = supabase.channel('private_calls_global_receiver', {
+    const ch = supabase.channel('private_calls_global', {
       config: { broadcast: { self: false } }
     });
     ch.on('broadcast', { event: 'call_signal' }, ({ payload }) => {
