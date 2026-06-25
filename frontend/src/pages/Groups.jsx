@@ -87,8 +87,8 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
   };
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, padding: '16px' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-card)', width: '100%', maxWidth: step === 1 ? '480px' : '440px', maxHeight: 'calc(100vh - 80px)', borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'max-width 0.3s ease' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, padding: '80px 16px 32px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-card)', width: '100%', maxWidth: step === 1 ? '480px' : '440px', maxHeight: 'calc(100vh - 120px)', borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'max-width 0.3s ease' }}>
 
         {/* Header */}
         <div style={{ padding: '14px 18px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -202,22 +202,22 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               </span>
             </div>
 
-            <div className="no-scrollbar" style={{ padding: '10px 18px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: 1 }}>
+            <div className="no-scrollbar" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', flex: 1 }}>
               {/* Tên nhóm */}
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tên nhóm *</label>
+                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Tên nhóm *</label>
                 <div className="form-input-wrap">
-                  <input className="form-input" style={{ padding: '8px 12px', fontSize: 13 }} placeholder={meetingMode === 'online' ? 'Nhập tên nhóm của bạn ' : 'Nhập tên nhóm học của bạn'} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                  <input className="form-input" style={{ padding: '9px 13px', fontSize: 13 }} placeholder={meetingMode === 'online' ? 'Nhập tên nhóm của bạn ' : 'Nhập tên nhóm học của bạn'} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
                 </div>
               </div>
 
               {/* Môn học */}
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Môn học *</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Môn học *</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <select
                     className="form-input"
-                    style={{ padding: '8px 12px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', appearance: 'auto' }}
+                    style={{ padding: '9px 13px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', appearance: 'auto' }}
                     value={subjectMode === 'custom' ? 'custom' : (formData.subject || '')}
                     onChange={e => {
                       const val = e.target.value;
@@ -243,7 +243,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                   {subjectMode === 'custom' && (
                     <input
                       className="form-input"
-                      style={{ padding: '8px 12px', fontSize: 13, borderColor: 'var(--primary-light)', boxShadow: '0 0 0 2px rgba(108,99,255,0.15)' }}
+                      style={{ padding: '9px 13px', fontSize: 13, borderColor: 'var(--primary-light)', boxShadow: '0 0 0 2px rgba(108,99,255,0.15)' }}
                       placeholder="Nhập tên môn học mới..."
                       value={customSubject}
                       onChange={e => {
@@ -259,20 +259,20 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               {/* Mô tả - Chỉ hiển thị khi tạo nhóm công khai */}
               {!isPrivate && (
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Mô tả nhóm</label>
-                  <textarea className="form-textarea" placeholder="Mô tả ngắn gọn về nhóm để thành viên hiểu mục tiêu học" style={{ height: '56px', resize: 'none', padding: '8px 12px', fontSize: 13 }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                  <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Mô tả nhóm</label>
+                  <textarea className="form-textarea" placeholder="Mô tả ngắn gọn về nhóm để thành viên hiểu mục tiêu học" style={{ height: '72px', resize: 'none', padding: '9px 13px', fontSize: 13 }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                 </div>
               )}
 
               {/* Location Picker for Offline mode */}
               {meetingMode === 'offline' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tên địa điểm học tập *</label>
+                    <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Tên địa điểm học tập *</label>
                     <div className="form-input-wrap">
                       <input
                         className="form-input"
-                        style={{ padding: '8px 12px', fontSize: 13 }}
+                        style={{ padding: '9px 13px', fontSize: 13 }}
                         placeholder="Nhập tên quán cà phê, thư viện..."
                         value={customName}
                         onChange={e => handleCustomLocationChange(e.target.value)}
@@ -323,11 +323,11 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
 
               {/* Số lượng thành viên tối đa */}
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Số lượng thành viên tối đa</label>
+                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Số lượng thành viên tối đa</label>
                 <div className="form-input-wrap">
                   <select
                     className="form-input"
-                    style={{ padding: '8px 12px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '8px', width: '100%', cursor: 'pointer' }}
+                    style={{ padding: '9px 13px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '8px', width: '100%', cursor: 'pointer' }}
                     value={formData.maxMembers || 10}
                     onChange={e => setFormData({ ...formData, maxMembers: parseInt(e.target.value, 10) })}
                   >
@@ -343,7 +343,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               </div>
 
               {/* Toggle Riêng tư / Công khai */}
-              <div style={{ borderRadius: 10, border: `1.5px solid ${isPrivate ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)'}`, background: isPrivate ? 'rgba(239,68,68,0.04)' : 'rgba(16,185,129,0.04)', padding: '10px 14px', transition: 'all 0.25s' }}>
+              <div style={{ borderRadius: 10, border: `1.5px solid ${isPrivate ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)'}`, background: isPrivate ? 'rgba(239,68,68,0.04)' : 'rgba(16,185,129,0.04)', padding: '12px 16px', transition: 'all 0.25s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
@@ -1567,159 +1567,155 @@ export default function Groups() {
     )}
 
     {reviewGroup && (
-      <div style={{
-        position: 'fixed',
-        bottom: '24px',
-        right: '24px',
-        width: '360px',
-        maxHeight: '450px',
-        background: 'rgba(16, 20, 35, 0.95)',
-        backdropFilter: 'blur(16px)',
-        border: '1.5px solid var(--text-primary)',
-        borderRadius: '16px',
-        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), var(--shadow-glow)',
-        zIndex: 11000,
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        color: 'var(--text-primary)',
-        animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) ease',
+      <div onClick={() => setReviewGroup(null)} style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+        zIndex: 11000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+        animation: 'fadeIn 0.2s ease-out',
       }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '12px' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              Thông tin nhóm học
-            </h3>
-            <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
-              Đọc kỹ thông tin trước khi tham gia
-            </p>
-          </div>
-          <button 
-            onClick={() => setReviewGroup(null)}
-            style={{
-              background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px', padding: '2px'
-            }}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Body content scrollable */}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }} className="no-scrollbar">
-          {/* Tên nhóm */}
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-              Tên nhóm
+        <div onClick={(e) => e.stopPropagation()} style={{
+          width: '100%', maxWidth: '420px', maxHeight: '85vh',
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '20px',
+          padding: '24px', boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+          display: 'flex', flexDirection: 'column',
+          color: 'var(--text-primary)',
+          animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) ease',
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '12px' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                Thông tin nhóm học
+              </h3>
+              <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
+                Đọc kỹ thông tin trước khi tham gia
+              </p>
             </div>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
-              {reviewGroup.name}
-            </div>
+            <button 
+              onClick={() => setReviewGroup(null)}
+              style={{
+                background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px', padding: '2px'
+              }}
+            >
+              ✕
+            </button>
           </div>
 
-          {/* Môn học & Thành viên */}
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-                Môn học
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
-                {reviewGroup.subject}
-              </div>
-            </div>
+          {/* Body content scrollable */}
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }} className="no-scrollbar">
+            {/* Tên nhóm */}
             <div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-                Thành viên
+                Tên nhóm
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
-                {reviewGroup.members?.length || 0} / {reviewGroup.maxMembers || 10}
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+                {reviewGroup.name}
               </div>
             </div>
-          </div>
 
-          {/* Mô tả */}
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-              Mô tả
+            {/* Môn học & Thành viên */}
+            <div style={{ display: 'flex', gap: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  Môn học
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
+                  {reviewGroup.subject}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  Thành viên
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
+                  {reviewGroup.members?.length || 0} / {reviewGroup.maxMembers || 10}
+                </div>
+              </div>
             </div>
-            <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4, fontStyle: reviewGroup.description ? 'normal' : 'italic' }}>
-              {reviewGroup.description ? `"${reviewGroup.description}"` : 'Không có mô tả.'}
-            </p>
-          </div>
 
-          {/* Tài liệu của các thành viên */}
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '6px' }}>
-              Tài liệu đã tải lên ({loadingFiles ? '...' : reviewGroupFiles.length})
+            {/* Mô tả */}
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                Mô tả
+              </div>
+              <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4, fontStyle: reviewGroup.description ? 'normal' : 'italic' }}>
+                {reviewGroup.description ? `"${reviewGroup.description}"` : 'Không có mô tả.'}
+              </p>
             </div>
-            {loadingFiles ? (
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '4px 0' }}>
-                Đang tải danh sách tài liệu...
+
+            {/* Tài liệu của các thành viên */}
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '6px' }}>
+                Tài liệu đã tải lên ({loadingFiles ? '...' : reviewGroupFiles.length})
               </div>
-            ) : reviewGroupFiles.length === 0 ? (
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
-                Nhóm chưa có tài liệu nào được tải lên.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {reviewGroupFiles.map((file, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.03)', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)', flexShrink: 0 }}>
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                      {file.file_name}
-                    </span>
-                    {file.file_size && (
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                        {formatBytes(file.file_size)}
+              {loadingFiles ? (
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '4px 0' }}>
+                  Đang tải danh sách tài liệu...
+                </div>
+              ) : reviewGroupFiles.length === 0 ? (
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
+                  Nhóm chưa có tài liệu nào được tải lên.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {reviewGroupFiles.map((file, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.03)', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)', flexShrink: 0 }}>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {file.file_name}
                       </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                      {file.file_size && (
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                          {formatBytes(file.file_size)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Footer Actions */}
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '8px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button 
-            onClick={() => setReviewGroup(null)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            Hủy
-          </button>
-          <button 
-            onClick={handleConfirmJoin}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '8px',
-              border: 'none',
-              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%)',
-              color: '#ffffff',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(108, 99, 255, 0.25)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-          >
-            {reviewGroup.isPrivate ? 'Đồng ý gửi yêu cầu' : 'Đồng ý tham gia'}
-          </button>
+          {/* Footer Actions */}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '8px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <button 
+              onClick={() => setReviewGroup(null)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              Hủy
+            </button>
+            <button 
+              onClick={handleConfirmJoin}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%)',
+                color: '#ffffff',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(108, 99, 255, 0.25)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+            >
+              {reviewGroup.isPrivate ? 'Đồng ý gửi yêu cầu' : 'Đồng ý tham gia'}
+            </button>
+          </div>
         </div>
       </div>
     )}

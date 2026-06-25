@@ -2184,6 +2184,17 @@ export default function GlobalMessageListener() {
         );
       }
     });
+ 
+    adminChannel.on('broadcast', { event: 'post_rejected' }, async ({ payload }) => {
+      if (!payload) return;
+      const { userId } = payload;
+      if (String(userId) === String(uid)) {
+        addToast(
+          'Bài viết của bạn đã bị Admin từ chối phê duyệt và xóa bỏ. ❌',
+          'error', 8000, null, '📝'
+        );
+      }
+    });
 
     adminChannel.subscribe();
 
@@ -13566,7 +13577,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 // ── Inline toast (Admin is outside AppLayout) ──────────────────────
 function AdminToast({ toasts, remove }) {
   return (
-    <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 9999 }}>
+    <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 20000 }}>
       {toasts.map((t) => (
         <div key={t.id} style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: 'var(--shadow)', borderLeft: `4px solid ${t.type === 'success' ? 'var(--success)' : 'var(--error)'}`, minWidth: '280px', maxWidth: '360px', fontSize: '14px', marginBottom: '10px' }}>
           <span style={{ flex: 1, color: 'var(--text-primary)' }}>{t.msg}</span>
@@ -13930,19 +13941,26 @@ const EMPTY_GROUP_FORM = { name: '', subject: '', description: '', creatorId: ''
 export default function Admin() {
   const { admin, adminLogout, setAdmin } = useAuth();
 
-  const adminChannelRef = useRef(null);
-
-  useEffect(() => {
-    if (admin) {
-      const ch = supabase.channel('admin-broadcasts');
-      ch.subscribe();
-      adminChannelRef.current = ch;
-      
-      return () => {
-        supabase.removeChannel(ch);
-      };
+  const notifyUser = useCallback(async (targetUserId, event, payload) => {
+    try {
+      const channelName = `admin-broadcasts-${targetUserId}`;
+      const ch = supabase.channel(channelName);
+      ch.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await ch.send({
+            type: 'broadcast',
+            event,
+            payload,
+          });
+          setTimeout(() => {
+            supabase.removeChannel(ch).catch(() => {});
+          }, 1000);
+        }
+      });
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[Admin] Gửi thông báo thất bại:', err);
     }
-  }, [admin]);
+  }, []);
 
   // Auth
   const [loginForm,    setLoginForm]    = useState({ email: '', password: '' });
@@ -14478,13 +14496,7 @@ export default function Admin() {
                                           onClick={async () => {
                                             try {
                                               await approvePost(p.id);
-                                              if (adminChannelRef.current) {
-                                                adminChannelRef.current.send({
-                                                  type: 'broadcast',
-                                                  event: 'post_approved',
-                                                  payload: { postId: p.id, userId: p.userId, userFullName: p.userFullName }
-                                                });
-                                              }
+                                              await notifyUser(p.userId, 'post_approved', { postId: p.id, userId: p.userId, userFullName: p.userFullName });
                                               showToast('Phê duyệt bài viết thành công!');
                                               loadData();
                                             } catch (err) {
@@ -14504,6 +14516,7 @@ export default function Admin() {
                                               onConfirm: async () => {
                                                 setConfirmConfig(null);
                                                 try {
+                                                  await notifyUser(p.userId, 'post_rejected', { postId: p.id, userId: p.userId, userFullName: p.userFullName });
                                                   await adminDeletePost(p.id);
                                                   showToast('Đã từ chối và xóa bài viết!');
                                                   loadData();
@@ -14575,20 +14588,14 @@ export default function Admin() {
                                     onClick={async () => {
                                       try {
                                         await approveFile(f.id);
-                                        if (adminChannelRef.current) {
-                                          adminChannelRef.current.send({
-                                            type: 'broadcast',
-                                            event: 'file_approved',
-                                            payload: {
-                                              fileId: f.id,
-                                              userId: f.userId,
-                                              fileName: f.fileName,
-                                              groupId: f.groupId,
-                                              groupName: f.groupName,
-                                              userFullName: f.userFullName
-                                            }
-                                          });
-                                        }
+                                        await notifyUser(f.userId, 'file_approved', {
+                                          fileId: f.id,
+                                          userId: f.userId,
+                                          fileName: f.fileName,
+                                          groupId: f.groupId,
+                                          groupName: f.groupName,
+                                          userFullName: f.userFullName
+                                        });
                                         showToast('Phê duyệt tài liệu thành công!');
                                         loadData();
                                       } catch (err) {
@@ -14616,20 +14623,14 @@ export default function Admin() {
                                           setConfirmConfig(null);
                                           try {
                                             await adminDeleteFile(f.id);
-                                            if (adminChannelRef.current) {
-                                              adminChannelRef.current.send({
-                                                type: 'broadcast',
-                                                event: 'file_rejected',
-                                                payload: {
-                                                  fileId: f.id,
-                                                  userId: f.userId,
-                                                  fileName: f.fileName,
-                                                  groupId: f.groupId,
-                                                  groupName: f.groupName,
-                                                  userFullName: f.userFullName
-                                                }
-                                              });
-                                            }
+                                            await notifyUser(f.userId, 'file_rejected', {
+                                              fileId: f.id,
+                                              userId: f.userId,
+                                              fileName: f.fileName,
+                                              groupId: f.groupId,
+                                              groupName: f.groupName,
+                                              userFullName: f.userFullName
+                                            });
                                             showToast('Đã từ chối và xóa tài liệu thành công!');
                                             loadData();
                                           } catch (err) {
@@ -19679,8 +19680,8 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
   };
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, padding: '16px' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-card)', width: '100%', maxWidth: step === 1 ? '480px' : '440px', maxHeight: 'calc(100vh - 80px)', borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'max-width 0.3s ease' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, padding: '80px 16px 32px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-card)', width: '100%', maxWidth: step === 1 ? '480px' : '440px', maxHeight: 'calc(100vh - 120px)', borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'max-width 0.3s ease' }}>
 
         {/* Header */}
         <div style={{ padding: '14px 18px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -19794,22 +19795,22 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               </span>
             </div>
 
-            <div className="no-scrollbar" style={{ padding: '10px 18px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: 1 }}>
+            <div className="no-scrollbar" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', flex: 1 }}>
               {/* Tên nhóm */}
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tên nhóm *</label>
+                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Tên nhóm *</label>
                 <div className="form-input-wrap">
-                  <input className="form-input" style={{ padding: '8px 12px', fontSize: 13 }} placeholder={meetingMode === 'online' ? 'Nhập tên nhóm của bạn ' : 'Nhập tên nhóm học của bạn'} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                  <input className="form-input" style={{ padding: '9px 13px', fontSize: 13 }} placeholder={meetingMode === 'online' ? 'Nhập tên nhóm của bạn ' : 'Nhập tên nhóm học của bạn'} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
                 </div>
               </div>
 
               {/* Môn học */}
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Môn học *</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Môn học *</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <select
                     className="form-input"
-                    style={{ padding: '8px 12px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', appearance: 'auto' }}
+                    style={{ padding: '9px 13px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', appearance: 'auto' }}
                     value={subjectMode === 'custom' ? 'custom' : (formData.subject || '')}
                     onChange={e => {
                       const val = e.target.value;
@@ -19835,7 +19836,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                   {subjectMode === 'custom' && (
                     <input
                       className="form-input"
-                      style={{ padding: '8px 12px', fontSize: 13, borderColor: 'var(--primary-light)', boxShadow: '0 0 0 2px rgba(108,99,255,0.15)' }}
+                      style={{ padding: '9px 13px', fontSize: 13, borderColor: 'var(--primary-light)', boxShadow: '0 0 0 2px rgba(108,99,255,0.15)' }}
                       placeholder="Nhập tên môn học mới..."
                       value={customSubject}
                       onChange={e => {
@@ -19851,20 +19852,20 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               {/* Mô tả - Chỉ hiển thị khi tạo nhóm công khai */}
               {!isPrivate && (
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Mô tả nhóm</label>
-                  <textarea className="form-textarea" placeholder="Mô tả ngắn gọn về nhóm để thành viên hiểu mục tiêu học" style={{ height: '56px', resize: 'none', padding: '8px 12px', fontSize: 13 }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                  <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Mô tả nhóm</label>
+                  <textarea className="form-textarea" placeholder="Mô tả ngắn gọn về nhóm để thành viên hiểu mục tiêu học" style={{ height: '72px', resize: 'none', padding: '9px 13px', fontSize: 13 }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                 </div>
               )}
 
               {/* Location Picker for Offline mode */}
               {meetingMode === 'offline' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Tên địa điểm học tập *</label>
+                    <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Tên địa điểm học tập *</label>
                     <div className="form-input-wrap">
                       <input
                         className="form-input"
-                        style={{ padding: '8px 12px', fontSize: 13 }}
+                        style={{ padding: '9px 13px', fontSize: 13 }}
                         placeholder="Nhập tên quán cà phê, thư viện..."
                         value={customName}
                         onChange={e => handleCustomLocationChange(e.target.value)}
@@ -19915,11 +19916,11 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
 
               {/* Số lượng thành viên tối đa */}
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Số lượng thành viên tối đa</label>
+                <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Số lượng thành viên tối đa</label>
                 <div className="form-input-wrap">
                   <select
                     className="form-input"
-                    style={{ padding: '8px 12px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '8px', width: '100%', cursor: 'pointer' }}
+                    style={{ padding: '9px 13px', fontSize: 13, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '8px', width: '100%', cursor: 'pointer' }}
                     value={formData.maxMembers || 10}
                     onChange={e => setFormData({ ...formData, maxMembers: parseInt(e.target.value, 10) })}
                   >
@@ -19935,7 +19936,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               </div>
 
               {/* Toggle Riêng tư / Công khai */}
-              <div style={{ borderRadius: 10, border: `1.5px solid ${isPrivate ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)'}`, background: isPrivate ? 'rgba(239,68,68,0.04)' : 'rgba(16,185,129,0.04)', padding: '10px 14px', transition: 'all 0.25s' }}>
+              <div style={{ borderRadius: 10, border: `1.5px solid ${isPrivate ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)'}`, background: isPrivate ? 'rgba(239,68,68,0.04)' : 'rgba(16,185,129,0.04)', padding: '12px 16px', transition: 'all 0.25s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
@@ -21159,159 +21160,155 @@ export default function Groups() {
     )}
 
     {reviewGroup && (
-      <div style={{
-        position: 'fixed',
-        bottom: '24px',
-        right: '24px',
-        width: '360px',
-        maxHeight: '450px',
-        background: 'rgba(16, 20, 35, 0.95)',
-        backdropFilter: 'blur(16px)',
-        border: '1.5px solid var(--text-primary)',
-        borderRadius: '16px',
-        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), var(--shadow-glow)',
-        zIndex: 11000,
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        color: 'var(--text-primary)',
-        animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) ease',
+      <div onClick={() => setReviewGroup(null)} style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+        zIndex: 11000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+        animation: 'fadeIn 0.2s ease-out',
       }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '12px' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              Thông tin nhóm học
-            </h3>
-            <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
-              Đọc kỹ thông tin trước khi tham gia
-            </p>
-          </div>
-          <button 
-            onClick={() => setReviewGroup(null)}
-            style={{
-              background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px', padding: '2px'
-            }}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Body content scrollable */}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }} className="no-scrollbar">
-          {/* Tên nhóm */}
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-              Tên nhóm
+        <div onClick={(e) => e.stopPropagation()} style={{
+          width: '100%', maxWidth: '420px', maxHeight: '85vh',
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '20px',
+          padding: '24px', boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+          display: 'flex', flexDirection: 'column',
+          color: 'var(--text-primary)',
+          animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) ease',
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '12px' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                Thông tin nhóm học
+              </h3>
+              <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
+                Đọc kỹ thông tin trước khi tham gia
+              </p>
             </div>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
-              {reviewGroup.name}
-            </div>
+            <button 
+              onClick={() => setReviewGroup(null)}
+              style={{
+                background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px', padding: '2px'
+              }}
+            >
+              ✕
+            </button>
           </div>
 
-          {/* Môn học & Thành viên */}
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-                Môn học
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
-                {reviewGroup.subject}
-              </div>
-            </div>
+          {/* Body content scrollable */}
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }} className="no-scrollbar">
+            {/* Tên nhóm */}
             <div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-                Thành viên
+                Tên nhóm
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
-                {reviewGroup.members?.length || 0} / {reviewGroup.maxMembers || 10}
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+                {reviewGroup.name}
               </div>
             </div>
-          </div>
 
-          {/* Mô tả */}
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-              Mô tả
+            {/* Môn học & Thành viên */}
+            <div style={{ display: 'flex', gap: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  Môn học
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
+                  {reviewGroup.subject}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  Thành viên
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
+                  {reviewGroup.members?.length || 0} / {reviewGroup.maxMembers || 10}
+                </div>
+              </div>
             </div>
-            <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4, fontStyle: reviewGroup.description ? 'normal' : 'italic' }}>
-              {reviewGroup.description ? `"${reviewGroup.description}"` : 'Không có mô tả.'}
-            </p>
-          </div>
 
-          {/* Tài liệu của các thành viên */}
-          <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '6px' }}>
-              Tài liệu đã tải lên ({loadingFiles ? '...' : reviewGroupFiles.length})
+            {/* Mô tả */}
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                Mô tả
+              </div>
+              <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4, fontStyle: reviewGroup.description ? 'normal' : 'italic' }}>
+                {reviewGroup.description ? `"${reviewGroup.description}"` : 'Không có mô tả.'}
+              </p>
             </div>
-            {loadingFiles ? (
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '4px 0' }}>
-                Đang tải danh sách tài liệu...
+
+            {/* Tài liệu của các thành viên */}
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '6px' }}>
+                Tài liệu đã tải lên ({loadingFiles ? '...' : reviewGroupFiles.length})
               </div>
-            ) : reviewGroupFiles.length === 0 ? (
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
-                Nhóm chưa có tài liệu nào được tải lên.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {reviewGroupFiles.map((file, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.03)', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)', flexShrink: 0 }}>
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                      {file.file_name}
-                    </span>
-                    {file.file_size && (
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                        {formatBytes(file.file_size)}
+              {loadingFiles ? (
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '4px 0' }}>
+                  Đang tải danh sách tài liệu...
+                </div>
+              ) : reviewGroupFiles.length === 0 ? (
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
+                  Nhóm chưa có tài liệu nào được tải lên.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {reviewGroupFiles.map((file, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.03)', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)', flexShrink: 0 }}>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {file.file_name}
                       </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                      {file.file_size && (
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                          {formatBytes(file.file_size)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Footer Actions */}
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '8px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button 
-            onClick={() => setReviewGroup(null)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            Hủy
-          </button>
-          <button 
-            onClick={handleConfirmJoin}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '8px',
-              border: 'none',
-              background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%)',
-              color: '#ffffff',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(108, 99, 255, 0.25)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-          >
-            {reviewGroup.isPrivate ? 'Đồng ý gửi yêu cầu' : 'Đồng ý tham gia'}
-          </button>
+          {/* Footer Actions */}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '8px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <button 
+              onClick={() => setReviewGroup(null)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              Hủy
+            </button>
+            <button 
+              onClick={handleConfirmJoin}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%)',
+                color: '#ffffff',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(108, 99, 255, 0.25)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+            >
+              {reviewGroup.isPrivate ? 'Đồng ý gửi yêu cầu' : 'Đồng ý tham gia'}
+            </button>
+          </div>
         </div>
       </div>
     )}
@@ -24927,23 +24924,24 @@ function CtrlBtn({ onClick, title, active = true, danger = false, children }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        width: 56, height: 56,
+        width: danger ? 64 : 56, height: danger ? 64 : 56,
         borderRadius: '50%',
         border: 'none',
         cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '22px',
-        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+        transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         background: danger
-          ? (hov ? '#dc2626' : 'linear-gradient(135deg,#ef4444,#dc2626)')
+          ? 'linear-gradient(135deg, #ef4444, #dc2626)'
           : active
             ? (hov ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)')
             : (hov ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.12)'),
         // eslint-disable-next-line no-dupe-keys
         border: danger ? 'none' : `1.5px solid ${active ? 'rgba(255,255,255,0.12)' : 'rgba(239,68,68,0.35)'}`,
-        boxShadow: danger ? '0 4px 20px rgba(239,68,68,0.4)' : 'none',
-        transform: hov ? 'scale(1.1)' : 'scale(1)',
+        boxShadow: danger ? '0 4px 14px rgba(239,68,68,0.4)' : 'none',
+        transform: hov ? (danger ? 'scale(1.15) rotate(-10deg)' : 'scale(1.1)') : 'scale(1)',
         color: danger ? '#fff' : active ? '#fff' : '#ef4444',
+        animation: danger ? 'pc-reject-pulse 1.5s ease-in-out infinite' : 'none',
       }}
     >
       {children}
@@ -24960,6 +24958,8 @@ function VideoTile({ stream, name, avatar, muted = false, camOff = false, mirror
       ref.current.play().catch(() => {});
     }
   }, [stream, camOff]);
+
+  const isConnecting = !stream;
 
   return (
     <div style={{
@@ -24984,17 +24984,29 @@ function VideoTile({ stream, name, avatar, muted = false, camOff = false, mirror
       ) : (
         <div style={{
           display: 'flex', flexDirection: 'column',
-          alignItems: 'center', gap: '14px',
+          alignItems: 'center', gap: '20px',
           background: `radial-gradient(circle at center, ${colorOf(name)}22 0%, #0a0a1a 70%)`,
           width: '100%', height: '100%',
           justifyContent: 'center',
         }}>
-          <div style={{
-            padding: '6px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1.5px solid rgba(255,255,255,0.08)',
-          }}>
-            <Avatar src={avatar} name={name} size={80} />
+          <div style={{ position: 'relative', marginBottom: isConnecting ? '10px' : '0px' }}>
+            {isConnecting && [0, 1, 2].map(i => (
+              <div key={i} style={{
+                position: 'absolute', inset: '-12px',
+                borderRadius: '50%',
+                border: '2px solid rgba(108,99,255,0.4)',
+                animation: `pc-wave 2s ease-out ${i * 0.6}s infinite`,
+              }} />
+            ))}
+            <div style={{
+              borderRadius: '50%',
+              animation: isConnecting ? 'pc-avatar-glow 2s ease-in-out infinite' : 'none',
+              border: '3px solid rgba(255,255,255,0.2)',
+              display: 'inline-flex',
+              overflow: 'hidden',
+            }}>
+              <Avatar src={avatar} name={name} size={isConnecting ? 88 : 80} />
+            </div>
           </div>
           <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
             {camOff ? 'Camera tắt' : 'Đang kết nối...'}
@@ -25144,6 +25156,18 @@ export default function PrivateCall() {
         @keyframes pc-connecting-dot {
           0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
           40%           { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pc-reject-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+          50%       { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+        }
+        @keyframes pc-avatar-glow {
+          0%, 100% { box-shadow: 0 0 0 4px rgba(108,99,255,0.3), 0 0 30px rgba(108,99,255,0.2); }
+          50%       { box-shadow: 0 0 0 8px rgba(108,99,255,0.5), 0 0 50px rgba(108,99,255,0.35); }
+        }
+        @keyframes pc-wave {
+          0%   { transform: scale(1); opacity: 0.8; }
+          100% { transform: scale(2.2); opacity: 0; }
         }
         .pc-controls-bar {
           transition: opacity 0.35s ease, transform 0.35s ease;
@@ -26124,13 +26148,13 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
     >
       <div
         style={{
-          background: '#15152a',
-          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-card)',
+          border: '1.5px solid var(--border)',
           borderRadius: '20px',
           padding: '24px',
           width: '380px',
           maxWidth: '100%',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7)',
+          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.15)',
           display: 'flex',
           flexDirection: 'column',
           maxHeight: '75vh',
@@ -26138,16 +26162,16 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff' }}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)' }}>{title}</h3>
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255,255,255,0.05)',
+              background: 'var(--bg-input)',
               border: 'none',
               borderRadius: '50%',
               width: '32px',
               height: '32px',
-              color: '#a0aec0',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -26155,8 +26179,8 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
               fontSize: '16px',
               transition: 'all 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--border)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-input)'}
           >
             ✕
           </button>
@@ -26165,7 +26189,7 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
         {/* Ô tìm kiếm nhanh */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.1)',
+          background: 'var(--bg-input)', border: '1.5px solid var(--border)',
           borderRadius: '12px', padding: '10px 14px', marginBottom: '16px',
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
@@ -26176,7 +26200,7 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
             placeholder="Tìm kiếm nhanh..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: '#fff', fontSize: '14px', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'inherit' }}
           />
         </div>
 
@@ -26208,10 +26232,10 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
                     width: '100%',
                     padding: '12px 16px',
                     textAlign: 'left',
-                    background: isSelected ? 'linear-gradient(135deg, var(--primary, #6c63ff), #5b53e0)' : 'rgba(255, 255, 255, 0.03)',
-                    border: isSelected ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                    background: isSelected ? 'var(--text-primary)' : 'var(--bg-input)',
+                    border: isSelected ? 'none' : '1px solid var(--border)',
                     borderRadius: '12px',
-                    color: '#fff',
+                    color: isSelected ? '#fff' : 'var(--text-secondary)',
                     fontSize: '14px',
                     fontWeight: isSelected ? 700 : 500,
                     cursor: 'pointer',
@@ -26220,14 +26244,14 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
                   }}
                   onMouseEnter={e => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                      e.currentTarget.style.borderColor = 'var(--text-muted)';
                     }
                   }}
                   onMouseLeave={e => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                      e.currentTarget.style.background = 'var(--bg-input)';
+                      e.currentTarget.style.borderColor = 'var(--border)';
                     }
                   }}
                 >

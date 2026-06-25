@@ -14,7 +14,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 // ── Inline toast (Admin is outside AppLayout) ──────────────────────
 function AdminToast({ toasts, remove }) {
   return (
-    <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 9999 }}>
+    <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 20000 }}>
       {toasts.map((t) => (
         <div key={t.id} style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: 'var(--shadow)', borderLeft: `4px solid ${t.type === 'success' ? 'var(--success)' : 'var(--error)'}`, minWidth: '280px', maxWidth: '360px', fontSize: '14px', marginBottom: '10px' }}>
           <span style={{ flex: 1, color: 'var(--text-primary)' }}>{t.msg}</span>
@@ -378,19 +378,26 @@ const EMPTY_GROUP_FORM = { name: '', subject: '', description: '', creatorId: ''
 export default function Admin() {
   const { admin, adminLogout, setAdmin } = useAuth();
 
-  const adminChannelRef = useRef(null);
-
-  useEffect(() => {
-    if (admin) {
-      const ch = supabase.channel('admin-broadcasts');
-      ch.subscribe();
-      adminChannelRef.current = ch;
-      
-      return () => {
-        supabase.removeChannel(ch);
-      };
+  const notifyUser = useCallback(async (targetUserId, event, payload) => {
+    try {
+      const channelName = `admin-broadcasts-${targetUserId}`;
+      const ch = supabase.channel(channelName);
+      ch.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await ch.send({
+            type: 'broadcast',
+            event,
+            payload,
+          });
+          setTimeout(() => {
+            supabase.removeChannel(ch).catch(() => {});
+          }, 1000);
+        }
+      });
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[Admin] Gửi thông báo thất bại:', err);
     }
-  }, [admin]);
+  }, []);
 
   // Auth
   const [loginForm,    setLoginForm]    = useState({ email: '', password: '' });
@@ -926,13 +933,7 @@ export default function Admin() {
                                           onClick={async () => {
                                             try {
                                               await approvePost(p.id);
-                                              if (adminChannelRef.current) {
-                                                adminChannelRef.current.send({
-                                                  type: 'broadcast',
-                                                  event: 'post_approved',
-                                                  payload: { postId: p.id, userId: p.userId, userFullName: p.userFullName }
-                                                });
-                                              }
+                                              await notifyUser(p.userId, 'post_approved', { postId: p.id, userId: p.userId, userFullName: p.userFullName });
                                               showToast('Phê duyệt bài viết thành công!');
                                               loadData();
                                             } catch (err) {
@@ -952,6 +953,7 @@ export default function Admin() {
                                               onConfirm: async () => {
                                                 setConfirmConfig(null);
                                                 try {
+                                                  await notifyUser(p.userId, 'post_rejected', { postId: p.id, userId: p.userId, userFullName: p.userFullName });
                                                   await adminDeletePost(p.id);
                                                   showToast('Đã từ chối và xóa bài viết!');
                                                   loadData();
@@ -1023,20 +1025,14 @@ export default function Admin() {
                                     onClick={async () => {
                                       try {
                                         await approveFile(f.id);
-                                        if (adminChannelRef.current) {
-                                          adminChannelRef.current.send({
-                                            type: 'broadcast',
-                                            event: 'file_approved',
-                                            payload: {
-                                              fileId: f.id,
-                                              userId: f.userId,
-                                              fileName: f.fileName,
-                                              groupId: f.groupId,
-                                              groupName: f.groupName,
-                                              userFullName: f.userFullName
-                                            }
-                                          });
-                                        }
+                                        await notifyUser(f.userId, 'file_approved', {
+                                          fileId: f.id,
+                                          userId: f.userId,
+                                          fileName: f.fileName,
+                                          groupId: f.groupId,
+                                          groupName: f.groupName,
+                                          userFullName: f.userFullName
+                                        });
                                         showToast('Phê duyệt tài liệu thành công!');
                                         loadData();
                                       } catch (err) {
@@ -1064,20 +1060,14 @@ export default function Admin() {
                                           setConfirmConfig(null);
                                           try {
                                             await adminDeleteFile(f.id);
-                                            if (adminChannelRef.current) {
-                                              adminChannelRef.current.send({
-                                                type: 'broadcast',
-                                                event: 'file_rejected',
-                                                payload: {
-                                                  fileId: f.id,
-                                                  userId: f.userId,
-                                                  fileName: f.fileName,
-                                                  groupId: f.groupId,
-                                                  groupName: f.groupName,
-                                                  userFullName: f.userFullName
-                                                }
-                                              });
-                                            }
+                                            await notifyUser(f.userId, 'file_rejected', {
+                                              fileId: f.id,
+                                              userId: f.userId,
+                                              fileName: f.fileName,
+                                              groupId: f.groupId,
+                                              groupName: f.groupName,
+                                              userFullName: f.userFullName
+                                            });
                                             showToast('Đã từ chối và xóa tài liệu thành công!');
                                             loadData();
                                           } catch (err) {

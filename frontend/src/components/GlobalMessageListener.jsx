@@ -502,6 +502,17 @@ export default function GlobalMessageListener() {
         );
       }
     });
+ 
+    adminChannel.on('broadcast', { event: 'post_rejected' }, async ({ payload }) => {
+      if (!payload) return;
+      const { userId } = payload;
+      if (String(userId) === String(uid)) {
+        addToast(
+          'Bài viết của bạn đã bị Admin từ chối phê duyệt và xóa bỏ. ❌',
+          'error', 8000, null, '📝'
+        );
+      }
+    });
 
     adminChannel.subscribe();
 

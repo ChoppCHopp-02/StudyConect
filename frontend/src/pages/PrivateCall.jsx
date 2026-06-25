@@ -330,23 +330,24 @@ function CtrlBtn({ onClick, title, active = true, danger = false, children }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        width: 56, height: 56,
+        width: danger ? 64 : 56, height: danger ? 64 : 56,
         borderRadius: '50%',
         border: 'none',
         cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '22px',
-        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+        transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         background: danger
-          ? (hov ? '#dc2626' : 'linear-gradient(135deg,#ef4444,#dc2626)')
+          ? 'linear-gradient(135deg, #ef4444, #dc2626)'
           : active
             ? (hov ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)')
             : (hov ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.12)'),
         // eslint-disable-next-line no-dupe-keys
         border: danger ? 'none' : `1.5px solid ${active ? 'rgba(255,255,255,0.12)' : 'rgba(239,68,68,0.35)'}`,
-        boxShadow: danger ? '0 4px 20px rgba(239,68,68,0.4)' : 'none',
-        transform: hov ? 'scale(1.1)' : 'scale(1)',
+        boxShadow: danger ? '0 4px 14px rgba(239,68,68,0.4)' : 'none',
+        transform: hov ? (danger ? 'scale(1.15) rotate(-10deg)' : 'scale(1.1)') : 'scale(1)',
         color: danger ? '#fff' : active ? '#fff' : '#ef4444',
+        animation: danger ? 'pc-reject-pulse 1.5s ease-in-out infinite' : 'none',
       }}
     >
       {children}
@@ -363,6 +364,8 @@ function VideoTile({ stream, name, avatar, muted = false, camOff = false, mirror
       ref.current.play().catch(() => {});
     }
   }, [stream, camOff]);
+
+  const isConnecting = !stream;
 
   return (
     <div style={{
@@ -387,17 +390,29 @@ function VideoTile({ stream, name, avatar, muted = false, camOff = false, mirror
       ) : (
         <div style={{
           display: 'flex', flexDirection: 'column',
-          alignItems: 'center', gap: '14px',
+          alignItems: 'center', gap: '20px',
           background: `radial-gradient(circle at center, ${colorOf(name)}22 0%, #0a0a1a 70%)`,
           width: '100%', height: '100%',
           justifyContent: 'center',
         }}>
-          <div style={{
-            padding: '6px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1.5px solid rgba(255,255,255,0.08)',
-          }}>
-            <Avatar src={avatar} name={name} size={80} />
+          <div style={{ position: 'relative', marginBottom: isConnecting ? '10px' : '0px' }}>
+            {isConnecting && [0, 1, 2].map(i => (
+              <div key={i} style={{
+                position: 'absolute', inset: '-12px',
+                borderRadius: '50%',
+                border: '2px solid rgba(108,99,255,0.4)',
+                animation: `pc-wave 2s ease-out ${i * 0.6}s infinite`,
+              }} />
+            ))}
+            <div style={{
+              borderRadius: '50%',
+              animation: isConnecting ? 'pc-avatar-glow 2s ease-in-out infinite' : 'none',
+              border: '3px solid rgba(255,255,255,0.2)',
+              display: 'inline-flex',
+              overflow: 'hidden',
+            }}>
+              <Avatar src={avatar} name={name} size={isConnecting ? 88 : 80} />
+            </div>
           </div>
           <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
             {camOff ? 'Camera tắt' : 'Đang kết nối...'}
@@ -547,6 +562,18 @@ export default function PrivateCall() {
         @keyframes pc-connecting-dot {
           0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
           40%           { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pc-reject-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+          50%       { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+        }
+        @keyframes pc-avatar-glow {
+          0%, 100% { box-shadow: 0 0 0 4px rgba(108,99,255,0.3), 0 0 30px rgba(108,99,255,0.2); }
+          50%       { box-shadow: 0 0 0 8px rgba(108,99,255,0.5), 0 0 50px rgba(108,99,255,0.35); }
+        }
+        @keyframes pc-wave {
+          0%   { transform: scale(1); opacity: 0.8; }
+          100% { transform: scale(2.2); opacity: 0; }
         }
         .pc-controls-bar {
           transition: opacity 0.35s ease, transform 0.35s ease;

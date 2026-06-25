@@ -40,13 +40,13 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
     >
       <div
         style={{
-          background: '#15152a',
-          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-card)',
+          border: '1.5px solid var(--border)',
           borderRadius: '20px',
           padding: '24px',
           width: '380px',
           maxWidth: '100%',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7)',
+          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.15)',
           display: 'flex',
           flexDirection: 'column',
           maxHeight: '75vh',
@@ -54,16 +54,16 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff' }}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)' }}>{title}</h3>
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255,255,255,0.05)',
+              background: 'var(--bg-input)',
               border: 'none',
               borderRadius: '50%',
               width: '32px',
               height: '32px',
-              color: '#a0aec0',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -71,8 +71,8 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
               fontSize: '16px',
               transition: 'all 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--border)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-input)'}
           >
             ✕
           </button>
@@ -81,7 +81,7 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
         {/* Ô tìm kiếm nhanh */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.1)',
+          background: 'var(--bg-input)', border: '1.5px solid var(--border)',
           borderRadius: '12px', padding: '10px 14px', marginBottom: '16px',
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
@@ -92,7 +92,7 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
             placeholder="Tìm kiếm nhanh..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: '#fff', fontSize: '14px', fontFamily: 'inherit' }}
+            style={{ background: 'none', border: 'none', outline: 'none', flex: 1, color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'inherit' }}
           />
         </div>
 
@@ -124,10 +124,10 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
                     width: '100%',
                     padding: '12px 16px',
                     textAlign: 'left',
-                    background: isSelected ? 'linear-gradient(135deg, var(--primary, #6c63ff), #5b53e0)' : 'rgba(255, 255, 255, 0.03)',
-                    border: isSelected ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                    background: isSelected ? 'var(--text-primary)' : 'var(--bg-input)',
+                    border: isSelected ? 'none' : '1px solid var(--border)',
                     borderRadius: '12px',
-                    color: '#fff',
+                    color: isSelected ? '#fff' : 'var(--text-secondary)',
                     fontSize: '14px',
                     fontWeight: isSelected ? 700 : 500,
                     cursor: 'pointer',
@@ -136,14 +136,14 @@ function LocationModal({ isOpen, onClose, title, options, value, onSelect }) {
                   }}
                   onMouseEnter={e => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                      e.currentTarget.style.borderColor = 'var(--text-muted)';
                     }
                   }}
                   onMouseLeave={e => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                      e.currentTarget.style.background = 'var(--bg-input)';
+                      e.currentTarget.style.borderColor = 'var(--border)';
                     }
                   }}
                 >
