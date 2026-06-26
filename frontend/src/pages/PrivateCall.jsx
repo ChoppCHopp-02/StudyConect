@@ -402,7 +402,7 @@ function VideoTile({ stream, name, avatar, muted = false, camOff = false, mirror
               <div key={i} style={{
                 position: 'absolute', inset: '-12px',
                 borderRadius: '50%',
-                border: '2px solid rgba(108,99,255,0.4)',
+                border: '2px solid rgba(255,255,255,0.4)',
                 animation: `pc-wave 2s ease-out ${i * 0.6}s infinite`,
               }} />
             ))}
@@ -570,8 +570,8 @@ export default function PrivateCall() {
           50%       { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
         }
         @keyframes pc-avatar-glow {
-          0%, 100% { box-shadow: 0 0 0 4px rgba(108,99,255,0.3), 0 0 30px rgba(108,99,255,0.2); }
-          50%       { box-shadow: 0 0 0 8px rgba(108,99,255,0.5), 0 0 50px rgba(108,99,255,0.35); }
+          0%, 100% { box-shadow: 0 0 0 4px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2); }
+          50%       { box-shadow: 0 0 0 8px rgba(255,255,255,0.5), 0 0 50px rgba(255,255,255,0.35); }
         }
         @keyframes pc-wave {
           0%   { transform: scale(1); opacity: 0.8; }
@@ -587,7 +587,7 @@ export default function PrivateCall() {
         onClick={resetHideTimer}
         style={{
           position: 'fixed', inset: 0,
-          background: 'radial-gradient(ellipse at 30% 20%, #1a1040 0%, #0a0a1a 100%)',
+          background: 'radial-gradient(ellipse at 30% 20%, #1a1a1a 0%, #0a0a0a 100%)',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
           fontFamily: "'Inter', 'Segoe UI', sans-serif",
@@ -624,7 +624,7 @@ export default function PrivateCall() {
                     {[0, 1, 2].map(i => (
                       <span key={i} style={{
                         width: 5, height: 5, borderRadius: '50%',
-                        background: '#a78bfa', display: 'inline-block',
+                        background: '#D4D4D4', display: 'inline-block',
                         animation: `pc-connecting-dot 1.4s ease-in-out ${i * 0.2}s infinite`,
                       }} />
                     ))}

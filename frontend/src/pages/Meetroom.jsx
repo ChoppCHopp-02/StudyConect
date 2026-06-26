@@ -43,14 +43,14 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
       borderRadius: fullScreen ? '0' : '24px',
       overflow: 'hidden',
       background: '#0d0d18',
-      border: speaking ? '2.5px solid #8b5cf6' : screenSharing ? '2px solid rgba(139,92,246,0.5)' : '1px solid rgba(255,255,255,0.08)',
+      border: speaking ? '2.5px solid #FFFFFF' : screenSharing ? '2px solid rgba(255,255,255,0.5)' : '1px solid rgba(255,255,255,0.08)',
       aspectRatio: fullScreen ? 'auto' : '16/9',
       width: fullScreen ? '100%' : '100%',
       height: fullScreen ? '100%' : '100%',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       boxShadow: speaking 
-        ? '0 0 20px rgba(139,92,246,0.35), 0 12px 40px rgba(0,0,0,0.5)' 
+        ? '0 0 20px rgba(255,255,255,0.35), 0 12px 40px rgba(0,0,0,0.5)' 
         : '0 8px 30px rgba(0,0,0,0.35)',
       maxWidth: '100%',
       maxHeight: '100%',
@@ -65,15 +65,15 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
           width: '100%',
           height: '100%',
           justifyContent: 'center',
-          background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, rgba(13, 13, 24, 1) 100%)',
+          background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, rgba(13, 13, 24, 1) 100%)',
         }}>
           <div style={{
             padding: '20px',
             borderRadius: '50%',
-            background: 'rgba(139,92,246,0.2)',
-            border: '2px solid rgba(139,92,246,0.4)',
-            color: '#a78bfa',
-            boxShadow: '0 8px 32px rgba(139,92,246,0.25)',
+            background: 'rgba(255,255,255,0.2)',
+            border: '2px solid rgba(255,255,255,0.4)',
+            color: '#D4D4D4',
+            boxShadow: '0 8px 32px rgba(255,255,255,0.25)',
           }}>
             <MonitorSvg active={true} size={48} />
           </div>
@@ -120,11 +120,11 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
           {screenSharing && !isLocal && (
             <div style={{
               position: 'absolute', top: '16px', left: '16px',
-              background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+              background: 'linear-gradient(135deg, #3A3A3A, #1A1A1A)',
               borderRadius: '8px', padding: '6px 12px',
               fontSize: '12px', fontWeight: 700, color: 'white',
               display: 'flex', alignItems: 'center', gap: '6px',
-              boxShadow: '0 4px 12px rgba(139,92,246,0.3)',
+              boxShadow: '0 4px 12px rgba(255,255,255,0.15)',
               zIndex: 10,
             }}>
               <MonitorSvg active={true} size={14} />
@@ -141,7 +141,7 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
           width: '100%',
           height: '100%',
           justifyContent: 'center',
-          background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.12) 0%, rgba(13, 13, 24, 1) 100%)',
+          background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0%, rgba(13, 13, 24, 1) 100%)',
         }}>
           <div style={{
             padding: '6px',
@@ -166,7 +166,7 @@ function VideoTile({ stream, name, avatar, muted: mutedProp = false, camOff = fa
         display: 'flex', alignItems: 'center', gap: '8px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
       }}>
-        {speaking && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', animation: 'pulse 1s infinite' }} />}
+        {speaking && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFFFFF', animation: 'pulse 1s infinite' }} />}
         <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'white', letterSpacing: '0.01em' }}>
           {name}{isLocal ? ' (Bạn)' : ''}
         </span>
@@ -230,7 +230,7 @@ function StudyTimer() {
       </div>
       <div style={{ position: 'relative', width: 180, height: 180 }}>
         <svg width="180" height="180" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(108,99,255,0.1)" strokeWidth="7" />
+          <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="7" />
           <circle cx="90" cy="90" r={r} fill="none"
             stroke={pct > 0.5 ? 'var(--primary)' : pct > 0.2 ? '#f59e0b' : '#ef4444'}
             strokeWidth="7" strokeLinecap="round"
@@ -1180,15 +1180,15 @@ export default function MeetRoom() {
               <button onClick={() => setFsChatOpen(o => !o)} title="Chat & Thành viên" style={{
                 height: '36px', borderRadius: '12px', flexShrink: 0,
                 padding: '0 16px',
-                background: fsChatOpen ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'rgba(255,255,255,0.06)',
-                border: `1px solid ${fsChatOpen ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                background: fsChatOpen ? 'linear-gradient(135deg, #3A3A3A, #1A1A1A)' : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${fsChatOpen ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 cursor: 'pointer', fontSize: '13px', fontWeight: 600, transition: 'all 0.2s',
                 backdropFilter: 'blur(12px)',
                 color: '#ffffff',
                 fontFamily: 'inherit',
                 whiteSpace: 'nowrap',
-                boxShadow: fsChatOpen ? '0 4px 16px rgba(139,92,246,0.3)' : 'none',
+                boxShadow: fsChatOpen ? '0 4px 16px rgba(255,255,255,0.15)' : 'none',
               }}>
                 <ChatSvg size={14} />
                 Trò chuyện
@@ -1431,6 +1431,7 @@ export default function MeetRoom() {
                       position: 'absolute', bottom: '-1px', right: '-1px',
                       width: '9px', height: '9px', borderRadius: '50%',
                       background: '#22c55e', border: '1.5px solid #0a0a14',
+                      background: '#525252', border: '1.5px solid #0a0a14',
                     }} />
                   </div>
                 ))}
@@ -1448,17 +1449,17 @@ export default function MeetRoom() {
               <div style={{
                 position: 'absolute', top: '64px', right: '20px',
                 width: '320px', height: '450px',
-                background: 'rgba(15,15,26,0.82)', backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px',
+                background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(24px)',
+                border: '1px solid rgba(0,0,0,0.1)', borderRadius: '20px',
                 display: 'flex', flexDirection: 'column', zIndex: 300,
-                boxShadow: '0 20px 50px rgba(0,0,0,0.55)',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
                 overflow: 'hidden',
               }}>
                 {/* Tab bar */}
                 <div style={{
                   display: 'flex',
-                  borderBottom: '1px solid rgba(255,255,255,0.08)',
-                  background: 'rgba(0,0,0,0.2)',
+                  borderBottom: '1px solid rgba(0,0,0,0.08)',
+                  background: 'rgba(0,0,0,0.05)',
                   flexShrink: 0,
                   padding: '6px 6px 0',
                   gap: '4px',
@@ -1469,10 +1470,10 @@ export default function MeetRoom() {
                       padding: '8px 10px',
                       border: 'none',
                       cursor: 'pointer',
-                      background: fsChatTab === t.key ? 'rgba(139,92,246,0.15)' : 'none',
-                      borderBottom: fsChatTab === t.key ? '2px solid #8b5cf6' : '2px solid transparent',
+                      background: fsChatTab === t.key ? 'rgba(0,0,0,0.1)' : 'none',
+                      borderBottom: fsChatTab === t.key ? '2px solid #171717' : '2px solid transparent',
                       borderRadius: '6px 6px 0 0',
-                      color: fsChatTab === t.key ? '#c7d2fe' : 'rgba(255,255,255,0.4)',
+                      color: fsChatTab === t.key ? '#171717' : 'rgba(0,0,0,0.4)',
                       fontFamily: 'inherit',
                       fontSize: '12px',
                       fontWeight: 600,
@@ -1494,7 +1495,7 @@ export default function MeetRoom() {
                     <>
                       <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {messages.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '30px 12px', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
+                          <div style={{ textAlign: 'center', padding: '30px 12px', color: 'rgba(0,0,0,0.3)', fontSize: '12px' }}>
                             Chưa có tin nhắn nào.
                           </div>
                         )}
@@ -1504,10 +1505,10 @@ export default function MeetRoom() {
                             <div key={msg.id} style={{ display: 'flex', gap: '6px', flexDirection: isMe ? 'row-reverse' : 'row', alignItems: 'flex-end' }}>
                               {!isMe && <Avatar src={msg.avatar} name={msg.sender} size={22} />}
                               <div style={{ maxWidth: '78%' }}>
-                                {!isMe && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', marginBottom: '2px', paddingLeft: '3px' }}>{msg.sender}</div>}
+                                {!isMe && <div style={{ fontSize: '9px', color: 'rgba(0,0,0,0.4)', marginBottom: '2px', paddingLeft: '3px' }}>{msg.sender}</div>}
                                 <div style={{
-                                  background: isMe ? '#8b5cf6' : 'rgba(255,255,255,0.08)',
-                                  color: 'white', border: isMe ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                  background: isMe ? '#171717' : '#f5f5f5',
+                                  color: isMe ? '#ffffff' : '#171717', border: isMe ? 'none' : '1px solid rgba(0,0,0,0.1)',
                                   borderRadius: isMe ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
                                   padding: '7px 11px', fontSize: '12px', lineHeight: 1.4,
                                 }}>{msg.text}</div>
@@ -1517,20 +1518,20 @@ export default function MeetRoom() {
                         })}
                         <div ref={msgEndRef} />
                       </div>
-                      <div style={{ padding: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: '6px', flexShrink: 0 }}>
+                      <div style={{ padding: '10px', borderTop: '1px solid rgba(0,0,0,0.08)', display: 'flex', gap: '6px', flexShrink: 0 }}>
                         <input
                           value={input} onChange={e => setInput(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                           placeholder="Nhắn tin..."
                           style={{
-                            flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '16px', padding: '7px 13px', color: 'white',
+                            flex: 1, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
+                            borderRadius: '16px', padding: '7px 13px', color: '#171717',
                             fontSize: '12px', fontFamily: 'inherit', outline: 'none',
                           }} />
                         <button onClick={sendMessage} style={{
                           width: '32px', height: '32px', borderRadius: '50%', border: 'none',
-                          background: input.trim() ? '#8b5cf6' : 'rgba(255,255,255,0.12)',
-                          color: 'white', cursor: 'pointer',
+                          background: input.trim() ? '#171717' : 'rgba(0,0,0,0.1)',
+                          color: input.trim() ? '#ffffff' : '#888', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           transition: '0.2s', flexShrink: 0,
                         }}>
@@ -1547,20 +1548,20 @@ export default function MeetRoom() {
                       {allFeeds.map(f => {
                         const role = getParticipantRole(f);
                         return (
-                          <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px' }}>
+                          <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <div style={{ position: 'relative' }}>
                                 <Avatar src={f.avatar} name={f.name} size={26} />
                                 <div style={{
                                   position: 'absolute', bottom: '-1px', right: '-1px',
                                   width: '7px', height: '7px', borderRadius: '50%',
-                                  background: '#22c55e', border: '1px solid #0f0f1a'
+                                  background: '#525252', border: '1px solid #ffffff'
                                 }} />
                               </div>
-                              <span style={{ fontSize: '12px', fontWeight: 600, color: 'white', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#171717', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <span>{f.name}{f.isLocal ? ' (Bạn)' : ''}</span>
                                 {role === 'Trưởng phòng' && (
-                                  <span title="Trưởng phòng" style={{ display: 'inline-flex', alignItems: 'center', color: '#f59e0b' }}>
+                                  <span title="Trưởng phòng" style={{ display: 'inline-flex', alignItems: 'center', color: '#525252' }}>
                                     <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                                       <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14a1 1 0 0 0 1-1v-1H4v1a1 1 0 0 0 1 1z" />
                                     </svg>
@@ -1577,9 +1578,9 @@ export default function MeetRoom() {
                                 const canForce = amLeader && !f.isLocal;
 
                                 const iconBtn = (active, type, Icon, titleOn, titleOff) => {
-                                  const color = active ? '#22c55e' : '#ef4444';
-                                  const bg = active ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
-                                  const border = active ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)';
+                                  const color = active ? '#171717' : '#888';
+                                  const bg = active ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.05)';
+                                  const border = active ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.1)';
                                   const payload = type === 'cam'
                                     ? { type: 'force-mute', to: f.id, room: roomId, muteCam: true, muteMic: false }
                                     : { type: 'force-mute', to: f.id, room: roomId, muteMic: true, muteCam: false };
@@ -1601,22 +1602,7 @@ export default function MeetRoom() {
                                         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                                         flexShrink: 0,
                                         padding: 0,
-                                        boxShadow: active ? '0 2px 8px rgba(34,197,94,0.12)' : '0 2px 8px rgba(239,68,68,0.12)',
                                       }}
-                                      onMouseEnter={canForce && active ? e => {
-                                        e.currentTarget.style.background = 'rgba(239,68,68,0.25)';
-                                        e.currentTarget.style.borderColor = '#ef4444';
-                                        e.currentTarget.style.color = '#ef4444';
-                                        e.currentTarget.style.transform = 'scale(1.15)';
-                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(239,68,68,0.35)';
-                                      } : undefined}
-                                      onMouseLeave={canForce && active ? e => {
-                                        e.currentTarget.style.background = bg;
-                                        e.currentTarget.style.borderColor = border;
-                                        e.currentTarget.style.color = color;
-                                        e.currentTarget.style.transform = 'scale(1)';
-                                        e.currentTarget.style.boxShadow = active ? '0 2px 8px rgba(34,197,94,0.12)' : '0 2px 8px rgba(239,68,68,0.12)';
-                                      } : undefined}
                                     >
                                       <Icon active={active} size={14} />
                                     </button>
@@ -1651,11 +1637,11 @@ export default function MeetRoom() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               gap: '12px',
               padding: '10px 20px',
-              background: 'rgba(15, 15, 26, 0.72)',
+              background: 'rgba(255, 255, 255, 0.8)',
               backdropFilter: 'blur(24px)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid rgba(0,0,0,0.1)',
               borderRadius: '32px',
-              boxShadow: '0 16px 40px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)',
+              boxShadow: '0 16px 40px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.5)',
               whiteSpace: 'nowrap',
             }}>
               {/* Mic toggle */}
@@ -1686,7 +1672,7 @@ export default function MeetRoom() {
               />
 
               {/* Divider */}
-              <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+              <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
 
               {/* Chat Toggle (only when NOT fullscreen) */}
               {!isFullscreen && (
@@ -1729,7 +1715,7 @@ export default function MeetRoom() {
               )}
 
               {/* Divider */}
-              <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+              <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
 
               {/* End call (Leave Room) */}
               <button
@@ -1741,7 +1727,7 @@ export default function MeetRoom() {
                 }}
                 title="Rời phòng"
                 style={{
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  background: '#171717',
                   border: 'none',
                   borderRadius: '50%',
                   width: '46px',
@@ -1749,11 +1735,11 @@ export default function MeetRoom() {
                   cursor: 'pointer', color: 'white',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 4px 14px rgba(239,68,68,0.4)',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
                   flexShrink: 0,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(239,68,68,0.55)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(239,68,68,0.4)'; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.2)'; }}
               >
                 <PhoneOffSvg />
               </button>
@@ -1764,10 +1750,10 @@ export default function MeetRoom() {
           {!isFullscreen && sidebarOpen && (
             <div className="meet-sidebar" style={{
               width: '350px', flexShrink: 0,
-              background: 'rgba(15,15,26,0.75)', borderLeft: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.95)', borderLeft: '1px solid rgba(0,0,0,0.08)',
               display: 'flex', flexDirection: 'column', height: '100%',
               backdropFilter: 'blur(20px)',
-              boxShadow: '-10px 0 30px rgba(0,0,0,0.3)',
+              boxShadow: '-10px 0 30px rgba(0,0,0,0.05)',
               animation: 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards',
             }}>
               {/* Navbar spacer — đẩy nội dung xuống dưới thanh nav */}
@@ -1780,8 +1766,8 @@ export default function MeetRoom() {
               {/* Tab bar */}
               <div style={{
                 display: 'flex',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(0,0,0,0.2)',
+                borderBottom: '1px solid rgba(0,0,0,0.08)',
+                background: 'rgba(0,0,0,0.02)',
                 flexShrink: 0,
                 padding: '8px 8px 0',
                 gap: '4px',
@@ -1792,10 +1778,10 @@ export default function MeetRoom() {
                     padding: '10px 12px',
                     border: 'none',
                     cursor: 'pointer',
-                    background: tab === t.key ? 'rgba(139,92,246,0.12)' : 'none',
-                    borderBottom: tab === t.key ? '2px solid #8b5cf6' : '2px solid transparent',
+                    background: tab === t.key ? 'rgba(0,0,0,0.05)' : 'none',
+                    borderBottom: tab === t.key ? '2px solid #171717' : '2px solid transparent',
                     borderRadius: '8px 8px 0 0',
-                    color: tab === t.key ? '#c7d2fe' : 'rgba(255,255,255,0.4)',
+                    color: tab === t.key ? '#171717' : 'rgba(0,0,0,0.4)',
                     fontFamily: 'inherit',
                     fontSize: '13px',
                     fontWeight: 600,
@@ -1821,7 +1807,7 @@ export default function MeetRoom() {
                   <>
                     <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {messages.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '40px 16px', color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>
+                        <div style={{ textAlign: 'center', padding: '40px 16px', color: 'rgba(0,0,0,0.3)', fontSize: '13px' }}>
                           Chưa có tin nhắn nào.
                         </div>
                       )}
@@ -1831,34 +1817,34 @@ export default function MeetRoom() {
                           <div key={msg.id} style={{ display: 'flex', gap: '8px', flexDirection: isMe ? 'row-reverse' : 'row', alignItems: 'flex-end', marginBottom: '4px' }}>
                             {!isMe && <Avatar src={msg.avatar} name={msg.sender} size={26} />}
                             <div style={{ maxWidth: '76%' }}>
-                              {!isMe && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginBottom: '3px', paddingLeft: '4px' }}>{msg.sender}</div>}
+                              {!isMe && <div style={{ fontSize: '10px', color: 'rgba(0,0,0,0.4)', marginBottom: '3px', paddingLeft: '4px' }}>{msg.sender}</div>}
                               <div style={{
-                                background: isMe ? '#8b5cf6' : 'rgba(255,255,255,0.06)',
-                                color: 'white', border: isMe ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                background: isMe ? '#171717' : '#f5f5f5',
+                                color: isMe ? '#ffffff' : '#171717', border: isMe ? 'none' : '1px solid rgba(0,0,0,0.05)',
                                 borderRadius: isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                                 padding: '9px 13px', fontSize: '13px', lineHeight: 1.5,
                               }}>{msg.text}</div>
-                              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', marginTop: '3px', textAlign: isMe ? 'right' : 'left', padding: '0 4px' }}>{msg.time}</div>
+                              <div style={{ fontSize: '10px', color: 'rgba(0,0,0,0.25)', marginTop: '3px', textAlign: isMe ? 'right' : 'left', padding: '0 4px' }}>{msg.time}</div>
                             </div>
                           </div>
                         );
                       })}
                       <div ref={msgEndRef} />
                     </div>
-                    <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: '8px', flexShrink: 0 }}>
+                    <div style={{ padding: '12px', borderTop: '1px solid rgba(0,0,0,0.08)', display: 'flex', gap: '8px', flexShrink: 0 }}>
                       <input
                         value={input} onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                         placeholder="Nhắn tin..."
                         style={{
-                          flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: '20px', padding: '9px 16px', color: 'white',
+                          flex: 1, background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)',
+                          borderRadius: '20px', padding: '9px 16px', color: '#171717',
                           fontSize: '13px', fontFamily: 'inherit', outline: 'none',
                         }} />
                       <button onClick={sendMessage} style={{
                         width: '38px', height: '38px', borderRadius: '50%', border: 'none',
-                        background: input.trim() ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'rgba(255,255,255,0.08)',
-                        color: 'white', cursor: 'pointer',
+                        background: input.trim() ? '#171717' : 'rgba(0,0,0,0.08)',
+                        color: input.trim() ? '#ffffff' : '#888', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s',
                         flexShrink: 0,
                       }}>
@@ -1878,7 +1864,7 @@ export default function MeetRoom() {
                   <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span>Danh sách trực tuyến</span>
-                      <span style={{ background: 'rgba(139,92,246,0.15)', color: '#c7d2fe', fontSize: '11px', padding: '2px 8px', borderRadius: '10px' }}>{allFeeds.length}</span>
+                      <span style={{ background: 'rgba(255,255,255,0.15)', color: '#E5E5E5', fontSize: '11px', padding: '2px 8px', borderRadius: '10px' }}>{allFeeds.length}</span>
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {allFeeds.map(f => {
@@ -1900,7 +1886,7 @@ export default function MeetRoom() {
                                     {f.name}{f.isLocal ? ' (Bạn)' : ''}
                                   </span>
                                   {f.screenSharing && (
-                                    <span title="Đang chia sẻ màn hình" style={{ display: 'flex', alignItems: 'center', color: '#a78bfa', flexShrink: 0 }}>
+                                    <span title="Đang chia sẻ màn hình" style={{ display: 'flex', alignItems: 'center', color: '#D4D4D4', flexShrink: 0 }}>
                                       <MonitorSvg active={true} size={14} />
                                     </span>
                                   )}
