@@ -775,6 +775,24 @@ export default function Groups() {
     fetchGroups();
   }, [fetchGroups]);
 
+  // Realtime: tự cập nhật danh sách nhóm khi có nhóm mới/bị xóa/đổi thông tin
+  // Channel 'groups-list-realtime' — tên TĨNH, chỉ mount khi user đang ở trang /groups
+  useEffect(() => {
+    const channel = supabase
+      .channel('groups-list-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'study_groups' }, () => {
+        fetchGroups();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, () => {
+        fetchGroups(); // cập nhật số thành viên trên mỗi card nhóm
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchGroups]);
+
   // Tải trạng thái join request của user cho các nhóm riêng tư
   useEffect(() => {
     if (!user?.id || groups.length === 0) return;

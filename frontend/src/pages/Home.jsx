@@ -89,13 +89,14 @@ export default function Home() {
     if (!user?.id) return;
     fetchPosts();
 
-    // Polling fallback 15 phút — Không dùng Realtime subscription vì bảng posts
-    // không thể filter theo friend IDs ở server-side, gây egress O(N²)
+    // Polling fallback 2 phút — Không dùng Realtime subscription vì bảng posts
+    // không thể filter theo friend IDs ở server-side, gây egress O(N²).
+    // Giảm từ 15 phút → 2 phút để cải thiện UX feed mà không vi phạm egress quota.
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchPosts();
       }
-    }, 900000); // 15 phút
+    }, 120000); // 2 phút
 
     return () => {
       clearInterval(interval);
