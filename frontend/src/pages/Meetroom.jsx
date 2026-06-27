@@ -1728,7 +1728,7 @@ export default function MeetRoom() {
                 }}
                 title="Rời phòng"
                 style={{
-                  background: '#171717',
+                  background: '#ef4444',
                   border: 'none',
                   borderRadius: '50%',
                   width: '46px',
@@ -1736,11 +1736,19 @@ export default function MeetRoom() {
                   cursor: 'pointer', color: 'white',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+                  boxShadow: '0 4px 14px rgba(239,68,68,0.3)',
                   flexShrink: 0,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.2)'; }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#dc2626';
+                  e.currentTarget.style.transform = 'scale(1.08)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(239,68,68,0.45)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = '#ef4444';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(239,68,68,0.3)';
+                }}
               >
                 <PhoneOffSvg />
               </button>
@@ -1757,21 +1765,14 @@ export default function MeetRoom() {
               boxShadow: '-10px 0 30px rgba(0,0,0,0.05)',
               animation: 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards',
             }}>
-              {/* Navbar spacer — đẩy nội dung xuống dưới thanh nav */}
-              <div style={{
-                height: '64px',
-                flexShrink: 0,
-                transition: 'height 0.3s ease',
-              }} />
-
               {/* Tab bar */}
               <div style={{
                 display: 'flex',
-                borderBottom: '1px solid rgba(0,0,0,0.08)',
-                background: 'rgba(0,0,0,0.02)',
+                borderBottom: '2px solid #171717',
+                background: 'transparent',
                 flexShrink: 0,
-                padding: '8px 8px 0',
-                gap: '4px',
+                padding: '16px 16px 0',
+                gap: '6px',
               }}>
                 {TABS.map(t => (
                   <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -1780,12 +1781,11 @@ export default function MeetRoom() {
                     border: 'none',
                     cursor: 'pointer',
                     background: tab === t.key ? 'rgba(0,0,0,0.05)' : 'none',
-                    borderBottom: tab === t.key ? '2px solid #171717' : '2px solid transparent',
                     borderRadius: '8px 8px 0 0',
-                    color: tab === t.key ? '#171717' : 'rgba(0,0,0,0.4)',
+                    color: tab === t.key ? '#171717' : 'rgba(0,0,0,0.45)',
                     fontFamily: 'inherit',
                     fontSize: '13px',
-                    fontWeight: 600,
+                    fontWeight: tab === t.key ? 700 : 600,
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -2096,9 +2096,8 @@ function UsersSvg({ size = 20 }) {
 
 function PhoneOffSvg({ size = 20 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
-      <line x1="2" x2="22" y1="2" y2="22" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 9c-2.73 0-5.32.74-7.55 2.03a1 1 0 0 0-.45.83v2.89a1 1 0 0 0 .61.92c2.09.91 4.39 1.4 6.81 1.4s4.72-.49 6.81-1.4a1 1 0 0 0 .61-.92v-2.89a1 1 0 0 0-.45-.83C17.32 9.74 14.73 9 12 9z" />
     </svg>
   );
 }
