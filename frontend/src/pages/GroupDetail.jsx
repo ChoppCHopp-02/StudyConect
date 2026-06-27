@@ -147,7 +147,7 @@ export default function GroupDetail() {
               <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '4px 12px', borderRadius: '6px', background: 'rgba(0,0,0,0.04)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
                 {h.group.subject}
               </span>
-              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', padding: '4px 12px', borderRadius: '6px', background: h.group.meetingMode === 'offline' ? 'rgba(16,185,129,0.1)' : 'rgba(99,179,237,0.1)', color: h.group.meetingMode === 'offline' ? '#10b981' : '#63b3ed', border: h.group.meetingMode === 'offline' ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(99,179,237,0.3)' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', padding: '4px 12px', borderRadius: '6px', background: 'rgba(0,0,0,0.04)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
                 {h.group.meetingMode === 'offline' ? 'Offline' : 'Online'}
               </span>
               {h.group.creatorId === user?.id && <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', padding: '4px 12px', borderRadius: '6px', background: 'rgba(17, 24, 39, 0.04)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>Trưởng nhóm</span>}
@@ -161,7 +161,7 @@ export default function GroupDetail() {
                 <h1 className="group-header-title" style={{ fontFamily: "'Fraunces', serif", fontSize: '30px', fontWeight: 900, margin: '0 0 8px 0', color: 'var(--text-primary)', lineHeight: 1.2 }}>{h.group.name}</h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0, maxWidth: '640px', lineHeight: 1.6 }}>{h.group.description || 'Chưa có mô tả cho nhóm này.'}</p>
               </div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(62,207,207,0.06)', border: '1px solid rgba(62,207,207,0.2)', borderRadius: '999px', alignSelf: 'flex-start' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(0,0,0,0.04)', border: '1px solid var(--border)', borderRadius: '999px', alignSelf: 'flex-start' }}>
                 <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{h.group.members.length}/{h.group.maxMembers || 10}</span>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>thành viên</span>
               </div>

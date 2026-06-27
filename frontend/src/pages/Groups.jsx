@@ -1224,7 +1224,7 @@ export default function Groups() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: '12px' }}>
                     <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3, letterSpacing: '-0.01em' }}>{group.name}</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                      <span className="badge-outline" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.04)', display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '10px', padding: '4px 10px', fontSize: '11px', fontWeight: 700 }}>
+                      <span className="badge-outline" style={{ borderColor: 'var(--text-primary)', color: 'var(--text-primary)', background: 'rgba(0,0,0,0.04)', display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '10px', padding: '4px 10px', fontSize: '11px', fontWeight: 800, border: '1.5px solid var(--text-primary)' }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                           <circle cx="9" cy="7" r="4" />
@@ -1233,7 +1233,7 @@ export default function Groups() {
                         </svg>
                         {group?.members?.length || 0}/{group.maxMembers || 10}
                       </span>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 10, whiteSpace: 'nowrap', background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 10, whiteSpace: 'nowrap', background: 'rgba(0,0,0,0.04)', color: 'var(--text-primary)', border: '1.5px solid var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                         {group.meetingMode === 'offline' ? (
                           <>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1252,7 +1252,7 @@ export default function Groups() {
                           </>
                         )}
                       </span>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 10, whiteSpace: 'nowrap', background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 10, whiteSpace: 'nowrap', background: 'rgba(0,0,0,0.04)', color: 'var(--text-primary)', border: '1.5px solid var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                         {group.isPrivate ? (
                           <>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
