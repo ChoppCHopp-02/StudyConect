@@ -1056,7 +1056,7 @@ export default function Groups() {
                 justifyContent: 'center',
                 gap: '8px',
                 background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--text-primary) 100%)',
-                border: '1.5px solid #ffffff',
+                border: 'none',
                 color: '#ffffff',
                 fontWeight: 700,
                 borderRadius: '12px',

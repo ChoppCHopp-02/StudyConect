@@ -465,7 +465,7 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
             )}
 
 
-            {displayUser && (
+            {displayUser && location.pathname !== '/groups' && (
               <button className="btn-logout desktop-only" onClick={handleLogout} style={{
                 background: 'transparent',
                 border: '1px solid var(--border)',

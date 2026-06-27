@@ -1404,49 +1404,49 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: '10px',
                   padding: '8px 18px', borderRadius: '20px',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(0, 0, 0, 0.04)',
+                  border: '1.5px solid #000000',
                   backdropFilter: 'blur(8px)',
-                  fontSize: '12px', fontWeight: 600,
-                  color: 'rgba(220,220,220,0.9)',
+                  fontSize: '12px', fontWeight: 800,
+                  color: '#000000',
                   boxShadow: 'none',
                 }}>
                   {/* Icon container — circular premium style */}
                   <span style={{
                     position: 'relative',
                     width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
-                    background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.18), rgba(255,255,255,0.06))',
+                    background: 'rgba(0, 0, 0, 0.04)',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    border: '1.5px solid rgba(255,255,255,0.25)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+                    border: '1.5px solid #000000',
+                    boxShadow: 'none',
                   }}>
                     {isMissed ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.3))' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
                         {/* Thân máy có fill mờ */}
                         <path
                           d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
-                          fill="rgba(255,255,255,0.08)"
-                          stroke="rgba(220,220,220,0.9)"
-                          strokeWidth="1.8"
+                          fill="rgba(0, 0, 0, 0.05)"
+                          stroke="#000000"
+                          strokeWidth="2"
                         />
                         {/* Gạch chéo đậm */}
-                        <line x1="16" y1="6" x2="6" y2="16" stroke="rgba(220,220,220,0.9)" strokeWidth="2.2" />
+                        <line x1="16" y1="6" x2="6" y2="16" stroke="#000000" strokeWidth="2.5" />
                       </svg>
                     ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.3))' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
                         {/* Thân camera có fill mờ */}
                         <rect
                           width="14" height="12" x="2" y="6" rx="2" ry="2"
-                          fill="rgba(255,255,255,0.08)"
-                          stroke="#d4d4d4"
-                          strokeWidth="1.8"
+                          fill="rgba(0, 0, 0, 0.05)"
+                          stroke="#000000"
+                          strokeWidth="2"
                         />
                         {/* Tam giác play có fill */}
                         <path
                           d="m22 8-6 4 6 4V8Z"
-                          fill="rgba(255,255,255,0.12)"
-                          stroke="#d4d4d4"
-                          strokeWidth="1.8"
+                          fill="rgba(0, 0, 0, 0.05)"
+                          stroke="#000000"
+                          strokeWidth="2"
                         />
                       </svg>
                     )}
