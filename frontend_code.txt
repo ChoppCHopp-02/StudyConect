@@ -32064,11 +32064,11 @@ export const getUserPosts = async (friendId) => {
   if (!postsData || postsData.length === 0) return [];
 
   const postIds = postsData.map(p => p.id);
-  const { data: commentsData } = await supabase
+  const { data: commentsData, error: commentsError } = await supabase
     .from('comments')
     .select(`
       id, post_id, user_id, parent_id, content, created_at,
-      users (
+      users!user_id (
         full_name,
         avatar
       )
@@ -32076,6 +32076,10 @@ export const getUserPosts = async (friendId) => {
     .in('post_id', postIds)
     .order('created_at', { ascending: true })
     .limit(50);
+
+  if (commentsError && import.meta.env.DEV) {
+    console.error('Error loading comments in getUserPosts:', commentsError);
+  }
 
   return postsData.map(p => {
     const pCommentsRaw = (commentsData || []).filter(c => c.post_id === p.id);
