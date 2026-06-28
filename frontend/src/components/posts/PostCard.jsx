@@ -74,7 +74,7 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
     <article
       style={{
         background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
+        border: '1.5px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         marginBottom: '14px',
         overflow: 'hidden',
