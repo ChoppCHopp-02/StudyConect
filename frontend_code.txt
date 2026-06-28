@@ -7446,7 +7446,7 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onCommen
     <article
       style={{
         background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
+        border: '1.5px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         marginBottom: '14px',
         overflow: 'hidden',
@@ -23032,10 +23032,8 @@ export default function Home() {
         <main style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', paddingRight: '4px', overflow: 'hidden', height: '100%' }}>
           {/* Create Question Box - Fixed Top */}
           <div style={{ flexShrink: 0, paddingBottom: '14px', zIndex: 20 }}>
-            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
-              <div style={{ display: 'inline-flex', borderRadius: '50%', flexShrink: 0 }}>
-                <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
-              </div>
+            <div className="sc-card-animated" style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border)', borderRadius: '18px', padding: '16px 18px', display: 'flex', gap: '12px', alignItems: 'center', animationDelay: '0s' }}>
+              <Avatar src={user?.avatar} initial={user?.fullName || 'U'} size={42} />
               <button
                 onClick={() => setShowCreateModal(true)}
                 style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '24px', padding: '12px 18px', color: 'var(--text-muted)', fontSize: '14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}
