@@ -20092,6 +20092,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
 
   const [suggestions, setSuggestions] = useState([]);
   const [placesError, setPlacesError] = useState('');
+  // eslint-disable-next-line react-hooks/purity
   const sessionTokenRef = useRef(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36));
   const ignoreNextAutocompleteRef = useRef(false);
   const ignoreNextGeocodeRef = useRef(false);
@@ -20119,6 +20120,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
   // Google Places Autocomplete: Debounce 350ms
   useEffect(() => {
     if (meetingMode !== 'offline' || !customName || customName.trim().length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
       return;
     }
@@ -20191,6 +20193,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
     }
     
     // Tạo session token mới cho lượt tìm tiếp theo
+    // eslint-disable-next-line react-hooks/purity
     sessionTokenRef.current = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
   };
 
@@ -20332,11 +20335,11 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
           <>
             {/* Mode badge */}
             <div style={{ padding: '8px 18px 0' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: 'rgba(0,0,0,0.06)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1.5px solid var(--border)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', letterSpacing: '0.02em' }}>
                 {meetingMode === 'online' ? (
                   <>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.04)" />
                       <line x1="2" y1="12" x2="22" y2="12" />
                       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                     </svg>
@@ -20344,7 +20347,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                   </>
                 ) : (
                   <>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
@@ -20732,16 +20735,34 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               </div>
 
               {/* Toggle Riêng tư / Công khai */}
-              <div style={{ borderRadius: 10, border: `1.5px solid ${isPrivate ? 'rgba(0, 0, 0, 0.15)' : 'var(--border)'}`, background: isPrivate ? 'var(--bg-input)' : 'rgba(0, 0, 0, 0.04)', padding: '12px 16px', transition: 'all 0.25s' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ 
+                borderRadius: 12, 
+                border: '1.5px solid var(--border)', 
+                background: 'var(--bg-card)', 
+                padding: '16px 20px', 
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
+                transition: 'all 0.25s' 
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      <span style={{ fontSize: 14 }}>{isPrivate ? '🔒' : '🌐'}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: isPrivate ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      {isPrivate ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="rgba(234, 179, 8, 0.1)" stroke="#EAB308" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#EAB308" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <circle cx="12" cy="12" r="10" fill="rgba(59, 130, 246, 0.1)" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                      )}
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                         {isPrivate ? 'Nhóm riêng tư' : 'Nhóm công khai'}
                       </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                       {isPrivate
                         ? 'Thành viên mới cần gửi yêu cầu và được trưởng nhóm duyệt mới vào được.'
                         : 'Bất kỳ ai cũng có thể tham gia nhóm ngay mà không cần chờ duyệt.'}
@@ -20758,7 +20779,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                     })}
                     style={{
                       width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', flexShrink: 0,
-                      background: isPrivate ? 'rgba(0, 0, 0, 0.12)' : 'var(--primary)',
+                      background: isPrivate ? '#E5E7EB' : 'var(--text-primary)',
                       position: 'relative', transition: 'background 0.25s', padding: 0,
                     }}
                     title={isPrivate ? 'Đang tắt: Công khai — nhấn để chuyển sang Công khai' : 'Đang bật: Công khai — nhấn để chuyển sang Riêng tư'}
@@ -20766,7 +20787,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                     <span style={{
                       position: 'absolute', top: 3, left: isPrivate ? 3 : 23,
                       width: 18, height: 18, borderRadius: '50%', background: 'white',
-                      transition: 'left 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                      transition: 'left 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
                     }} />
                   </button>
                 </div>
@@ -21126,6 +21147,7 @@ function PromptModal({ isOpen, title, message, defaultValue, placeholder, onConf
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setValue(defaultValue || '');
     }
   }, [isOpen, defaultValue]);
@@ -21277,6 +21299,7 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
     if (isOpen) {
       const isKnown = dbSubjects.includes(defaultValue) || (!userMajor && defaultValue === 'Chung');
       if (isKnown || defaultValue === '') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSubjectMode('select');
         setSelectedSubject(defaultValue || '');
         setCustomSubject('');
