@@ -202,7 +202,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
               </span>
             </div>
 
-            <div className="no-scrollbar" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', flex: 1 }}>
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', flex: 1 }}>
               {/* Tên nhóm */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Tên nhóm *</label>
@@ -885,7 +885,7 @@ export default function Groups() {
   };
 
   const handleLeave = (group) => {
-    if (group.creatorId === user.id) {
+    if (Number(group.creatorId) === Number(user?.id)) {
       const isOnlyMember = (group.members?.length || 0) <= 1;
 
       if (isOnlyMember) {
@@ -1218,8 +1218,8 @@ export default function Groups() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
             {filteredGroups.map(group => {
               const isMember = group?.members?.some(m => Number(m) === Number(user?.id));
-              const isCreator = group.creatorId === user?.id;
-              const isDeputy = group.deputyId === user?.id;
+              const isCreator = Number(group.creatorId) === Number(user?.id);
+              const isDeputy = group.deputyId ? Number(group.deputyId) === Number(user?.id) : false;
 
               return (
                 <div key={group.id} className="group-card">
@@ -1621,7 +1621,7 @@ export default function Groups() {
           </div>
 
           {/* Body content scrollable */}
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }} className="no-scrollbar">
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }}>
             {/* Tên nhóm */}
             <div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>

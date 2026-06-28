@@ -922,7 +922,7 @@ input::-ms-clear {
   position: fixed;
   top: 80px;
   right: 24px;
-  z-index: 10000;
+  z-index: 99999;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -973,13 +973,28 @@ input::-ms-clear {
 /* ═══════════════════════════════════════════
    HIDE SCROLLBARS (keep scroll functionality)
 ═══════════════════════════════════════════ */
+/* Custom premium scrollbars globally */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
 * {
-  scrollbar-width: none;        /* Firefox */
-  -ms-overflow-style: none;     /* IE/Edge */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
 }
-*::-webkit-scrollbar {
-  display: none;                /* Chrome/Safari/Opera */
-}
+
 
 /* ═══════════════════════════════════════════
    RESPONSIVE LAYOUT SYSTEM
