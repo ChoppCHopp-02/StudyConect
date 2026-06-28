@@ -9,6 +9,19 @@ const mapGroup = (g) => {
   const deputyIds = deputies.map(m => m.user_id);
   const deputy = deputies[0];
 
+  let parsedLocation = null;
+  if (g.location) {
+    if (typeof g.location === 'object') {
+      parsedLocation = g.location;
+    } else {
+      try {
+        parsedLocation = JSON.parse(g.location);
+      } catch (e) {
+        parsedLocation = { name: g.location, address: g.location };
+      }
+    }
+  }
+
   return {
     id: g.id.toString(),
     name: g.name,
@@ -18,7 +31,7 @@ const mapGroup = (g) => {
     meetingMode: g.meeting_mode || 'online',
     isPrivate: g.is_private || false,
     maxMembers: g.max_members || 10,
-    location: g.location || null,
+    location: parsedLocation,
     creatorId: g.creator_id,
     deputyId: deputy ? deputy.user_id : null,
     deputyIds: deputyIds,
