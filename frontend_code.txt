@@ -20546,6 +20546,7 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
   const [subjectMode, setSubjectMode] = useState('select'); // 'select' | 'custom'
   const [selectedSubject, setSelectedSubject] = useState('');
   const [customSubject, setCustomSubject] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -20570,6 +20571,7 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
         setSelectedSubject('custom');
         setCustomSubject(defaultValue || '');
       }
+      setDropdownOpen(false);
     }
   }, [isOpen, defaultValue, dbSubjects, userMajor]);
 
@@ -20580,6 +20582,18 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
     const finalSubject = subjectMode === 'custom' ? customSubject.trim() : selectedSubject;
     if (!finalSubject) return;
     onConfirm(finalSubject);
+  };
+
+  const options = [...dbSubjects];
+  if (!userMajor) {
+    options.push('Chung');
+  }
+  options.push('custom');
+
+  const getLabel = (val) => {
+    if (val === 'custom') return 'Môn học khác...';
+    if (!val) return '-- Chọn môn học --';
+    return val;
   };
 
   return (
@@ -20599,7 +20613,7 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
         style={{
           background: 'var(--bg-card)',
           border: `1px solid var(--border)`,
-          borderRadius: 18,
+          borderRadius: 20,
           boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
           width: '100%', maxWidth: 400,
           padding: '28px 28px 24px',
@@ -20624,40 +20638,107 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
           </h3>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <select
-            value={subjectMode === 'custom' ? 'custom' : selectedSubject}
-            onChange={e => {
-              const val = e.target.value;
-              if (val === 'custom') {
-                setSubjectMode('custom');
-              } else {
-                setSubjectMode('select');
-                setSelectedSubject(val);
-              }
-            }}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative' }}>
+          <div 
+            onClick={() => setDropdownOpen(!dropdownOpen)}
             style={{
               width: '100%',
               background: 'var(--bg-input)',
               border: '1px solid var(--border)',
-              borderRadius: 10,
-              padding: '10px 14px',
+              borderRadius: 12,
+              padding: '11px 16px',
               color: 'var(--text-primary)',
               fontFamily: 'inherit',
               fontSize: '14px',
-              outline: 'none',
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              userSelect: 'none',
+              transition: 'border-color 0.2s',
             }}
           >
-            <option value="">-- Chọn môn học --</option>
-            {dbSubjects.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-            {!userMajor && (
-              <option value="Chung">Chung</option>
-            )}
-            <option value="custom">Môn học khác...</option>
-          </select>
+            <span>{getLabel(subjectMode === 'custom' ? 'custom' : selectedSubject)}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+
+          {dropdownOpen && (
+            <div 
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: 6,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: 14,
+                boxShadow: '0 12px 30px rgba(0,0,0,0.25)',
+                zIndex: 10000,
+                maxHeight: 200,
+                overflowY: 'auto',
+                padding: '6px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              }}
+            >
+              <div
+                onClick={() => {
+                  setSubjectMode('select');
+                  setSelectedSubject('');
+                  setDropdownOpen(false);
+                }}
+                style={{
+                  padding: '9px 12px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: 13.5,
+                  color: 'var(--text-secondary)',
+                  transition: 'all 0.15s',
+                  background: selectedSubject === '' && subjectMode === 'select' ? 'var(--bg-input)' : 'transparent',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = selectedSubject === '' && subjectMode === 'select' ? 'var(--bg-input)' : 'transparent'; e.currentTarget.style.color = selectedSubject === '' && subjectMode === 'select' ? 'var(--text-primary)' : 'var(--text-secondary)'; }}
+              >
+                -- Chọn môn học --
+              </div>
+
+              {options.map(opt => {
+                const isSelected = (opt === 'custom' && subjectMode === 'custom') || (opt !== 'custom' && subjectMode === 'select' && selectedSubject === opt);
+                return (
+                  <div
+                    key={opt}
+                    onClick={() => {
+                      if (opt === 'custom') {
+                        setSubjectMode('custom');
+                      } else {
+                        setSubjectMode('select');
+                        setSelectedSubject(opt);
+                      }
+                      setDropdownOpen(false);
+                    }}
+                    style={{
+                      padding: '9px 12px',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      fontSize: 13.5,
+                      color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      fontWeight: isSelected ? 600 : 400,
+                      transition: 'all 0.15s',
+                      background: isSelected ? 'var(--bg-input)' : 'transparent',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isSelected ? 'var(--bg-input)' : 'transparent'; e.currentTarget.style.color = isSelected ? 'var(--text-primary)' : 'var(--text-secondary)'; }}
+                  >
+                    {opt === 'custom' ? 'Môn học khác...' : opt}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {subjectMode === 'custom' && (
             <input
@@ -20671,12 +20752,13 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
                 width: '100%',
                 background: 'var(--bg-input)',
                 border: '1px solid var(--border)',
-                borderRadius: 10,
-                padding: '10px 14px',
+                borderRadius: 12,
+                padding: '11px 16px',
                 color: 'var(--text-primary)',
                 fontFamily: 'inherit',
                 fontSize: '14px',
                 outline: 'none',
+                marginTop: 4,
               }}
             />
           )}
@@ -20687,7 +20769,7 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
             type="button"
             onClick={onCancel}
             style={{
-              flex: 1, padding: '10px', borderRadius: 10,
+              flex: 1, padding: '10px 16px', borderRadius: 12,
               border: '1px solid var(--border)',
               background: 'var(--bg-card)',
               color: 'var(--text-primary)',
@@ -20703,7 +20785,7 @@ function SubjectSelectModal({ isOpen, title, userMajor, defaultValue, onConfirm,
           <button
             type="submit"
             style={{
-              flex: 1, padding: '10px', borderRadius: 10,
+              flex: 1, padding: '10px 16px', borderRadius: 12,
               border: 'none',
               background: 'var(--primary)',
               color: '#fff',
