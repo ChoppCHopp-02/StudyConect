@@ -38,15 +38,15 @@ export default function ConfirmModal({
   const variantMap = {
     danger:  { 
       icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         </svg>
       ), 
-      color: '#ef4444', 
-      bg: 'rgba(239,68,68,0.08)',  
-      border: 'rgba(239,68,68,0.2)',  
-      btnBg: '#ef4444', 
+      color: 'var(--text-primary)', 
+      bg: 'rgba(0,0,0,0.04)',  
+      border: 'var(--border)',  
+      btnBg: 'var(--primary)', 
       btnShadow: 'none' 
     },
     warning: { 
