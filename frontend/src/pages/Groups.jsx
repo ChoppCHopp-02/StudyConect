@@ -563,6 +563,7 @@ function CreateGroupModal({ formData, setFormData, meetingMode, setMeetingMode, 
                         <img
                           src={staticMapUrl({ lat: selectedLocation.lat, lng: selectedLocation.lng })}
                           alt="Bản đồ địa điểm"
+                          draggable="false"
                           style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }}
                           onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
@@ -817,7 +818,7 @@ function InviteFriendsModal({ group, currentUser, onClose, addToast }) {
                 return (
                   <div key={friend.userId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: isPending ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isPending ? 'rgba(0,0,0,0.15)' : 'var(--border)'}`, transition: 'all 0.2s' }}>
                     {friend.avatar ? (
-                      <img src={friend.avatar} alt={friend.fullName} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--border)' }} />
+                      <img src={friend.avatar} alt={friend.fullName} draggable="false" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--border)' }} />
                     ) : (
                       <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--primary),var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#fff' }}>
                         {initials}
@@ -1747,7 +1748,7 @@ export default function Groups() {
 
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           {user?.avatar
-            ? <img src={user.avatar} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--text-primary)' }} />
+            ? <img src={user.avatar} alt="avatar" draggable="false" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--text-primary)' }} />
             : <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, var(--text-primary), var(--text-primary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#fff', border: '2px solid var(--text-primary)' }}>{initials}</div>
           }
           <div>
@@ -2364,6 +2365,7 @@ export default function Groups() {
           max-width: 1100px;
           margin: 0 auto;
           font-family: 'Inter', sans-serif;
+          overflow-x: hidden;
         }
         .page-title {
           font-family: 'Fraunces', serif;
