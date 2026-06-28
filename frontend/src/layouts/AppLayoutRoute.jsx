@@ -17,6 +17,10 @@ function matchConfig(pathname) {
   if (pathname.startsWith('/groups/')) {
     return { hideSidebar: true };
   }
+  // Match /friends/:id
+  if (pathname.startsWith('/friends/')) {
+    return { hideSidebar: true, hideRightSidebar: true };
+  }
   return LAYOUT_CONFIG[pathname] || {};
 }
 
