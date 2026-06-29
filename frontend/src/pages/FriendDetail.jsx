@@ -151,11 +151,32 @@ export default function FriendDetail() {
   }, [id, addToast]);
 
   useEffect(() => {
-    if (activeTab === 'posts') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadPosts();
-    }
-  }, [activeTab, loadPosts]);
+    if (activeTab !== 'posts' || !id) return;
+    loadPosts();
+
+    const channelName = `friend-posts-realtime-${id}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'posts', filter: `user_id=eq.${id}` },
+        () => {
+          loadPosts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
+        () => {
+          loadPosts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeTab, loadPosts, id]);
 
   // Post handlers
   const handleLikePost = async (postId, emoji, e) => {

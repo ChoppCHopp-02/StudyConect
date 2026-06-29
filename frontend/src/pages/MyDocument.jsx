@@ -218,8 +218,31 @@ export default function MyDocuments() {
     finally { setLoading(false); }
   }, [user]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadFiles(); }, [loadFiles]);
+  useEffect(() => {
+    if (!user?.id) return;
+    loadFiles();
+
+    const channelName = `my-documents-realtime-${user.id}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'files',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          loadFiles();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadFiles, user?.id]);
 
   const handleDelete = async (file) => {
     try {
