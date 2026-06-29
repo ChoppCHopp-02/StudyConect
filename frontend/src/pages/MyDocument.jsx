@@ -575,36 +575,104 @@ export default function MyDocuments() {
       {deleteConfirm && (
         <div onClick={() => setDeleteConfirm(null)} style={{
           position: 'fixed', inset: 0, zIndex: 5000,
-          background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: '24px',
+          animation: 'fadeIn 0.2s ease',
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: 'var(--bg-card)', borderRadius: 'var(--radius)', padding: '28px 32px',
-            maxWidth: '420px', width: '100%', border: '1px solid var(--border)', textAlign: 'center',
+            background: 'var(--bg-card)',
+            borderRadius: '16px',
+            padding: '28px 32px',
+            maxWidth: '420px',
+            width: '100%',
+            border: '2.5px solid var(--border)',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+            position: 'relative',
+            overflow: 'hidden',
           }}>
-            <div style={{ color: 'var(--error)', display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.4))' }}>
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
+            {/* Red accent strip at the top */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: '6px',
+              background: 'linear-gradient(90deg, #ef4444, #b91c1c)'
+            }} />
+
+            <div style={{ color: '#ef4444', display: 'flex', justifyContent: 'center', marginBottom: '16px', marginTop: '8px' }}>
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1.5px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '50%',
+                width: '60px',
+                height: '60px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.1)',
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </div>
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Xóa tài liệu?</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>
-              Bạn có chắc muốn xóa <strong style={{ color: 'var(--text-primary)' }}>{deleteConfirm.fileName}</strong>?
+
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.3px' }}>Xóa tài liệu?</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', lineHeight: 1.5, marginBottom: '24px' }}>
+              Bạn có chắc muốn xóa <strong style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>{deleteConfirm.fileName}</strong>?
               Hành động này không thể hoàn tác.
             </p>
+            
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button onClick={() => setDeleteConfirm(null)} style={{
-                padding: '10px 24px', borderRadius: '20px', cursor: 'pointer',
-                background: 'var(--bg-input)', border: '1px solid var(--border)',
-                color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600, fontFamily: 'inherit',
-              }}>Hủy</button>
+                flex: 1,
+                padding: '10px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                background: 'var(--bg-input)',
+                border: '1.5px solid var(--border)',
+                color: 'var(--text-primary)',
+                fontSize: '14px',
+                fontWeight: 700,
+                fontFamily: 'inherit',
+                transition: 'all 0.2s',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#000000';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'var(--bg-input)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              >Hủy</button>
+              
               <button onClick={() => handleDelete(deleteConfirm)} style={{
-                padding: '10px 24px', borderRadius: '20px', cursor: 'pointer',
-                background: 'var(--error)', border: 'none',
-                color: 'white', fontSize: '14px', fontWeight: 600, fontFamily: 'inherit',
-              }}>Xóa</button>
+                flex: 1,
+                padding: '10px 24px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                background: '#ef4444',
+                border: '1.5px solid var(--border)',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 700,
+                fontFamily: 'inherit',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#dc2626';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = '#ef4444';
+                e.currentTarget.style.transform = 'none';
+              }}
+              >Xóa</button>
             </div>
           </div>
         </div>

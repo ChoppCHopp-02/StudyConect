@@ -1860,53 +1860,96 @@ function ConversationView({ user, friend, friends, onBack, onlineUserIds, onNick
         <div
           style={{
             position: 'fixed', inset: 0, zIndex: 9998,
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fadeIn 0.2s ease',
           }}
           onClick={() => setDeleteConfirmId(null)}
         >
           <div
             style={{
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: '18px', padding: '24px 28px', maxWidth: '340px', width: '90%',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-              animation: 'fadeIn 0.18s ease',
+              background: 'var(--bg-card)',
+              border: '2.5px solid var(--border)',
+              borderRadius: '16px',
+              padding: '28px 32px',
+              maxWidth: '380px',
+              width: '90%',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+              position: 'relative',
+              overflow: 'hidden',
+              textAlign: 'center',
             }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ color: 'var(--error)', display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.4))' }}>
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                <line x1="10" y1="11" x2="10" y2="17" />
-                <line x1="14" y1="11" x2="14" y2="17" />
-              </svg>
+            {/* Danger indicator top border line */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: '6px',
+              background: 'linear-gradient(90deg, #ef4444, #b91c1c)'
+            }} />
+
+            <div style={{ color: '#ef4444', display: 'flex', justifyContent: 'center', marginBottom: '16px', marginTop: '8px' }}>
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1.5px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '50%',
+                width: '56px',
+                height: '56px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.1)',
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </div>
             </div>
-            <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, textAlign: 'center', color: 'var(--text-primary)' }}>Xóa tin nhắn?</h3>
-            <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5 }}>Tin nhắn sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
-            <div style={{ display: 'flex', gap: '10px' }}>
+
+            <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>Xóa tin nhắn?</h3>
+            <p style={{ margin: '0 0 24px', fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Tin nhắn này sẽ bị xóa vĩnh viễn khỏi cuộc trò chuyện của bạn và không thể khôi phục lại.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={() => setDeleteConfirmId(null)}
                 style={{
                   flex: 1, padding: '10px', borderRadius: '10px',
                   border: '1px solid var(--border)', background: 'var(--bg-input)',
-                  color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer',
+                  color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer',
                   fontFamily: 'inherit', fontSize: '14px', transition: 'all 0.2s',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-input)'}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#000000';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'var(--bg-input)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                }}
               >Hủy</button>
+              
               <button
                 onClick={confirmDelete}
                 style={{
                   flex: 1, padding: '10px', borderRadius: '10px',
-                  border: 'none', background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  border: '1.5px solid var(--border)', background: '#ef4444',
                   color: 'white', fontWeight: 700, cursor: 'pointer',
                   fontFamily: 'inherit', fontSize: '14px', transition: 'all 0.2s',
-                  boxShadow: '0 4px 14px rgba(239,68,68,0.4)',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
                 }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#dc2626';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = '#ef4444';
+                  e.currentTarget.style.transform = 'none';
+                }}
               >Xóa</button>
             </div>
           </div>
