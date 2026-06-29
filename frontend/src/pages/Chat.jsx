@@ -2409,9 +2409,15 @@ function FriendList({ user, friends, onSelect, lastMessages, onlineUserIds }) {
           </div>
         ) : (() => {
           const sortedFiltered = [...filtered].sort((a, b) => {
+            const lastA = lastMessages[String(a.userId)];
+            const lastB = lastMessages[String(b.userId)];
+            const timeA = lastA ? new Date(lastA.createdAt).getTime() : 0;
+            const timeB = lastB ? new Date(lastB.createdAt).getTime() : 0;
+            if (timeB !== timeA) return timeB - timeA;
+
             const aOn = onlineUserIds.includes(String(a.userId)) ? 1 : 0;
             const bOn = onlineUserIds.includes(String(b.userId)) ? 1 : 0;
-            return bOn - aOn; // Online first
+            return bOn - aOn;
           });
           return sortedFiltered.map(f => {
             const last = lastMessages[String(f.userId)];
@@ -2523,6 +2529,64 @@ export default function Chat() {
   const [totalUnread, setTotalUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  const friendsRef = useRef([]);
+  useEffect(() => {
+    friendsRef.current = friends;
+  }, [friends]);
+
+  // Realtime subscription for Chat Sidebar Overview
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`chat-overview-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`
+        },
+        async (payload) => {
+          const msg = payload.new;
+          if (!msg || msg.group_id) return;
+
+          const senderIdStr = msg.sender_id.toString();
+          const hasFriend = friendsRef.current.some(f => String(f.userId) === senderIdStr);
+
+          if (!hasFriend) {
+            try {
+              await refreshCache(user.id);
+              const list = await getFriends(String(user.id), true);
+              setFriends(list);
+              const lm = getLastMessages(user.id);
+              setLastMessages(lm);
+              const total = list.reduce((acc, f) => acc + getUnreadCount(user.id, f.userId), 0);
+              setTotalUnread(total);
+            } catch (err) {
+              if (import.meta.env.DEV) console.warn('[Chat] Realtime full refresh failed:', err);
+            }
+          } else {
+            await refreshCache(user.id);
+            const lm = getLastMessages(user.id);
+            setLastMessages(lm);
+
+            const total = friendsRef.current.reduce((acc, f) => acc + getUnreadCount(user.id, f.userId), 0);
+            setTotalUnread(total);
+
+            // Trigger re-sorting
+            setFriends(prev => [...prev]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);

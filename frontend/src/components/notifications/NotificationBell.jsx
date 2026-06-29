@@ -31,23 +31,41 @@ export default function NotificationBell({ style }) {
 
   // Chỉ rung khi có thông báo MỚI (unreadCount tăng)
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[NotificationBell] unreadCount changed:', {
+        unreadCount,
+        prevUnread: prevUnreadRef.current,
+        notifsCount: notifs.length,
+        seenCount: seen.size,
+      });
+    }
+
     if (prevUnreadRef.current === null) {
       // Lần đầu mount — không rung, chỉ ghi nhớ giá trị ban đầu
       prevUnreadRef.current = unreadCount;
       return;
     }
     if (unreadCount > prevUnreadRef.current) {
+      if (import.meta.env.DEV) {
+        console.log('[NotificationBell] Triggering ring! unreadCount increased:', prevUnreadRef.current, '->', unreadCount);
+      }
       // Có thông báo mới đến — bật rung
       setRinging(true);
       if (ringTimerRef.current) clearTimeout(ringTimerRef.current);
       // Tắt sau 2.5 giây (đủ 1 vòng animation bell-shake)
-      ringTimerRef.current = setTimeout(() => setRinging(false), 2500);
+      ringTimerRef.current = setTimeout(() => {
+        if (import.meta.env.DEV) {
+          console.log('[NotificationBell] Stopping ring.');
+        }
+        setRinging(false);
+      }, 2500);
     }
     prevUnreadRef.current = unreadCount;
     return () => {
       if (ringTimerRef.current) clearTimeout(ringTimerRef.current);
     };
-  }, [unreadCount]);
+  }, [unreadCount, notifs, seen]);
+
 
   const calcPos = () => {
     if (!btnRef.current) return;

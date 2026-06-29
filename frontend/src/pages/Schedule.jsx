@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { getUserSchedulesAndDeadlines, toggleDeadline } from '../services/interactionService';
+import { supabase } from '../config/supabaseClient';
+
 
 const getProcessedDeadlines = (deadList) => {
   const now = Date.now();
@@ -59,6 +61,215 @@ export default function Schedule() {
   const [deadlines, setDeadlines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [urgentCount, setUrgentCount] = useState(0);
+
+  const userGroupsRolesRef = useRef({});
+  const groupNamesCacheRef = useRef({});
+
+  // Fetch user groups and roles on mount / user change
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchUserGroups = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('group_members')
+          .select('group_id, role')
+          .eq('user_id', parseInt(user.id, 10));
+        if (!error && data) {
+          const roles = {};
+          data.forEach(m => {
+            roles[m.group_id.toString()] = m.role;
+          });
+          userGroupsRolesRef.current = roles;
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('Error fetching user groups:', err);
+      }
+    };
+    fetchUserGroups();
+  }, [user?.id]);
+
+  // Helper to check deadline visibility
+  const isDeadlineVisibleForUser = useCallback((dl) => {
+    const groupIdStr = dl.group_id.toString();
+    const role = userGroupsRolesRef.current[groupIdStr];
+    if (!role) return false;
+    if (role === 'creator' || role === 'admin') return true;
+    if (!dl.assignee_id) return true;
+    return Number(dl.assignee_id) === Number(user?.id);
+  }, [user?.id]);
+
+  // Helper to resolve group name asynchronously
+  const getGroupNameAsync = useCallback(async (gId) => {
+    const groupIdStr = gId.toString();
+    if (groupNamesCacheRef.current[groupIdStr]) {
+      return groupNamesCacheRef.current[groupIdStr];
+    }
+    try {
+      const { data } = await supabase
+        .from('study_groups')
+        .select('name')
+        .eq('id', parseInt(gId, 10))
+        .single();
+      const name = data?.name || 'Nhóm học';
+      groupNamesCacheRef.current[groupIdStr] = name;
+      return name;
+    } catch {
+      return 'Nhóm học';
+    }
+  }, []);
+
+  // Realtime subscription for overview
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`user-schedule-overview-${user.id}`)
+      // Deadlines
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'deadlines' },
+        (payload) => {
+          const newDl = payload.new;
+          if (!newDl) return;
+          if (!userGroupsRolesRef.current[newDl.group_id?.toString()]) return;
+          if (!isDeadlineVisibleForUser(newDl)) return;
+
+          getGroupNameAsync(newDl.group_id).then(gName => {
+            const formatted = {
+              id: newDl.id.toString(),
+              groupId: newDl.group_id.toString(),
+              groupName: gName,
+              title: newDl.title,
+              dueDate: newDl.due_date,
+              description: newDl.description || '',
+              completed: newDl.completed || false
+            };
+            setDeadlines(prev => {
+              if (prev.some(d => d.id === formatted.id)) return prev;
+              const updated = [...prev, formatted];
+              const processed = getProcessedDeadlines(updated);
+              setUrgentCount(processed.filter(d => d.dueSoon).length);
+              return processed;
+            });
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'deadlines' },
+        (payload) => {
+          const updatedDl = payload.new;
+          if (!updatedDl) return;
+          if (!userGroupsRolesRef.current[updatedDl.group_id?.toString()]) return;
+          if (!isDeadlineVisibleForUser(updatedDl)) {
+            // If it becomes invisible (e.g. assigned to someone else), remove it
+            setDeadlines(prev => {
+              const updated = prev.filter(d => d.id !== updatedDl.id.toString());
+              const processed = getProcessedDeadlines(updated);
+              setUrgentCount(processed.filter(d => d.dueSoon).length);
+              return processed;
+            });
+            return;
+          }
+
+          getGroupNameAsync(updatedDl.group_id).then(gName => {
+            const formatted = {
+              id: updatedDl.id.toString(),
+              groupId: updatedDl.group_id.toString(),
+              groupName: gName,
+              title: updatedDl.title,
+              dueDate: updatedDl.due_date,
+              description: updatedDl.description || '',
+              completed: updatedDl.completed || false
+            };
+            setDeadlines(prev => {
+              const updated = prev.map(d => d.id === formatted.id ? formatted : d);
+              const processed = getProcessedDeadlines(updated);
+              setUrgentCount(processed.filter(d => d.dueSoon).length);
+              return processed;
+            });
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'deadlines' },
+        (payload) => {
+          if (!payload.old?.id) return;
+          setDeadlines(prev => {
+            const updated = prev.filter(d => d.id !== payload.old.id.toString());
+            const processed = getProcessedDeadlines(updated);
+            setUrgentCount(processed.filter(d => d.dueSoon).length);
+            return processed;
+          });
+        }
+      )
+      // Schedules
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'schedules' },
+        (payload) => {
+          const newSched = payload.new;
+          if (!newSched) return;
+          if (!userGroupsRolesRef.current[newSched.group_id?.toString()]) return;
+
+          getGroupNameAsync(newSched.group_id).then(gName => {
+            const formatted = {
+              id: newSched.id.toString(),
+              groupId: newSched.group_id.toString(),
+              groupName: gName,
+              topic: newSched.topic,
+              dateTime: newSched.date_time,
+              location: newSched.location || 'Online',
+              description: newSched.description || ''
+            };
+            setSchedules(prev => {
+              if (prev.some(s => s.id === formatted.id)) return prev;
+              const updated = [...prev, formatted];
+              return updated.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+            });
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'schedules' },
+        (payload) => {
+          const updatedSched = payload.new;
+          if (!updatedSched) return;
+          if (!userGroupsRolesRef.current[updatedSched.group_id?.toString()]) return;
+
+          getGroupNameAsync(updatedSched.group_id).then(gName => {
+            const formatted = {
+              id: updatedSched.id.toString(),
+              groupId: updatedSched.group_id.toString(),
+              groupName: gName,
+              topic: updatedSched.topic,
+              dateTime: updatedSched.date_time,
+              location: updatedSched.location || 'Online',
+              description: updatedSched.description || ''
+            };
+            setSchedules(prev => {
+              const updated = prev.map(s => s.id === formatted.id ? formatted : s);
+              return updated.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+            });
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'schedules' },
+        (payload) => {
+          if (!payload.old?.id) return;
+          setSchedules(prev => prev.filter(s => s.id !== payload.old.id.toString()));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, isDeadlineVisibleForUser, getGroupNameAsync]);
 
   const fetchAllData = useCallback(async () => {
     if (!user?.id) return;

@@ -6433,23 +6433,41 @@ export default function NotificationBell({ style }) {
 
   // Chỉ rung khi có thông báo MỚI (unreadCount tăng)
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[NotificationBell] unreadCount changed:', {
+        unreadCount,
+        prevUnread: prevUnreadRef.current,
+        notifsCount: notifs.length,
+        seenCount: seen.size,
+      });
+    }
+
     if (prevUnreadRef.current === null) {
       // Lần đầu mount — không rung, chỉ ghi nhớ giá trị ban đầu
       prevUnreadRef.current = unreadCount;
       return;
     }
     if (unreadCount > prevUnreadRef.current) {
+      if (import.meta.env.DEV) {
+        console.log('[NotificationBell] Triggering ring! unreadCount increased:', prevUnreadRef.current, '->', unreadCount);
+      }
       // Có thông báo mới đến — bật rung
       setRinging(true);
       if (ringTimerRef.current) clearTimeout(ringTimerRef.current);
       // Tắt sau 2.5 giây (đủ 1 vòng animation bell-shake)
-      ringTimerRef.current = setTimeout(() => setRinging(false), 2500);
+      ringTimerRef.current = setTimeout(() => {
+        if (import.meta.env.DEV) {
+          console.log('[NotificationBell] Stopping ring.');
+        }
+        setRinging(false);
+      }, 2500);
     }
     prevUnreadRef.current = unreadCount;
     return () => {
       if (ringTimerRef.current) clearTimeout(ringTimerRef.current);
     };
-  }, [unreadCount]);
+  }, [unreadCount, notifs, seen]);
+
 
   const calcPos = () => {
     if (!btnRef.current) return;
@@ -9533,6 +9551,178 @@ export default function useGroupDetail(groupId, user, addToast) {
       supabase.removeChannel(memberChannel);
     };
   }, [groupId, user?.id, navigate, addToast, fetchGroupMembersDetails]);
+
+  // Deadlines and Schedules Realtime subscription
+  useEffect(() => {
+    if (!groupId) return;
+
+    const detailChannel = supabase
+      .channel(`group-details-updates-${groupId}`)
+      // Deadlines
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'deadlines',
+          filter: `group_id=eq.${groupId}`
+        },
+        (payload) => {
+          const newDl = payload.new;
+          if (!newDl) return;
+
+          const assigneeId = newDl.assignee_id?.toString();
+          const cachedMember = membersDetailsCacheRef.current[assigneeId];
+          const assigneeName = cachedMember?.fullName || null;
+
+          const formatted = {
+            id: newDl.id.toString(),
+            groupId: newDl.group_id.toString(),
+            title: newDl.title,
+            dueDate: newDl.due_date,
+            description: newDl.description || '',
+            creatorId: newDl.creator_id,
+            assigneeId: newDl.assignee_id || null,
+            assigneeName,
+            completed: newDl.completed || false,
+            createdAt: newDl.created_at
+          };
+
+          setDeadlines(prev => {
+            if (prev.some(d => d.id === formatted.id)) return prev;
+            const updated = [...prev, formatted];
+            return getProcessedDeadlines(updated).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'deadlines',
+          filter: `group_id=eq.${groupId}`
+        },
+        (payload) => {
+          const updatedDl = payload.new;
+          if (!updatedDl) return;
+
+          const assigneeId = updatedDl.assignee_id?.toString();
+          const cachedMember = membersDetailsCacheRef.current[assigneeId];
+          const assigneeName = cachedMember?.fullName || null;
+
+          const formatted = {
+            id: updatedDl.id.toString(),
+            groupId: updatedDl.group_id.toString(),
+            title: updatedDl.title,
+            dueDate: updatedDl.due_date,
+            description: updatedDl.description || '',
+            creatorId: updatedDl.creator_id,
+            assigneeId: updatedDl.assignee_id || null,
+            assigneeName,
+            completed: updatedDl.completed || false,
+            createdAt: updatedDl.created_at
+          };
+
+          setDeadlines(prev => {
+            const updated = prev.map(d => d.id === formatted.id ? formatted : d);
+            return getProcessedDeadlines(updated).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'deadlines',
+          filter: `group_id=eq.${groupId}`
+        },
+        (payload) => {
+          if (!payload.old?.id) return;
+          setDeadlines(prev => prev.filter(d => d.id !== payload.old.id.toString()));
+        }
+      )
+      // Schedules
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'schedules',
+          filter: `group_id=eq.${groupId}`
+        },
+        (payload) => {
+          const newSched = payload.new;
+          if (!newSched) return;
+
+          const formatted = {
+            id: newSched.id.toString(),
+            groupId: newSched.group_id.toString(),
+            topic: newSched.topic,
+            dateTime: newSched.date_time,
+            location: newSched.location || 'Online',
+            description: newSched.description || '',
+            creatorId: newSched.creator_id,
+            createdAt: newSched.created_at
+          };
+
+          setSchedules(prev => {
+            if (prev.some(s => s.id === formatted.id)) return prev;
+            const updated = [...prev, formatted];
+            return updated.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'schedules',
+          filter: `group_id=eq.${groupId}`
+        },
+        (payload) => {
+          const updatedSched = payload.new;
+          if (!updatedSched) return;
+
+          const formatted = {
+            id: updatedSched.id.toString(),
+            groupId: updatedSched.group_id.toString(),
+            topic: updatedSched.topic,
+            dateTime: updatedSched.date_time,
+            location: updatedSched.location || 'Online',
+            description: updatedSched.description || '',
+            creatorId: updatedSched.creator_id,
+            createdAt: updatedSched.created_at
+          };
+
+          setSchedules(prev => {
+            const updated = prev.map(s => s.id === formatted.id ? formatted : s);
+            return updated.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'schedules',
+          filter: `group_id=eq.${groupId}`
+        },
+        (payload) => {
+          if (!payload.old?.id) return;
+          setSchedules(prev => prev.filter(s => s.id !== payload.old.id.toString()));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(detailChannel);
+    };
+  }, [groupId]);
+
 
   // Sync last seen chat time when chat is active
   useEffect(() => {
