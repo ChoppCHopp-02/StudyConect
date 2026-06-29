@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useOnlineUsers } from '@/context/OnlineUsersContext';
@@ -104,6 +104,39 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
   const friendsCacheRef = useRef({}); // { [userId]: friends[] } — cache in memory, reset on page reload only
   const onlineUserIds = useOnlineUsers();
 
+  const fetchSideData = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const schedulesRes = await getUserSchedulesAndDeadlines(user.id).catch(() => null);
+      if (schedulesRes) {
+        const { schedules: schedList = [], deadlines: deadList = [] } = schedulesRes;
+        const now = Date.now();
+        const upcomingSched = schedList
+          .filter((s) => new Date(s.dateTime) >= now)
+          .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+          .slice(0, 3);
+        setSchedules(upcomingSched);
+
+        const oneDayMs = 24 * 60 * 60 * 1000;
+        const processedDeadlines = deadList
+          .map(d => {
+            const due = new Date(d.dueDate).getTime();
+            return {
+              ...d,
+              dueSoon: !d.completed && due > now && (due - now) <= oneDayMs,
+              overdue: !d.completed && due < now
+            };
+          })
+          .filter(d => !d.completed)
+          .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+          .slice(0, 4);
+        setDeadlines(processedDeadlines);
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('Error fetching schedules/deadlines in layout:', err);
+    }
+  }, [user?.id]);
+
   // Fetch sidebar data: friends, schedules & deadlines
   useEffect(() => {
     if (!user?.id) return;
@@ -125,38 +158,6 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
       }
     };
 
-    const fetchSideData = async () => {
-      try {
-        const schedulesRes = await getUserSchedulesAndDeadlines(user.id).catch(() => null);
-        if (schedulesRes && isMounted) {
-          const { schedules: schedList = [], deadlines: deadList = [] } = schedulesRes;
-          const now = Date.now();
-          const upcomingSched = schedList
-            .filter((s) => new Date(s.dateTime) >= now)
-            .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
-            .slice(0, 3);
-          setSchedules(upcomingSched);
-
-          const oneDayMs = 24 * 60 * 60 * 1000;
-          const processedDeadlines = deadList
-            .map(d => {
-              const due = new Date(d.dueDate).getTime();
-              return {
-                ...d,
-                dueSoon: !d.completed && due > now && (due - now) <= oneDayMs,
-                overdue: !d.completed && due < now
-              };
-            })
-            .filter(d => !d.completed)
-            .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-            .slice(0, 4);
-          setDeadlines(processedDeadlines);
-        }
-      } catch (err) {
-        if (import.meta.env.DEV) console.warn('Error fetching schedules/deadlines in layout:', err);
-      }
-    };
-
     loadFriends();
     fetchSideData();
 
@@ -171,7 +172,69 @@ export default function AppLayout({ children, hideNavbar = false, hideSidebar = 
       isMounted = false;
       clearInterval(interval);
     };
-  }, [user?.id]);
+  }, [user?.id, fetchSideData]);
+
+  // Realtime subscription for schedules and deadlines on the home/layout sidebar
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let joinedGroupIds = [];
+    const updateJoinedGroupIds = async () => {
+      try {
+        const { data } = await supabase
+          .from('group_members')
+          .select('group_id')
+          .eq('user_id', parseInt(user.id, 10));
+        if (data) {
+          joinedGroupIds = data.map(m => m.group_id.toString());
+        }
+      } catch {
+        // ignore
+      }
+    };
+    updateJoinedGroupIds();
+
+    const channelName = `layout-schedules-deadlines-${user.id}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'schedules' },
+        async (payload) => {
+          const gId = (payload.new?.group_id || payload.old?.group_id)?.toString();
+          if (!gId) return;
+          await updateJoinedGroupIds();
+          if (joinedGroupIds.includes(gId)) {
+            fetchSideData();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'deadlines' },
+        async (payload) => {
+          const gId = (payload.new?.group_id || payload.old?.group_id)?.toString();
+          if (!gId) return;
+          await updateJoinedGroupIds();
+          if (joinedGroupIds.includes(gId)) {
+            fetchSideData();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'group_members', filter: `user_id=eq.${user.id}` },
+        async () => {
+          await updateJoinedGroupIds();
+          fetchSideData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchSideData]);
 
 
   
